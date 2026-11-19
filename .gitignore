@@ -1,0 +1,14 @@
+# Local authentication and Google Apps Script project bindings
+.clasprc.json
+.clasp.json
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+credentials.json
+service-account*.json
+node_modules/
+coverage/
+.DS_Store
