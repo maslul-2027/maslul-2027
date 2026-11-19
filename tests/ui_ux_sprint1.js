@@ -30,11 +30,13 @@ async function t(name, fn) { try { await fn(); pass++; console.log('PASS', name)
       await p.selectOption('#course', { label: 'קורס ב' }); await p.waitForFunction(() => /קורס: קורס ב/.test(document.getElementById('ctx').textContent));
       await p.evaluate(() => window.scrollTo(0, 5000)); assert.ok(await p.evaluate(() => document.getElementById('ctx').getBoundingClientRect().top >= 0), 'the header (with the context line) is sticky');
     });
-    await t('UX2 an identical call still in flight is shared: a double tap / repeated read is ONE server request', async () => {
+    await t('UX2 identical READS in flight are shared (one request); WRITES are never merged or suppressed', async () => {
       const p = await open(); let n = 0; await p.route('**/rpc', async r => { const b = JSON.parse(r.request().postData() || '{}'); if (b.m === 'api' && b.a === 'soldiers.list') n++; await new Promise(z => setTimeout(z, 150)); r.continue(); });
       await p.evaluate(cid => Promise.all([call('soldiers.list', { courseId: cid, opts: {} }), call('soldiers.list', { courseId: cid, opts: {} }), call('soldiers.list', { courseId: cid, opts: {} })]), c1); assert.strictEqual(n, 1, 'three identical reads -> one request');
       await p.evaluate(cid => call('soldiers.list', { courseId: cid, opts: {} }), c1); assert.strictEqual(n, 2, 'a later call is a NEW request (no stale cache)');
-      const w = await p.evaluate(cid => { const a = { courseId: cid, data: { full_name: '' } }; return Promise.all([call('soldiers.create', a), call('soldiers.create', a)]).then(r => r[0] === r[1] || JSON.stringify(r[0]) === JSON.stringify(r[1])); }, c1); assert.ok(w, 'both callers of a shared write receive the same result');
+      let w = 0; await p.unroute('**/rpc'); await p.route('**/rpc', async r => { const b = JSON.parse(r.request().postData() || '{}'); if (b.m === 'api' && b.a === 'soldiers.create') w++; await new Promise(z => setTimeout(z, 100)); r.continue(); });
+      const wa = { courseId: c1, data: { full_name: '' } }; await p.evaluate(a => Promise.all([call('soldiers.create', a), call('soldiers.create', a)]), wa); assert.strictEqual(w, 2, 'WRITES are never merged (non-idempotent): two calls -> two requests');
+      await p.evaluate(a => call('soldiers.create', a), wa); assert.strictEqual(w, 3, 'a write after the previous one settled is sent again');
     });
     await t('UX3 immediate loading feedback: progress bar + aria-busy while a call is pending, cleared after (also after a failure)', async () => {
       const p = await open(); await p.route('**/rpc', async r => { await new Promise(z => setTimeout(z, 400)); r.continue(); });

@@ -8,7 +8,7 @@ Hebrew RTL and the white/black/red/turquoise design are unchanged.
 |---|---|
 | Context | The sticky header now shows a live line `קורס: <name> · <area> · <screen>`, so the selected course and place are visible on every screen (also while scrolled). |
 | Perceived speed / feedback | Every server call raises a thin progress bar at the top and `aria-busy` on `<body>` until it settles (success **or** failure). |
-| Duplicate submissions | `call()` shares one in-flight promise for an identical method+arguments, so a double tap / repeated read is **one** server request. A later call is a new request (no cache, so no stale data). |
+| Duplicate reads | `call()` shares one in-flight promise only for identical **read-only** routes (list/get/summary…). Writes are never merged or suppressed (issue #7); double-submit protection stays with the existing button locks. No cache, so no stale data. |
 | Connectivity | An offline banner appears when the browser goes offline and disappears when it returns. |
 | Accessibility | Global `prefers-reduced-motion` rule (all animation/transition near-zero, drawer transition off); existing focus rings and 44px touch targets verified at 360/390. |
 | Small phones | A `max-width:400px` block: tighter header/padding, 2-column KPI grid, media and long text cannot overflow. |

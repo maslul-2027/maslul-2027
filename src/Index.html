@@ -137,7 +137,8 @@ body.nav-open{overflow:hidden}
    de-duplicates repeated reads; (b) a global progress bar + aria-busy tells the user something is happening. Data contracts, arguments and results are unchanged. */
 var NET={n:0,live:{}};
 function netBusy(d){NET.n=Math.max(0,NET.n+d);if(document.body)document.body.setAttribute('aria-busy',NET.n>0?'true':'false');}
-function call(method,args){var a=args||{},key;try{key=method+'\u0001'+JSON.stringify(a);}catch(e){key=null;}
+var READ_RE=/\.(list|get|mine|summary|overview|home|counts|events|org|insights|trends|strengthsGaps|notEntered)$/;
+function call(method,args){var a=args||{},key;try{key=READ_RE.test(String(method))?method+'\u0001'+JSON.stringify(a):null;}catch(e){key=null;}
   if(key&&NET.live[key])return NET.live[key];
   var p=new Promise(function(res,rej){google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e)}).api(method,a);});
   netBusy(1);var fin=function(){if(key&&NET.live[key]===p)delete NET.live[key];netBusy(-1);};if(key)NET.live[key]=p;p.then(fin,fin);return p;}
