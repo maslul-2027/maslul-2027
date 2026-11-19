@@ -199,7 +199,28 @@ function api(method, args) {
     const fn = Object.prototype.hasOwnProperty.call(API_, method) ? API_[method] : null;
     if (!fn) throw new AppError('NOT_FOUND', 'פעולה לא מוכרת.');
     const ctx = Auth.context();
-    return { ok: true, data: fn(ctx, args || {}) };
+    // Durable double-submit protection (issue #9 review): a WRITE that carries a client idempotency key (idem_) is executed at most once per
+    // (user, route, key) within the cache window; a retry with the same key (second tap, lost response) gets the ORIGINAL result. Reads and keyless calls are unchanged.
+    // Check -> execute -> store run under the script lock, so two PARALLEL requests with the same key cannot both pass the check. Residual window (documented):
+    // if the instance dies, or the cache write fails, after the write committed but before the result is stored, a retry re-executes (needs domain-level uniqueness).
+    let a = args || {}, cacheKey = null, cache = null;
+    if (Object.prototype.hasOwnProperty.call(a, 'idem_')) {
+      const k = a.idem_; a = Object.assign({}, a); delete a.idem_;
+      if (typeof k === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(k) && !/\.(list|get|mine|summary|overview|home|counts|events|org|insights|trends|strengthsGaps|notEntered)$/.test(method) && typeof CacheService !== 'undefined') {
+        try { cache = CacheService.getScriptCache(); cacheKey = 'idem:' + String(ctx.email || '').toLowerCase() + ':' + method + ':' + k; } catch (e2) { cache = null; cacheKey = null; }
+      }
+    }
+    if (cache && cacheKey) {
+      // Locks.run is the project's RE-ENTRANT script lock (the store takes it again inside fn without deadlocking); a loser waits, then re-checks the cache.
+      return Locks.run(function () {
+        let hit = null; try { hit = cache.get(cacheKey); } catch (e5) { hit = null; }
+        if (hit) return JSON.parse(hit);
+        const out = { ok: true, data: fn(ctx, a) };
+        try { const j = JSON.stringify(out); if (j.length < 90000) cache.put(cacheKey, j, 300); } catch (e3) { console.error('idempotency store failed'); }
+        return out;
+      });
+    }
+    return { ok: true, data: fn(ctx, a) };
   } catch (e) {
     if (e instanceof AppError || (e && e.name === 'AppError')) return { ok: false, code: e.code, message: e.message };
     console.error(e && e.stack ? e.stack : String(e));            // details to server log only

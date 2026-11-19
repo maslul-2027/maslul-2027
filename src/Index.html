@@ -76,7 +76,15 @@ label.inl{display:inline-flex;align-items:center;margin:0;min-height:44px;gap:4p
   body.nav-open #side{transform:none;visibility:visible;transition:transform .18s}body.nav-open #scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40}
   .grps,#tabs{overflow:visible;flex-wrap:wrap}.grps{flex-wrap:nowrap}main{padding:12px}
 }
-@media(prefers-reduced-motion:reduce){#side{transition:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}#side{transition:none!important}}
+/* UX sprint 1: persistent context line, global network progress bar, small-phone (360px) hardening */
+@media(max-width:900px){#bnav:not([hidden]){display:flex;position:fixed;inset-inline:0;bottom:0;z-index:50;background:var(--surface,#fff);border-top:1px solid var(--border,#ddd);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));gap:4px}#bnav button{flex:1;min-width:0;min-height:48px;padding:4px 2px;font-size:12px;line-height:1.15;background:transparent;color:var(--text,#111);border:0;border-radius:10px;overflow-wrap:anywhere}#bnav button[aria-current=true]{background:var(--accent,#C62828);color:#fff;font-weight:700}body.has-bnav{padding-bottom:64px}body.nav-open #bnav{display:none!important}}
+@media(min-width:901px){#bnav{display:none!important}}
+header.top p.ctx{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header.top p.ctx:empty{display:none}
+#netbar{position:fixed;top:0;inset-inline:0;height:3px;z-index:60;background:linear-gradient(90deg,var(--accent),#14b8a6);transform-origin:right;transform:scaleX(0);opacity:0;pointer-events:none;transition:transform .4s ease,opacity .2s ease}
+body[aria-busy=true] #netbar{opacity:1;transform:scaleX(.85)}
+#offline{position:sticky;top:0;z-index:55;margin:0;border-radius:0;text-align:center}
+@media(max-width:400px){header.top{padding:8px 10px;gap:8px}header.top h1{font-size:15px}main{padding-inline:8px}.card{padding:10px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}img,svg,canvas,video{max-width:100%;height:auto}.msg,.notice{overflow-wrap:anywhere}pre,code{white-space:pre-wrap;overflow-wrap:anywhere}}
 @media print{#side,header.top,#menuBtn{display:none}}
 
 /* UX final pass: compact course toolbar, adaptive form grid, neutral notices, tidy empty states, "show more" for long tables */
@@ -112,7 +120,8 @@ body.nav-open{overflow:hidden}
 </style>
 </head>
 <body>
-<header class="top"><button id="menuBtn" type="button" aria-label="פתיחת תפריט ניווט" aria-expanded="false" aria-controls="side">☰</button><div class="brand"><h1>מערכת מעקב קורס</h1><p id="who">טוען…</p></div></header>
+<header class="top"><button id="menuBtn" type="button" aria-label="פתיחת תפריט ניווט" aria-expanded="false" aria-controls="side">☰</button><div class="brand"><h1>מערכת מעקב קורס</h1><p id="who">טוען…</p><p id="ctx" class="ctx" aria-live="polite"></p></div></header>
+<div id="netbar" aria-hidden="true"></div><div id="offline" class="notice hide" role="status">אין חיבור לאינטרנט — פעולות לא יישלחו עד לחזרת החיבור.</div><nav id="bnav" aria-label="ניווט מהיר" hidden></nav>
 <div class="shell">
 <aside id="side" aria-label="ניווט ראשי"><h2>תחומי המערכת</h2><nav id="grps" class="bar grps" aria-label="תחומי המערכת"></nav></aside>
 <div id="scrim" aria-hidden="true"></div>
@@ -126,7 +135,17 @@ body.nav-open{overflow:hidden}
 </div>
 <script>
 /* All server data is rendered with textContent / DOM nodes only (never innerHTML) — names and notes are untrusted. */
-function call(method,args){return new Promise(function(res,rej){google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e)}).api(method,args||{});});}
+/* UX sprint 1: every server call goes through here. (a) an IDENTICAL call (same method + arguments) that is still in flight is shared instead of sent twice — this makes a double tap on any save button a single submission and
+   de-duplicates repeated reads; (b) a global progress bar + aria-busy tells the user something is happening. Data contracts, arguments and results are unchanged. */
+var NET={n:0,live:{}};
+function netBusy(d){NET.n=Math.max(0,NET.n+d);if(document.body)document.body.setAttribute('aria-busy',NET.n>0?'true':'false');}
+var READ_RE=/\.(list|get|mine|summary|overview|home|counts|events|org|insights|trends|strengthsGaps|notEntered)$/;
+var IDEM={};function idemKey(method,key){var now=Date.now(),e=IDEM[key];if(e&&now-e.t<60000)return e.k;var k='i'+now.toString(36)+Math.random().toString(36).slice(2,12);IDEM[key]={k:k,t:now};return k;}
+function call(method,args){var a=args||{},key,rk=null;var isRead=READ_RE.test(String(method));try{key=isRead?method+'\u0001'+JSON.stringify(a):null;if(!isRead)rk=method+'\u0001'+JSON.stringify(a);}catch(e){key=null;}
+  if(key&&NET.live[key])return NET.live[key];
+  var send=a;if(!isRead&&rk&&a&&typeof a==='object'&&!Array.isArray(a)){send=Object.assign({},a);send.idem_=idemKey(method,rk);}
+  var p=new Promise(function(res,rej){var okh=function(r){if(rk&&r&&r.ok===false&&r.code!=='BUSY')delete IDEM[rk];else if(rk&&IDEM[rk])IDEM[rk].t=Date.now()-55000;res(r);};google.script.run.withSuccessHandler(okh).withFailureHandler(function(e){rej(e)}).api(method,send);});
+  netBusy(1);var fin=function(){if(key&&NET.live[key]===p)delete NET.live[key];netBusy(-1);};if(key)NET.live[key]=p;p.then(fin,fin);return p;}
 var S={ctx:null,courses:[],courseId:null,org:{departments:[],teams:[]},tab:'dash',mine:{course_wide:true,has_assignment:true,department_ids:[],team_ids:[]},types:[],users:[],reqId:null,navF:{departmentId:'',teamId:'',typeId:'',from:'',to:'',includeCancelled:false},filters:{q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false},soldiers:[]};
 var ACTION={SOLDIER_CREATE:'נוצר',SOLDIER_EDIT:'עריכת פרטים',SOLDIER_REASSIGN:'שינוי שיוך',SOLDIER_ACTIVITY:'שינוי סטטוס פעילות',SOLDIER_CANCEL:'ביטול',SOLDIER_RESTORE:'שחזור'};
 function $(id){return document.getElementById(id);}
@@ -146,6 +165,18 @@ function wide(){return isAdmin()||S.mine.course_wide;}
 function depsAllowed(){return S.org.departments.filter(function(d){return wide()||S.mine.department_ids.indexOf(d.id)!==-1;});}
 function teamsOf(dep){return S.org.teams.filter(function(t){return (!dep||t.department_id===dep)&&(wide()||S.mine.team_ids.indexOf(t.id)!==-1);});}
 
+/* UX sprint 1: persistent context (selected course + current screen) in the sticky header, and an offline notice. Read-only DOM observers; no data is touched. */
+(function(){var bn=$('bnav'),g=$('grps');if(!bn||!g)return;
+function build(){var bs=[].slice.call(g.querySelectorAll('button[id^=grp_]'));if(!bs.length){bn.hidden=true;document.body.classList.remove('has-bnav');return;}
+ var cur=bs.filter(function(b){return b.getAttribute('aria-current')==='true'||b.classList.contains('on');})[0],pick=bs.slice(0,4);if(cur&&pick.indexOf(cur)<0)pick[3]=cur;
+ bn.textContent='';pick.forEach(function(b){var x=document.createElement('button');x.type='button';x.textContent=b.textContent;if(b===cur)x.setAttribute('aria-current','true');x.addEventListener('click',function(){b.click();window.scrollTo(0,0);});bn.appendChild(x);});
+ if(bs.length>pick.length){var m=document.createElement('button');m.type='button';m.textContent='עוד ☰';m.addEventListener('click',function(){var mb=$('menuBtn');if(mb)mb.click();});bn.appendChild(m);}
+ bn.hidden=false;document.body.classList.add('has-bnav');}
+new MutationObserver(build).observe(g,{subtree:true,childList:true,attributes:true,attributeFilter:['class','aria-current']});build();})();
+function updateCtx(){var c=$('course'),o=c&&c.options&&c.options[c.selectedIndex],on=document.querySelector('#tabs .tab.on'),g=document.querySelector('#grps button[aria-current],#grps button.on'),x=$('ctx');if(!x)return;
+  var parts=[];if(o&&o.value)parts.push('קורס: '+o.text);if(g&&g.textContent)parts.push(g.textContent.trim());if(on&&on.textContent&&(!g||on.textContent.trim()!==g.textContent.trim()))parts.push(on.textContent.trim());x.textContent=parts.join(' · ');}
+(function(){var ob=new MutationObserver(updateCtx);['tabs','grps','course'].forEach(function(id){var n=$(id);if(n)ob.observe(n,{subtree:true,childList:true,attributes:true});});$('course').addEventListener('change',updateCtx);
+  function net(){var off=$('offline');if(off)off.classList.toggle('hide',navigator.onLine!==false);}window.addEventListener('online',net);window.addEventListener('offline',net);net();})();
 google.script.run.withSuccessHandler(function(r){
   if(!r.ok){$('who').textContent=r.message;return;}
   S.ctx=r.data;$('who').textContent=r.data.displayName+' · '+(r.data.role==='admin'?'מנהל מערכת':'מפקד')+' · v'+r.data.version;loadCourses();
