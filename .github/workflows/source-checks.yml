@@ -1,4 +1,4 @@
-name: Source checks (no deployment)
+name: Source checks (deployment disabled)
 
 on:
   push:
@@ -9,36 +9,38 @@ permissions:
   contents: read
 
 jobs:
-  verify:
+  repository-hygiene:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check repository hygiene
+      - name: Reject credential files anywhere in repository
         shell: bash
         run: |
           set -euo pipefail
-          for file in .clasp.json .clasprc.json .env credentials.json; do
-            if [ -e "$file" ]; then
-              echo "Forbidden local credential/binding file: $file" >&2
-              exit 1
-            fi
-          done
-      - name: Set up Node.js 22
-        if: hashFiles('package.json') != ''
-        uses: actions/setup-node@v4
+          if git ls-files | grep -Ei '(^|/)(\.clasp\.json|\.clasprc\.json|\.env(\..*)?|credentials\.json|service-account[^/]*\.json|[^/]*\.(pem|p12|pfx|key))$'; then
+            echo 'Credential-like files must not be committed.' >&2
+            exit 1
+          fi
+      - name: Check source layout
+        shell: bash
+        run: |
+          if [ -f package.json ] && [ ! -d src ]; then
+            echo 'package.json exists but src/ is missing.' >&2
+            exit 1
+          fi
+
+  tests:
+    if: ${{ hashFiles('package-lock.json') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: package-lock.json
-      - name: Install test dependencies
-        if: hashFiles('package-lock.json') != ''
-        run: npm ci
-      - name: Install browser dependencies
-        if: hashFiles('package-lock.json') != ''
-        run: npx playwright install --with-deps chromium
-      - name: Run source tests
-        if: hashFiles('package-lock.json') != ''
-        run: npm run test:ci
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ci
 
-# Deployment intentionally disabled until credentials, baseline reconciliation,
-# versioned /exec update and rollback are validated.
+# No deploy job. Google Apps Script deployment requires separately validated
+# credentials, source reconciliation and versioned deployment/rollback.
