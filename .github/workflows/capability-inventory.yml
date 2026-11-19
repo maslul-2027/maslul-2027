@@ -1,0 +1,17 @@
+name: API feature inventory gate
+on:
+  push:
+    paths: ['docs/capability-inventory.json', 'scripts/check_capability_inventory.cjs', '.github/workflows/capability-inventory.yml']
+  pull_request:
+    paths: ['docs/capability-inventory.json', 'scripts/check_capability_inventory.cjs', '.github/workflows/capability-inventory.yml']
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/check_capability_inventory.cjs
