@@ -81,7 +81,7 @@ const original = fs.readFileSync(path.join(source, 'src/Index.html'), 'utf8');
 assert.ok(original.includes('<body>'));
 const html = original.replace('<body>', `<body>
 <script src="./course-engine.js"></script>
-<div dir="rtl" style="padding:12px;background:#fff4cc">
+<div data-course-banner dir="rtl" style="padding:12px;background:#fff4cc">
   קורס סינתטי · השינויים נשמרים עד לרענון הדף. <a href="./">חזרה לדמו</a>
   <details><summary>בדיקת פעולות מערכת</summary>
     <form id="course-actions">
@@ -93,6 +93,18 @@ const html = original.replace('<body>', `<body>
   </details>
 </div>
 <script>
+if (window.parent !== window && new URLSearchParams(location.search).has('embedded')) {
+  document.querySelector('[data-course-banner] a').hidden = true;
+  window.addEventListener('message', event => {
+    if (event.origin !== location.origin || event.source !== window.parent) return;
+    const tab = event.data?.courseTab;
+    if (!['dash', 'soldiers', 'attendance', 'tasks'].includes(tab)) return;
+    if (typeof S !== 'undefined') {
+      S.tab = tab;
+      if (S.courseId && S.org) showTab(tab);
+    }
+  });
+}
 const actionForm = document.getElementById('course-actions');
 const params = actionForm.elements;
 const output = document.getElementById('course-action-result');
