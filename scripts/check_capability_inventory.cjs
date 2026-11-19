@@ -15,7 +15,26 @@ const methods = Object.entries(inv.groups).flatMap(([group, entries]) => {
 });
 if (new Set(methods).size !== methods.length) throw Error('Duplicate API methods');
 if (methods.length !== inv.source.method_count) throw Error('Method count mismatch');
-if (methods.length !== 140) throw Error('Expected 140 inventoried API methods; review any changes explicitly');
+if (methods.length !== 174) throw Error('Expected 174 inventoried API methods; review any changes explicitly');
 if (Object.keys(inv.groups).length !== 39) throw Error('Expected 39 API namespaces');
 if (inv.source.path !== 'src/Code.gs') throw Error('Unexpected inventory source');
-console.log('PASS: '+methods.length+' API methods in '+Object.keys(inv.groups).length+' groups; inventory only, no runtime assertion');
+const sourceFile = process.argv[2];
+if (!sourceFile) throw Error('Pass the baseline src/Code.gs path');
+const source = fs.readFileSync(sourceFile, 'utf8');
+const whitelist = source.match(/^const API_ = \{\s*\n([\s\S]*?)^\};/m);
+if (!whitelist) throw Error('Cannot locate the Apps Script API_ whitelist');
+const sourceMethods = Array.from(
+  whitelist[1].matchAll(/^\s*'([\w.]+)'\s*:\s*function\b/gm),
+  ([, method]) => method
+);
+if (new Set(sourceMethods).size !== sourceMethods.length) {
+  throw Error('Duplicate methods in the source whitelist');
+}
+const inventorySet = new Set(methods);
+const sourceSet = new Set(sourceMethods);
+const missing = sourceMethods.filter(method => !inventorySet.has(method));
+const extra = methods.filter(method => !sourceSet.has(method));
+if (missing.length || extra.length) {
+  throw Error('Source inventory mismatch\nMissing: ' + missing.join(', ') + '\nExtra: ' + extra.join(', '));
+}
+console.log('PASS: ' + methods.length + ' API methods match the Apps Script source whitelist');

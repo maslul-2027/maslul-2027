@@ -22,6 +22,7 @@
       "soldiers.create",
       "soldiers.update",
       "soldiers.reassign",
+      "soldiers.setActive",
       "soldiers.cancel",
       "soldiers.restore"
     ],
@@ -39,13 +40,15 @@
     "navtypes": [
       "navtypes.list",
       "navtypes.create",
-      "navtypes.rename"
+      "navtypes.rename",
+      "navtypes.setActive"
     ],
     "assignments": [
       "assignments.list",
       "assignments.mine",
       "assignments.create",
-      "assignments.update"
+      "assignments.update",
+      "assignments.setActive"
     ],
     "record": [
       "record.edit",
@@ -64,7 +67,15 @@
     ],
     "fitness": [
       "fitness.types",
+      "fitness.typeCreate",
+      "fitness.typeWeights",
+      "fitness.typeActive",
+      "fitness.typeVariant",
+      "fitness.draftSource",
       "fitness.versions",
+      "fitness.importDraft",
+      "fitness.editRow",
+      "fitness.addTable",
       "fitness.approve",
       "fitness.create",
       "fitness.list",
@@ -80,6 +91,8 @@
     ],
     "exams": [
       "exams.defs",
+      "exams.defCreate",
+      "exams.defPass",
       "exams.attempt",
       "exams.attempts",
       "exams.meetings",
@@ -88,7 +101,8 @@
     "acttypes": [
       "acttypes.list",
       "acttypes.create",
-      "acttypes.rename"
+      "acttypes.rename",
+      "acttypes.setActive"
     ],
     "attendance": [
       "attendance.create",
@@ -104,7 +118,8 @@
     "readiness": [
       "readiness.assess",
       "readiness.list",
-      "readiness.summary"
+      "readiness.summary",
+      "readiness.notEntered"
     ],
     "events": [
       "events.create",
@@ -113,9 +128,13 @@
     "qual": [
       "qual.define",
       "qual.list",
+      "qual.setActive",
       "qual.postpone",
+      "qual.dueHistory",
       "qual.assignments",
       "qual.update",
+      "qual.requestExclusion",
+      "qual.reviewExclusion",
       "qual.summary"
     ],
     "assess": [
@@ -147,6 +166,8 @@
       "alerts.counts"
     ],
     "forms": [
+      "forms.generalLink",
+      "forms.createLink",
       "forms.list",
       "forms.review"
     ],
@@ -154,7 +175,9 @@
       "dash.home",
       "dash.overview",
       "dash.groups",
-      "dash.trends"
+      "dash.compareCourses",
+      "dash.trends",
+      "dash.strengthsGaps"
     ],
     "analytics": [
       "analytics.insights"
@@ -163,6 +186,7 @@
       "reports.build",
       "reports.preview",
       "reports.generate",
+      "reports.fullExport",
       "reports.download",
       "reports.jobs"
     ],
@@ -178,16 +202,24 @@
       "docs.upload",
       "docs.list",
       "docs.download",
+      "docs.requestLink",
+      "docs.reviewLink",
+      "docs.pendingLinks",
+      "docs.attachEvidence",
       "docs.evidence"
     ],
     "ocr": [
       "ocr.start",
-      "ocr.rows"
+      "ocr.rows",
+      "ocr.editRow",
+      "ocr.approveRow",
+      "ocr.rejectRow"
     ],
     "ai": [
       "ai.ask",
       "ai.draft",
-      "ai.drafts"
+      "ai.drafts",
+      "ai.reviewDraft"
     ],
     "backup": [
       "backup.create",
@@ -210,11 +242,13 @@
       "meetings.get",
       "meetings.options",
       "meetings.save",
-      "meetings.integrity"
+      "meetings.integrity",
+      "meetings.auditRepair"
     ],
     "tasks": [
       "tasks.list",
       "tasks.get",
+      "tasks.setStatus",
       "tasks.indicators"
     ],
     "audit": [
