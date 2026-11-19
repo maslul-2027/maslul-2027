@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'maslul-demo-';
-const CACHE = CACHE_PREFIX + 'v5';
+const CACHE = CACHE_PREFIX + 'v6';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './capabilities.json'];
 
 self.addEventListener('install', event => {
@@ -18,15 +18,18 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   if (request.method !== 'GET' || !request.url.startsWith(self.registration.scope)) return;
 
+  const cacheURL = new URL(request.url);
+  if (request.mode === 'navigate') cacheURL.searchParams.delete('refresh');
+
   const cacheWrite = fetch(request, { cache: 'no-cache' }).then(response => {
     if (!response.ok) return { response };
     const copy = response.clone();
-    return { response, stored: caches.open(CACHE).then(cache => cache.put(request, copy)) };
+    return { response, stored: caches.open(CACHE).then(cache => cache.put(cacheURL.href, copy)) };
   });
   event.waitUntil(cacheWrite.then(result => result.stored).catch(() => {}));
   event.respondWith(cacheWrite.then(result => result.response).catch(async () => {
     const cache = await caches.open(CACHE);
-    return (await cache.match(request)) ||
+    return (await cache.match(cacheURL.href)) ||
       (request.mode === 'navigate' && await cache.match('./index.html')) ||
       Response.error();
   }));
