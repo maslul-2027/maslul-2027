@@ -1,0 +1,2963 @@
+{
+ "base": "c9bc782",
+ "actions": 174,
+ "wired_in_ui": 128,
+ "not_wired_in_ui": [
+  "acttypes.rename",
+  "acttypes.setActive",
+  "alerts.counts",
+  "assess.add",
+  "assess.list",
+  "attendance.summary",
+  "backup.prune",
+  "courses.rename",
+  "dash.strengthsGaps",
+  "dash.trends",
+  "docs.attachEvidence",
+  "docs.evidence",
+  "docs.requestLink",
+  "exams.defPass",
+  "exams.summary",
+  "favorites.toggle",
+  "fitness.addTable",
+  "fitness.draftSource",
+  "fitness.editRow",
+  "fitness.recompute",
+  "fitness.summary",
+  "fitness.typeActive",
+  "fitness.typeCreate",
+  "fitness.typeVariant",
+  "fitness.typeWeights",
+  "followups.update",
+  "import.decide",
+  "import.preview",
+  "marches.summary",
+  "migration.run",
+  "mk.summary",
+  "nav.summary",
+  "notes.list",
+  "ocr.editRow",
+  "qual.dueHistory",
+  "qual.postpone",
+  "qual.requestExclusion",
+  "qual.reviewExclusion",
+  "qual.setActive",
+  "qual.summary",
+  "qual.update",
+  "readiness.summary",
+  "reports.download",
+  "snote.add",
+  "snote.cancel",
+  "snote.list"
+ ],
+ "ui_call_sites_changed_vs_base": 0,
+ "rows": [
+  {
+   "action": "acttypes.create",
+   "class": "A",
+   "source": "src/Code.gs:79",
+   "handler": "function (ctx, a) { return ActivityTypes.create(ctx, a.courseId, a.name); },",
+   "ui_calls_base": [
+    "src/Index.html:722 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:753 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "acttypes.list",
+   "class": "N",
+   "source": "src/Code.gs:78",
+   "handler": "function (ctx, a) { return ActivityTypes.list(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:721 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:752 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "acttypes.rename",
+   "class": "A",
+   "source": "src/Code.gs:80",
+   "handler": "function (ctx, a) { return ActivityTypes.rename(ctx, a.id, a.name); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "acttypes.setActive",
+   "class": "A",
+   "source": "src/Code.gs:81",
+   "handler": "function (ctx, a) { return ActivityTypes.setActive(ctx, a.id, a.active); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ai.ask",
+   "class": "O",
+   "source": "src/Code.gs:157",
+   "handler": "function (ctx, a) { return Assistant.ask(ctx, a.courseId, a.question, { include_private: a",
+   "ui_calls_base": [
+    "src/Index.html:769 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:800 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ai.draft",
+   "class": "O",
+   "source": "src/Code.gs:158",
+   "handler": "function (ctx, a) { return Assistant.draft(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [
+    "src/Index.html:770 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:801 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ai.drafts",
+   "class": "O",
+   "source": "src/Code.gs:159",
+   "handler": "function (ctx, a) { return Assistant.drafts(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:771 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:802 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ai.reviewDraft",
+   "class": "A",
+   "source": "src/Code.gs:160",
+   "handler": "function (ctx, a) { return Assistant.reviewDraft(ctx, a.id, a.decision, a.note); },",
+   "ui_calls_base": [
+    "src/Index.html:771 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:802 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "alerts.counts",
+   "class": "G",
+   "source": "src/Code.gs:120",
+   "handler": "function (ctx, a) { return Alerts.counts(ctx, a.courseId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "alerts.handle",
+   "class": "O",
+   "source": "src/Code.gs:119",
+   "handler": "function (ctx, a) { return Alerts.handle(ctx, a.id, a.to, a.note); },",
+   "ui_calls_base": [
+    "src/Index.html:734 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:765 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "alerts.list",
+   "class": "O",
+   "source": "src/Code.gs:118",
+   "handler": "function (ctx, a) { return Alerts.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:663 (run)",
+    "src/Index.html:734 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:694 (run)",
+    "src/Index.html:765 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_pd1",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "alerts.refresh",
+   "class": "A",
+   "source": "src/Code.gs:117",
+   "handler": "function (ctx, a) { return Alerts.refresh(ctx, a.courseId, a.today); },",
+   "ui_calls_base": [
+    "src/Index.html:735 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:766 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "analytics.insights",
+   "class": "G",
+   "source": "src/Code.gs:131",
+   "handler": "function (ctx, a) { return Analytics.insights(ctx, a.courseId, a.f || {}); },   // product",
+   "ui_calls_base": [
+    "src/Index.html:617 (insightsPanel)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:648 (insightsPanel)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assess.add",
+   "class": "P",
+   "source": "src/Code.gs:105",
+   "handler": "function (ctx, a) { return Private.addAssessment(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assess.list",
+   "class": "P",
+   "source": "src/Code.gs:106",
+   "handler": "function (ctx, a) { return Private.listAssessments(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assignments.create",
+   "class": "A",
+   "source": "src/Code.gs:37",
+   "handler": "function (ctx, a) { return Assignments.create(ctx, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:463 (fillTarget)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:494 (fillTarget)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assignments.list",
+   "class": "A",
+   "source": "src/Code.gs:35",
+   "handler": "function (ctx, a) { return Assignments.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:468 (loadAssign)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:499 (loadAssign)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assignments.mine",
+   "class": "N",
+   "source": "src/Code.gs:36",
+   "handler": "function (ctx, a) { return Assignments.mine(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:326 (afterOrg)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:357 (afterOrg)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assignments.setActive",
+   "class": "A",
+   "source": "src/Code.gs:39",
+   "handler": "function (ctx, a) { return Assignments.setActive(ctx, a.id, a.active, a.expected_updated_a",
+   "ui_calls_base": [
+    "src/Index.html:472 (loadAssign)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:503 (loadAssign)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "assignments.update",
+   "class": "A",
+   "source": "src/Code.gs:38",
+   "handler": "function (ctx, a) { return Assignments.update(ctx, a.id, a.patch, a.expected_updated_at, a",
+   "ui_calls_base": [
+    "src/Index.html:479 (fill)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:510 (fill)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "attendance.create",
+   "class": "O",
+   "source": "src/Code.gs:82",
+   "handler": "function (ctx, a) { return Attendance.createEvent(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:592 (rescope)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:623 (rescope)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_uxqa",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "attendance.events",
+   "class": "G",
+   "source": "src/Code.gs:83",
+   "handler": "function (ctx, a) { return Attendance.eventsList(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:723 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:754 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r5_final_closure",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "attendance.roll",
+   "class": "O",
+   "source": "src/Code.gs:84",
+   "handler": "function (ctx, a) { return Attendance.eventRoll(ctx, a.courseId, a.eventId); },",
+   "ui_calls_base": [
+    "src/Index.html:601 (openEventDetail)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:632 (openEventDetail)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r5_final_closure",
+    "ui_uxqa",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "attendance.summary",
+   "class": "G",
+   "source": "src/Code.gs:85",
+   "handler": "function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Attendance.su",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "audit.list",
+   "class": "A",
+   "source": "src/Code.gs:182",
+   "handler": "function (ctx, a) { return Audit.list(ctx, a || {}); }",
+   "ui_calls_base": [
+    "src/Index.html:780 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:811 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.create",
+   "class": "A",
+   "source": "src/Code.gs:161",
+   "handler": "function (ctx, a) { return Backup.create(ctx, a.kind || 'manual'); },",
+   "ui_calls_base": [
+    "src/Index.html:778 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:809 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_staging_smoke",
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.list",
+   "class": "A",
+   "source": "src/Code.gs:162",
+   "handler": "function (ctx, a) { return Backup.list(ctx); },",
+   "ui_calls_base": [
+    "src/Index.html:779 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:810 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_pd1",
+    "ui_staging_smoke",
+    "v1_pentest",
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.plan",
+   "class": "A",
+   "source": "src/Code.gs:164",
+   "handler": "function (ctx, a) { return Backup.plan(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:790 (restorePanel)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:821 (restorePanel)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.prune",
+   "class": "A",
+   "source": "src/Code.gs:169",
+   "handler": "function (ctx, a) { return Backup.prune(ctx, a.keep); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.recover",
+   "class": "A",
+   "source": "src/Code.gs:166",
+   "handler": "function (ctx, a) { return Backup.recover(ctx, a.id, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:786 (recoveryPanel)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:817 (recoveryPanel)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "backup_ui_compat",
+    "v1_pentest",
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.restore",
+   "class": "A",
+   "source": "src/Code.gs:165",
+   "handler": "function (ctx, a) { return Backup.restore(ctx, a.id, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:796 (restorePanel)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:827 (restorePanel)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "run",
+    "ui_pd1",
+    "v1_pentest",
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "backup.verify",
+   "class": "A",
+   "source": "src/Code.gs:163",
+   "handler": "function (ctx, a) { return Backup.verify(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:779 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:810 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_restore_fault"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "correction.list",
+   "class": "O",
+   "source": "src/Code.gs:46",
+   "handler": "function (ctx, a) { return Records.listCorrections(ctx, a.courseId, a.status); },",
+   "ui_calls_base": [
+    "src/Index.html:437 (loadCorr)",
+    "src/Index.html:668 (run)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:468 (loadCorr)",
+    "src/Index.html:699 (run)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers",
+    "stage3",
+    "ui_pd2",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "correction.request",
+   "class": "O",
+   "source": "src/Code.gs:45",
+   "handler": "function (ctx, a) { return Records.requestCorrection(ctx, a.table, a.id, a.changes, a.reas",
+   "ui_calls_base": [
+    "src/Index.html:421 (resultForm)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:452 (resultForm)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "run",
+    "soldiers",
+    "stage3",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "correction.review",
+   "class": "O",
+   "source": "src/Code.gs:47",
+   "handler": "function (ctx, a) { return Records.reviewCorrection(ctx, a.requestId, a.decision, a.note);",
+   "ui_calls_base": [
+    "src/Index.html:444 (dec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:475 (dec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "run",
+    "ui_pd2"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "courses.archive",
+   "class": "A",
+   "source": "src/Code.gs:10",
+   "handler": "function (ctx, a) { return Courses.archive(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:775 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:806 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "courses.create",
+   "class": "A",
+   "source": "src/Code.gs:9",
+   "handler": "function (ctx, a) { return Courses.create(ctx, a); },",
+   "ui_calls_base": [
+    "src/Index.html:774 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:805 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "courses.list",
+   "class": "N",
+   "source": "src/Code.gs:7",
+   "handler": "function (ctx) { return Courses.list(ctx); },",
+   "ui_calls_base": [
+    "src/Index.html:153 (loadCourses)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:184 (loadCourses)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "idempotency",
+    "ui_staging_smoke",
+    "ui_ux_sprint1",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "courses.org",
+   "class": "N",
+   "source": "src/Code.gs:8",
+   "handler": "function (ctx, a) { return Courses.org(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:158 (pickCourse)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:189 (pickCourse)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "courses.rename",
+   "class": "A",
+   "source": "src/Code.gs:12",
+   "handler": "function (ctx, a) { return Courses.rename(ctx, a.courseId, a.kind, a.id, a.name); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "courses.reopen",
+   "class": "A",
+   "source": "src/Code.gs:11",
+   "handler": "function (ctx, a) { return Courses.reopen(ctx, a.courseId, a.reason); },",
+   "ui_calls_base": [
+    "src/Index.html:775 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:806 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "dash.compareCourses",
+   "class": "G",
+   "source": "src/Code.gs:128",
+   "handler": "function (ctx, a) { return Dashboard.compareCourses(ctx, a.courseIds); },",
+   "ui_calls_base": [
+    "src/Index.html:686 (groupOf)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:717 (groupOf)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "dash.groups",
+   "class": "G",
+   "source": "src/Code.gs:127",
+   "handler": "function (ctx, a) { return Dashboard.groups(ctx, a.courseId, a.by, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:691 (groupOf)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:722 (groupOf)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "dash.home",
+   "class": "G",
+   "source": "src/Code.gs:125",
+   "handler": "function (ctx, a) { return Dashboard.home(ctx); },",
+   "ui_calls_base": [
+    "src/Index.html:680 (groupOf)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:711 (groupOf)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "dash.overview",
+   "class": "O",
+   "source": "src/Code.gs:126",
+   "handler": "function (ctx, a) { return Dashboard.overview(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:648 (run)",
+    "src/Index.html:694 (groupOf)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:679 (run)",
+    "src/Index.html:725 (groupOf)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "dash.strengthsGaps",
+   "class": "O",
+   "source": "src/Code.gs:130",
+   "handler": "function (ctx, a) { return Dashboard.strengthsGaps(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "dash.trends",
+   "class": "O",
+   "source": "src/Code.gs:129",
+   "handler": "function (ctx, a) { return Dashboard.trends(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.attachEvidence",
+   "class": "P",
+   "source": "src/Code.gs:150",
+   "handler": "function (ctx, a) { return Documents.attachEvidence(ctx, a.assignmentId, a.documentId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.download",
+   "class": "P",
+   "source": "src/Code.gs:146",
+   "handler": "function (ctx, a) { return Documents.download(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:764 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:795 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.evidence",
+   "class": "P",
+   "source": "src/Code.gs:151",
+   "handler": "function (ctx, a) { return Documents.evidenceFor(ctx, a.assignmentId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.list",
+   "class": "P",
+   "source": "src/Code.gs:145",
+   "handler": "function (ctx, a) { return Documents.list(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [
+    "src/Index.html:764 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:795 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.pendingLinks",
+   "class": "A",
+   "source": "src/Code.gs:149",
+   "handler": "function (ctx, a) { return Documents.pendingLinks(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:765 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:796 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.requestLink",
+   "class": "P",
+   "source": "src/Code.gs:147",
+   "handler": "function (ctx, a) { return Documents.requestLink(ctx, a.id, a.table, a.recordId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.reviewLink",
+   "class": "A",
+   "source": "src/Code.gs:148",
+   "handler": "function (ctx, a) { return Documents.reviewLink(ctx, a.id, a.decision, a.note); },",
+   "ui_calls_base": [
+    "src/Index.html:765 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:796 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "docs.upload",
+   "class": "P",
+   "source": "src/Code.gs:144",
+   "handler": "function (ctx, a) { return Documents.upload(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:763 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:794 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "emergency.get",
+   "class": "P",
+   "source": "src/Code.gs:19",
+   "handler": "function (ctx, a) { return EmergencyContact.get(ctx, a.courseId, a.soldierId); },        /",
+   "ui_calls_base": [
+    "src/Index.html:234 (load)",
+    "src/Index.html:298 (L)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:265 (load)",
+    "src/Index.html:329 (L)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_uxqa",
+    "uxqa_server"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "emergency.orphans",
+   "class": "A",
+   "source": "src/Code.gs:21",
+   "handler": "function (ctx, a) { return EmergencyContact.reconcileOrphans(ctx, a.courseId, a.apply === ",
+   "ui_calls_base": [
+    "src/Index.html:746 (go)",
+    "src/Index.html:747 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:777 (go)",
+    "src/Index.html:778 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "emergency_orphan_ui_contract",
+    "uxqa_server",
+    "v1_forms"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "emergency.set",
+   "class": "P",
+   "source": "src/Code.gs:20",
+   "handler": "function (ctx, a) { return EmergencyContact.set(ctx, a.courseId, a.soldierId, a.contact); ",
+   "ui_calls_base": [
+    "src/Index.html:232 (edit)",
+    "src/Index.html:304 (L)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:263 (edit)",
+    "src/Index.html:335 (L)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "uxqa_server"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "events.create",
+   "class": "O",
+   "source": "src/Code.gs:93",
+   "handler": "function (ctx, a) { return Records.create(ctx, 'SoldierEvents', a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:730 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:761 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "events.list",
+   "class": "O",
+   "source": "src/Code.gs:94",
+   "handler": "function (ctx, a) { return SoldierEvents.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:731 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:762 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.attempt",
+   "class": "O",
+   "source": "src/Code.gs:74",
+   "handler": "function (ctx, a) { return Exams.addAttempt(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:718 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:749 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.attempts",
+   "class": "O",
+   "source": "src/Code.gs:75",
+   "handler": "function (ctx, a) { return Exams.attemptsList(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:719 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:750 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.defCreate",
+   "class": "A",
+   "source": "src/Code.gs:72",
+   "handler": "function (ctx, a) { return Exams.defCreate(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:717 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:748 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.defPass",
+   "class": "A",
+   "source": "src/Code.gs:73",
+   "handler": "function (ctx, a) { return Exams.defSetPass(ctx, a.id, a.pass, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.defs",
+   "class": "N",
+   "source": "src/Code.gs:71",
+   "handler": "function (ctx, a) { return Exams.defsList(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:716 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:747 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.meetings",
+   "class": "O",
+   "source": "src/Code.gs:76",
+   "handler": "function (ctx, a) { return Exams.meetingsList(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:720 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:751 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "exams.summary",
+   "class": "O",
+   "source": "src/Code.gs:77",
+   "handler": "function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Exams.summary",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "d7_authz",
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "favorites.list",
+   "class": "O",
+   "source": "src/Code.gs:113",
+   "handler": "function (ctx, a) { return Private.listFavorites(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:740 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:771 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "favorites.toggle",
+   "class": "O",
+   "source": "src/Code.gs:112",
+   "handler": "function (ctx, a) { return Private.toggleFavorite(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.addTable",
+   "class": "A",
+   "source": "src/Code.gs:60",
+   "handler": "function (ctx, a) { return Fitness.addTable(ctx, a.versionId, a.data); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.approve",
+   "class": "A",
+   "source": "src/Code.gs:61",
+   "handler": "function (ctx, a) { return Fitness.approve(ctx, a.versionId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:819 (refresh)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:850 (refresh)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.completion",
+   "class": "O",
+   "source": "src/Code.gs:65",
+   "handler": "function (ctx, a) { return Fitness.completion(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:661 (run)",
+    "src/Index.html:703 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:692 (run)",
+    "src/Index.html:734 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "b7_gaps",
+    "d7_authz",
+    "ui_b7b8",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.create",
+   "class": "O",
+   "source": "src/Code.gs:62",
+   "handler": "function (ctx, a) { return Records.create(ctx, 'FitnessTests', a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:711 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:742 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.draftSource",
+   "class": "A",
+   "source": "src/Code.gs:56",
+   "handler": "function (ctx, a) { return Fitness.draftSource(ctx); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.editRow",
+   "class": "A",
+   "source": "src/Code.gs:59",
+   "handler": "function (ctx, a) { return Fitness.editRow(ctx, a.versionId, a.rowId, a.patch, a.reason); ",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.importDraft",
+   "class": "A",
+   "source": "src/Code.gs:58",
+   "handler": "function (ctx, a) { return Fitness.importDraft(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:807 (adminFitness)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:838 (adminFitness)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.list",
+   "class": "O",
+   "source": "src/Code.gs:63",
+   "handler": "function (ctx, a) { return Fitness.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:712 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:743 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v105_fitness_governance",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.quality",
+   "class": "A",
+   "source": "src/Code.gs:66",
+   "handler": "function (ctx, a) { return Fitness.dataQuality(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:815 (refresh)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:846 (refresh)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.recompute",
+   "class": "A",
+   "source": "src/Code.gs:67",
+   "handler": "function (ctx, a) { return Fitness.recompute(ctx, a.id, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.summary",
+   "class": "G",
+   "source": "src/Code.gs:64",
+   "handler": "function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Fitness.summa",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.typeActive",
+   "class": "A",
+   "source": "src/Code.gs:54",
+   "handler": "function (ctx, a) { return Fitness.typeSetActive(ctx, a.id, a.active, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.typeCreate",
+   "class": "A",
+   "source": "src/Code.gs:52",
+   "handler": "function (ctx, a) { return Fitness.typeCreate(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.typeVariant",
+   "class": "A",
+   "source": "src/Code.gs:55",
+   "handler": "function (ctx, a) { return Fitness.typeSetVariant(ctx, a.id, a.component, a.variant, a.rea",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance",
+    "v106_pullups"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.typeWeights",
+   "class": "N",
+   "source": "src/Code.gs:53",
+   "handler": "function (ctx, a) { return Fitness.typeSetWeights(ctx, a.id, a.weights, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.types",
+   "class": "N",
+   "source": "src/Code.gs:51",
+   "handler": "function (ctx, a) { return Fitness.typesList(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:710 (go)",
+    "src/Index.html:810 (refresh)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:741 (go)",
+    "src/Index.html:841 (refresh)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v105_fitness_governance",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "fitness.versions",
+   "class": "N",
+   "source": "src/Code.gs:57",
+   "handler": "function (ctx, a) { return Fitness.versionsList(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:808 (adminFitness)",
+    "src/Index.html:810 (refresh)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:839 (adminFitness)",
+    "src/Index.html:841 (refresh)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v105_fitness_governance"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "followups.create",
+   "class": "O",
+   "source": "src/Code.gs:109",
+   "handler": "function (ctx, a) { return Private.createFollowUp(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:738 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:769 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "followups.list",
+   "class": "O",
+   "source": "src/Code.gs:111",
+   "handler": "function (ctx, a) { return Private.listFollowUps(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:739 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:770 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "followups.update",
+   "class": "O",
+   "source": "src/Code.gs:110",
+   "handler": "function (ctx, a) { return Private.updateFollowUp(ctx, a.id, a.patch); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "forms.createLink",
+   "class": "A",
+   "source": "src/Code.gs:122",
+   "handler": "function (ctx, a) { return Forms.createLink(ctx, a.courseId, a.soldierId, a.days); },",
+   "ui_calls_base": [
+    "src/Index.html:741 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:772 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "uxqa_server"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "forms.generalLink",
+   "class": "N",
+   "source": "src/Code.gs:121",
+   "handler": "function (ctx, a) { return Forms.generalLink(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:168 (personalFormBlock)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:199 (personalFormBlock)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "r3_forms_reports",
+    "ui_r3",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "forms.list",
+   "class": "O",
+   "source": "src/Code.gs:123",
+   "handler": "function (ctx, a) { return Forms.list(ctx, a.courseId, a.status); },",
+   "ui_calls_base": [
+    "src/Index.html:667 (run)",
+    "src/Index.html:749 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:698 (run)",
+    "src/Index.html:780 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_pd1",
+    "uxqa_server"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "forms.review",
+   "class": "A",
+   "source": "src/Code.gs:124",
+   "handler": "function (ctx, a) { return Forms.review(ctx, a.id, a.decision, a.note); },",
+   "ui_calls_base": [
+    "src/Index.html:749 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:780 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "uxqa_server"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "import.cancel",
+   "class": "A",
+   "source": "src/Code.gs:142",
+   "handler": "function (ctx, a) { return Import.cancel(ctx, a.id, a.reason); },",
+   "ui_calls_base": [
+    "src/Index.html:762 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:793 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "import.commit",
+   "class": "A",
+   "source": "src/Code.gs:141",
+   "handler": "function (ctx, a) { return Import.commit(ctx, a.id, a.confirm); },",
+   "ui_calls_base": [
+    "src/Index.html:762 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:793 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "import.decide",
+   "class": "A",
+   "source": "src/Code.gs:140",
+   "handler": "function (ctx, a) { return Import.decide(ctx, a.id, a.rowNo, a.decision); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "import.jobs",
+   "class": "A",
+   "source": "src/Code.gs:143",
+   "handler": "function (ctx, a) { return Import.jobs(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:762 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:793 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "import.preview",
+   "class": "A",
+   "source": "src/Code.gs:139",
+   "handler": "function (ctx, a) { return Import.preview(ctx, a.id, a.page); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "import.start",
+   "class": "A",
+   "source": "src/Code.gs:138",
+   "handler": "function (ctx, a) { return Import.start(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:760 (spec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:791 (spec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_staging_smoke"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "marches.create",
+   "class": "O",
+   "source": "src/Code.gs:86",
+   "handler": "function (ctx, a) { return Marches.create(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:725 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:756 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "marches.list",
+   "class": "O",
+   "source": "src/Code.gs:87",
+   "handler": "function (ctx, a) { return Marches.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:726 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:757 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "marches.summary",
+   "class": "G",
+   "source": "src/Code.gs:88",
+   "handler": "function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Marches.summa",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "meetings.auditRepair",
+   "class": "A",
+   "source": "src/Code.gs:181",
+   "handler": "function (ctx, a) { return Meetings.auditRepair(ctx, a.courseId, a.id, a.rev, a.reason); }",
+   "ui_calls_base": [
+    "src/Index.html:901 (checkInteg)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:932 (checkInteg)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "meetings.get",
+   "class": "N",
+   "source": "src/Code.gs:173",
+   "handler": "function (ctx, a) { return Meetings.get(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:887 (meetingsScreen)",
+    "src/Index.html:911 (load)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:918 (meetingsScreen)",
+    "src/Index.html:942 (load)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "meetings.integrity",
+   "class": "N",
+   "source": "src/Code.gs:180",
+   "handler": "function (ctx, a) { return Meetings.integrity(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:895 (checkInteg)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:926 (checkInteg)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "meetings.list",
+   "class": "N",
+   "source": "src/Code.gs:172",
+   "handler": "function (ctx, a) { return Meetings.list(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:907 (load)",
+    "src/Index.html:984 (sel)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:938 (load)",
+    "src/Index.html:1015 (sel)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "meetings.options",
+   "class": "N",
+   "source": "src/Code.gs:174",
+   "handler": "function (ctx, a) { return Meetings.options(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:881 (loadOpts)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:912 (loadOpts)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "meetings.save",
+   "class": "A",
+   "source": "src/Code.gs:175",
+   "handler": "function (ctx, a) { return Meetings.save(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:967 (validate)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:998 (validate)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "migration.run",
+   "class": "A",
+   "source": "src/Code.gs:170",
+   "handler": "function (ctx, a) { return Migration.run(ctx); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "mk.create",
+   "class": "O",
+   "source": "src/Code.gs:68",
+   "handler": "function (ctx, a) { return Records.create(ctx, 'MarksmanshipTests', a.courseId, a.data); }",
+   "ui_calls_base": [
+    "src/Index.html:714 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:745 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "mk.list",
+   "class": "O",
+   "source": "src/Code.gs:69",
+   "handler": "function (ctx, a) { return Marksmanship.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:715 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:746 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "mk.summary",
+   "class": "G",
+   "source": "src/Code.gs:70",
+   "handler": "function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Marksmanship.",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "nav.create",
+   "class": "O",
+   "source": "src/Code.gs:28",
+   "handler": "function (ctx, a) { return Records.create(ctx, 'NavigationTests', a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:377 (buildEntry)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:408 (buildEntry)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers",
+    "stage3",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "nav.groups",
+   "class": "O",
+   "source": "src/Code.gs:30",
+   "handler": "function (ctx, a) { return Navigation.groupSummary(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:381 (loadSnap)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:412 (loadSnap)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "stage3",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "nav.list",
+   "class": "O",
+   "source": "src/Code.gs:29",
+   "handler": "function (ctx, a) { return Navigation.list(ctx, a.courseId, { soldierId: a.soldierId, depa",
+   "ui_calls_base": [
+    "src/Index.html:391 (loadResults)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:422 (loadResults)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers",
+    "stage3",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "nav.summary",
+   "class": "G",
+   "source": "src/Code.gs:40",
+   "handler": "function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Navigation.su",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "soldiers",
+    "stage3",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "navtypes.create",
+   "class": "N",
+   "source": "src/Code.gs:32",
+   "handler": "function (ctx, a) { return Navigation.typeCreate(ctx, a.courseId, a.name); },",
+   "ui_calls_base": [
+    "src/Index.html:451 (buildTypes)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:482 (buildTypes)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "navtypes.list",
+   "class": "N",
+   "source": "src/Code.gs:31",
+   "handler": "function (ctx, a) { return Navigation.typesList(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:326 (afterOrg)",
+    "src/Index.html:447 (buildTypes)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:357 (afterOrg)",
+    "src/Index.html:478 (buildTypes)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "navtypes.rename",
+   "class": "N",
+   "source": "src/Code.gs:33",
+   "handler": "function (ctx, a) { return Navigation.typeRename(ctx, a.id, a.name); },",
+   "ui_calls_base": [
+    "src/Index.html:450 (buildTypes)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:481 (buildTypes)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "navtypes.setActive",
+   "class": "N",
+   "source": "src/Code.gs:34",
+   "handler": "function (ctx, a) { return Navigation.typeSetActive(ctx, a.id, a.active); },",
+   "ui_calls_base": [
+    "src/Index.html:449 (buildTypes)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:480 (buildTypes)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "stage3"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "notes.list",
+   "class": "P",
+   "source": "src/Code.gs:108",
+   "handler": "function (ctx, a) { return Private.listNotes(ctx, a.courseId, a.soldierId, a.all === true)",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "notes.save",
+   "class": "P",
+   "source": "src/Code.gs:107",
+   "handler": "function (ctx, a) { return Private.saveNote(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:737 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:768 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ocr.approveRow",
+   "class": "A",
+   "source": "src/Code.gs:155",
+   "handler": "function (ctx, a) { return Ocr.approveRow(ctx, a.id, a.confirm_uncertain === true); },",
+   "ui_calls_base": [
+    "src/Index.html:822 (showOcr)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:853 (showOcr)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ocr.editRow",
+   "class": "A",
+   "source": "src/Code.gs:154",
+   "handler": "function (ctx, a) { return Ocr.editRow(ctx, a.id, a.data); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ocr.rejectRow",
+   "class": "A",
+   "source": "src/Code.gs:156",
+   "handler": "function (ctx, a) { return Ocr.rejectRow(ctx, a.id, a.note); },",
+   "ui_calls_base": [
+    "src/Index.html:822 (showOcr)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:853 (showOcr)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ocr.rows",
+   "class": "A",
+   "source": "src/Code.gs:153",
+   "handler": "function (ctx, a) { return Ocr.rows(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:822 (showOcr)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:853 (showOcr)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "ocr.start",
+   "class": "A",
+   "source": "src/Code.gs:152",
+   "handler": "function (ctx, a) { return Ocr.start(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:767 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:798 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "preflight.last",
+   "class": "A",
+   "source": "src/Code.gs:168",
+   "handler": "function (ctx, a) { return Preflight.last(ctx); },",
+   "ui_calls_base": [
+    "src/Index.html:801 (show)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:832 (show)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_preflight"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "preflight.run",
+   "class": "A",
+   "source": "src/Code.gs:167",
+   "handler": "function (ctx, a) { return Preflight.run(ctx); },",
+   "ui_calls_base": [
+    "src/Index.html:800 (show)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:831 (show)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_preflight"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.assignments",
+   "class": "O",
+   "source": "src/Code.gs:100",
+   "handler": "function (ctx, a) { return Qualifications.assignments(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:733 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:764 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.define",
+   "class": "A",
+   "source": "src/Code.gs:95",
+   "handler": "function (ctx, a) { return Qualifications.define(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:732 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:763 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.dueHistory",
+   "class": "O",
+   "source": "src/Code.gs:99",
+   "handler": "function (ctx, a) { return Qualifications.dueHistory(ctx, a.id); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.list",
+   "class": "N",
+   "source": "src/Code.gs:96",
+   "handler": "function (ctx, a) { return Qualifications.list(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:733 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:764 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.postpone",
+   "class": "O",
+   "source": "src/Code.gs:98",
+   "handler": "function (ctx, a) { return Qualifications.postpone(ctx, a.id, a.date, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.requestExclusion",
+   "class": "O",
+   "source": "src/Code.gs:102",
+   "handler": "function (ctx, a) { return Qualifications.requestExclusion(ctx, a.id, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.reviewExclusion",
+   "class": "A",
+   "source": "src/Code.gs:103",
+   "handler": "function (ctx, a) { return Qualifications.reviewExclusion(ctx, a.id, a.decision, a.note); ",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.setActive",
+   "class": "A",
+   "source": "src/Code.gs:97",
+   "handler": "function (ctx, a) { return Qualifications.setActive(ctx, a.id, a.active, a.reason); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.summary",
+   "class": "G",
+   "source": "src/Code.gs:104",
+   "handler": "function (ctx, a) { return Qualifications.summary(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "qual.update",
+   "class": "O",
+   "source": "src/Code.gs:101",
+   "handler": "function (ctx, a) { return Qualifications.update(ctx, a.id, a.patch, a.expected_updated_at",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "readiness.assess",
+   "class": "O",
+   "source": "src/Code.gs:89",
+   "handler": "function (ctx, a) { return Readiness.assess(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:728 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:759 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "readiness.list",
+   "class": "O",
+   "source": "src/Code.gs:90",
+   "handler": "function (ctx, a) { return Readiness.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:729 (go)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:760 (go)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "readiness.notEntered",
+   "class": "O",
+   "source": "src/Code.gs:92",
+   "handler": "function (ctx, a) { return Readiness.notEntered(ctx, a.courseId, a.opts || {}); },   // op",
+   "ui_calls_base": [
+    "src/Index.html:659 (run)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:690 (run)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "r5_final_closure",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "readiness.summary",
+   "class": "G",
+   "source": "src/Code.gs:91",
+   "handler": "function (ctx, a) { return Readiness.summary(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "d7_authz",
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "record.cancel",
+   "class": "O",
+   "source": "src/Code.gs:42",
+   "handler": "function (ctx, a) { return Records.cancel(ctx, a.table, a.id, a.reason); },",
+   "ui_calls_base": [
+    "src/Index.html:404 (row)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:435 (row)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "record.edit",
+   "class": "O",
+   "source": "src/Code.gs:41",
+   "handler": "function (ctx, a) { return Records.adminEdit(ctx, a.table, a.id, a.patch, a.reason); },",
+   "ui_calls_base": [
+    "src/Index.html:421 (resultForm)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:452 (resultForm)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "record.history",
+   "class": "O",
+   "source": "src/Code.gs:44",
+   "handler": "function (ctx, a) { return Records.history(ctx, a.table, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:408 (row)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:439 (row)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "soldiers",
+    "stage3",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "record.restore",
+   "class": "O",
+   "source": "src/Code.gs:43",
+   "handler": "function (ctx, a) { return Records.restore(ctx, a.table, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:403 (row)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:434 (row)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "reports.build",
+   "class": "O",
+   "source": "src/Code.gs:132",
+   "handler": "function (ctx, a) { return Reports.build(ctx, a.courseId, a.spec); },",
+   "ui_calls_base": [
+    "src/Index.html:752 (spec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:783 (spec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "reports.download",
+   "class": "O",
+   "source": "src/Code.gs:136",
+   "handler": "function (ctx, a) { return Reports.download(ctx, a.id); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "reports.fullExport",
+   "class": "A",
+   "source": "src/Code.gs:135",
+   "handler": "function (ctx, a) { return Reports.fullExport(ctx, a.courseId, a.include_private === true)",
+   "ui_calls_base": [
+    "src/Index.html:755 (spec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:786 (spec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "reports.generate",
+   "class": "O",
+   "source": "src/Code.gs:134",
+   "handler": "function (ctx, a) { return Reports.generate(ctx, a.courseId, a.spec, a.format); },",
+   "ui_calls_base": [
+    "src/Index.html:631 (spec)",
+    "src/Index.html:753 (spec)",
+    "src/Index.html:754 (spec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:662 (spec)",
+    "src/Index.html:784 (spec)",
+    "src/Index.html:785 (spec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "reports.jobs",
+   "class": "O",
+   "source": "src/Code.gs:137",
+   "handler": "function (ctx, a) { return Reports.jobs(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:756 (spec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:787 (spec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "reports.preview",
+   "class": "G",
+   "source": "src/Code.gs:133",
+   "handler": "function (ctx, a) { return Reports.preview(ctx, a.courseId, a.spec); },",
+   "ui_calls_base": [
+    "src/Index.html:628 (spec)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:659 (spec)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "r5_final_closure",
+    "r5_privacy_subcohort",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "settings.list",
+   "class": "N",
+   "source": "src/Code.gs:49",
+   "handler": "function (ctx, a) { return Settings.list(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:773 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:804 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "settings.set",
+   "class": "A",
+   "source": "src/Code.gs:50",
+   "handler": "function (ctx, a) { return Settings.set(ctx, a.courseId, a.key, a.value, a.effective_from,",
+   "ui_calls_base": [
+    "src/Index.html:773 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:804 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "snote.add",
+   "class": "O",
+   "source": "src/Code.gs:114",
+   "handler": "function (ctx, a) { return SharedNotes.add(ctx, a.table, a.id, a.text, a.mentions); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "snote.cancel",
+   "class": "O",
+   "source": "src/Code.gs:116",
+   "handler": "function (ctx, a) { return SharedNotes.cancel(ctx, a.id); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "snote.list",
+   "class": "O",
+   "source": "src/Code.gs:115",
+   "handler": "function (ctx, a) { return SharedNotes.list(ctx, a.table, a.id); },",
+   "ui_calls_base": [],
+   "ui_calls_now": [],
+   "wired_in_ui": false,
+   "tests_referencing": [
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.cancel",
+   "class": "O",
+   "source": "src/Code.gs:26",
+   "handler": "function (ctx, a) { return Soldiers.cancel(ctx, a.id, a.reason); },",
+   "ui_calls_base": [
+    "src/Index.html:257 (row)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:288 (row)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.card",
+   "class": "O",
+   "source": "src/Code.gs:17",
+   "handler": "function (ctx, a) { return Card.build(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:238 (showCard)",
+    "src/Index.html:844 (wait)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:269 (showCard)",
+    "src/Index.html:875 (wait)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "d7_authz",
+    "soldiers",
+    "stage3",
+    "ui_pd2",
+    "ui_staging_smoke",
+    "uxqa_server",
+    "v1_card",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.create",
+   "class": "O",
+   "source": "src/Code.gs:22",
+   "handler": "function (ctx, a) { return Soldiers.create(ctx, a.courseId, a.data); },",
+   "ui_calls_base": [
+    "src/Index.html:303 (L)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:334 (L)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "idempotency",
+    "soldiers",
+    "ui_ux_sprint1"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.list",
+   "class": "O",
+   "source": "src/Code.gs:16",
+   "handler": "function (ctx, a) { return Soldiers.list(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:200 (load)",
+    "src/Index.html:372 (buildEntry)",
+    "src/Index.html:487 (vsol)",
+    "src/Index.html:660 (run)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:231 (load)",
+    "src/Index.html:403 (buildEntry)",
+    "src/Index.html:518 (vsol)",
+    "src/Index.html:691 (run)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "idempotency",
+    "soldiers",
+    "stage3",
+    "ui_pd1",
+    "ui_pd2",
+    "ui_staging_smoke",
+    "ui_ux_sprint1",
+    "uxqa_server",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.private",
+   "class": "P",
+   "source": "src/Code.gs:18",
+   "handler": "function (ctx, a) { return Private.soldierPrivate(ctx, a.courseId, a.soldierId); },",
+   "ui_calls_base": [
+    "src/Index.html:863 (mkTab)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:894 (mkTab)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "v1_card",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.reassign",
+   "class": "O",
+   "source": "src/Code.gs:24",
+   "handler": "function (ctx, a) { return Soldiers.reassign(ctx, a.id, a.target, a.expected_updated_at, a",
+   "ui_calls_base": [
+    "src/Index.html:317 (showMove)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:348 (showMove)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.restore",
+   "class": "O",
+   "source": "src/Code.gs:27",
+   "handler": "function (ctx, a) { return Soldiers.restore(ctx, a.id, a.reason); },",
+   "ui_calls_base": [
+    "src/Index.html:253 (row)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:284 (row)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.setActive",
+   "class": "O",
+   "source": "src/Code.gs:25",
+   "handler": "function (ctx, a) { return Soldiers.setActive(ctx, a.id, a.active, a.expected_updated_at, ",
+   "ui_calls_base": [
+    "src/Index.html:256 (row)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:287 (row)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "soldiers.update",
+   "class": "O",
+   "source": "src/Code.gs:23",
+   "handler": "function (ctx, a) { return Soldiers.update(ctx, a.id, a.patch, a.expected_updated_at, a.re",
+   "ui_calls_base": [
+    "src/Index.html:302 (L)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:333 (L)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "soldiers"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "tasks.get",
+   "class": "N",
+   "source": "src/Code.gs:177",
+   "handler": "function (ctx, a) { return Meetings.taskGet(ctx, a.id); },",
+   "ui_calls_base": [
+    "src/Index.html:1013 (taskDetail)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:1044 (taskDetail)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "tasks.indicators",
+   "class": "G",
+   "source": "src/Code.gs:179",
+   "handler": "function (ctx, a) { return Meetings.indicators(ctx, a.courseId); },",
+   "ui_calls_base": [
+    "src/Index.html:882 (refreshInd)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:913 (refreshInd)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "tasks.list",
+   "class": "N",
+   "source": "src/Code.gs:176",
+   "handler": "function (ctx, a) { return Meetings.tasks(ctx, a.courseId, a.opts || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:996 (load)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:1027 (load)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings",
+    "ui_pd6_qa",
+    "v1_pentest"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "tasks.setStatus",
+   "class": "N",
+   "source": "src/Code.gs:178",
+   "handler": "function (ctx, a) { return Meetings.setStatus(ctx, a.id, a.status, a.note, a.expected_vers",
+   "ui_calls_base": [
+    "src/Index.html:1025 (taskDetail)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:1056 (taskDetail)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "pd61_qa_fixes",
+    "pd6_meetings_tasks",
+    "ui_pd6_meetings",
+    "ui_pd6_qa"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "users.add",
+   "class": "A",
+   "source": "src/Code.gs:14",
+   "handler": "function (ctx, a) { return Courses.addUser(ctx, a); },",
+   "ui_calls_base": [
+    "src/Index.html:776 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:807 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_staging_smoke"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "users.list",
+   "class": "A",
+   "source": "src/Code.gs:13",
+   "handler": "function (ctx) { return Courses.listUsers(ctx); },",
+   "ui_calls_base": [
+    "src/Index.html:330 (afterOrg)",
+    "src/Index.html:777 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:361 (afterOrg)",
+    "src/Index.html:808 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [
+    "ui_pd1",
+    "ui_staging_smoke"
+   ],
+   "class_authz_test": "d7_authz"
+  },
+  {
+   "action": "users.set",
+   "class": "A",
+   "source": "src/Code.gs:15",
+   "handler": "function (ctx, a) { return Courses.setUser(ctx, a.userId, a.patch || {}); },",
+   "ui_calls_base": [
+    "src/Index.html:777 (mapFix)"
+   ],
+   "ui_calls_now": [
+    "src/Index.html:808 (mapFix)"
+   ],
+   "wired_in_ui": true,
+   "tests_referencing": [],
+   "class_authz_test": "d7_authz"
+  }
+ ]
+}

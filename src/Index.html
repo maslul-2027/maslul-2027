@@ -144,7 +144,7 @@ var IDEM={};function idemKey(method,key){var now=Date.now(),e=IDEM[key];if(e&&no
 function call(method,args){var a=args||{},key,rk=null;var isRead=READ_RE.test(String(method));try{key=isRead?method+'\u0001'+JSON.stringify(a):null;if(!isRead)rk=method+'\u0001'+JSON.stringify(a);}catch(e){key=null;}
   if(key&&NET.live[key])return NET.live[key];
   var send=a;if(!isRead&&rk&&a&&typeof a==='object'&&!Array.isArray(a)){send=Object.assign({},a);send.idem_=idemKey(method,rk);}
-  var p=new Promise(function(res,rej){var okh=function(r){if(rk&&r&&r.ok===false)delete IDEM[rk];else if(rk&&IDEM[rk])IDEM[rk].t=Date.now()-55000;res(r);};google.script.run.withSuccessHandler(okh).withFailureHandler(function(e){rej(e)}).api(method,send);});
+  var p=new Promise(function(res,rej){var okh=function(r){if(rk&&r&&r.ok===false&&r.code!=='BUSY')delete IDEM[rk];else if(rk&&IDEM[rk])IDEM[rk].t=Date.now()-55000;res(r);};google.script.run.withSuccessHandler(okh).withFailureHandler(function(e){rej(e)}).api(method,send);});
   netBusy(1);var fin=function(){if(key&&NET.live[key]===p)delete NET.live[key];netBusy(-1);};if(key)NET.live[key]=p;p.then(fin,fin);return p;}
 var S={ctx:null,courses:[],courseId:null,org:{departments:[],teams:[]},tab:'dash',mine:{course_wide:true,has_assignment:true,department_ids:[],team_ids:[]},types:[],users:[],reqId:null,navF:{departmentId:'',teamId:'',typeId:'',from:'',to:'',includeCancelled:false},filters:{q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false},soldiers:[]};
 var ACTION={SOLDIER_CREATE:'נוצר',SOLDIER_EDIT:'עריכת פרטים',SOLDIER_REASSIGN:'שינוי שיוך',SOLDIER_ACTIVITY:'שינוי סטטוס פעילות',SOLDIER_CANCEL:'ביטול',SOLDIER_RESTORE:'שחזור'};
