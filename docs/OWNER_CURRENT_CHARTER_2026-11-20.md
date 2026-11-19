@@ -25,7 +25,12 @@ Ship **one cohesive, fast, mobile-first, accessible, intuitive Hebrew RTL applic
 - Complete soldier roster and full scoped soldier card including one primary emergency contact where original schema supports it; creation, edit, reassignment, cancellation/restore and history.
 - Marksmanship, fitness/scoring, navigation, theoretical exams, attendance, marches, qualifications/readiness, training events, notes, assessments, records/corrections, tasks, meetings, alerts/followups, favorites/recents.
 - Settings, dashboards, group-only analytics, reports/preview/export with server enforced admin-only full exports, forms, docs/ocr/import, backup/migration/preflight/audit.
-- Every legacy API action in `docs/capability-inventory.json` (140 across 39 namespaces) must be tracked individually, plus older-version routes/UI functionality missing from that whitelist. A method merely listed in source does not count as working.
+- Every currently inventoried legacy API action in `docs/capability-inventory.json` (174 across 39 namespaces) must be tracked individually, plus older-version routes/UI functionality missing from that whitelist. A method merely listed in source does not count as working.
+
+## Reconciled repository progress (verified current main)
+- `docs/capability-inventory.json` on `main` now declares **174 actions / 39 groups**, not 140; PR #16 discovered and restored 34 omitted routes. Any handoff or test asserting 140 is obsolete and must be corrected.
+- PR #23–#31 show a rapidly evolving synthetic course engine, original UI integration, unified shell, design migration, home restoration, roster and deployment fixes. **Check their open/merged state and code/CI before making further changes**; do not overwrite active contributions or assume PR numbers imply merge.
+- `main/preview/index.html` may still differ from active PR branches. Product owner judges the actually deployed mobile result, not isolated PR screenshots.
 
 ## UX execution requirements
 - App shell with 4 high-level mobile navigation choices; context-aware commands, recent/favorite/search, progressive disclosure of domains. Avoid lengthy tab strips, duplicate headers or nesting one app frame in another.
