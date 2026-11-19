@@ -1,6 +1,6 @@
 ## UX sprint 1 (issue #2; source only, NOT deployed)
-- `src/Index.html`: live course/screen context line in the sticky header; top progress bar + `aria-busy` during server calls; in-flight de-duplication of identical READ calls only (writes are never merged); offline banner; global reduced-motion; <=400px hardening. No data-contract, permission or privacy change.
-- Tests: new `tests/ui_ux_sprint1.js` (7 browser tests; 5 fail on the old Index.html). Pins updated: `tests/src_manifest_dev62.txt`, `EXP_SUITES` 60.
+- `src/Index.html`: live course/screen context line in the sticky header; top progress bar + `aria-busy` during server calls; in-flight de-duplication of identical READ calls only (writes are never merged); offline banner; mobile bottom navigation (<=900px); global reduced-motion; <=400px hardening. No data-contract, permission or privacy change.
+- Tests: new `tests/ui_ux_sprint1.js` (8 browser tests; 5 fail on the old Index.html). Pins updated: `tests/src_manifest_dev62.txt`, `EXP_SUITES` 60.
 - Docs: `docs/UX_SPRINT1.md`, `docs/DEPLOY_AND_ROLLBACK.md` (runbook, not executed), before/after screenshots in `docs/ux-sprint1/`.
 
 ## R5.2.16.4.4 FINAL TEST CANDIDATE (2026-11-19; source + tests changed — closes the D2 rounds)

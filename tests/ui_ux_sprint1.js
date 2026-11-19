@@ -51,6 +51,14 @@ async function t(name, fn) { try { await fn(); pass++; console.log('PASS', name)
     await t('UX5 prefers-reduced-motion removes animations and transitions everywhere', async () => {
       const p = await open({ width: 390, height: 800 }, { reducedMotion: 'reduce' }); const d = await p.evaluate(() => ['side', 'netbar'].map(id => parseFloat(getComputedStyle(document.getElementById(id)).transitionDuration))); d.forEach(x => assert.ok(x < 0.01, 'transition ' + x));
     });
+    await t('UX7 mobile bottom navigation: <=900px shows up to 4 area buttons + "more", switching area works, current is marked, targets >= 44px, hidden on desktop', async () => {
+      const p = await open({ width: 390, height: 800 }); await p.waitForSelector('#bnav:not([hidden]) button');
+      const n = await p.$$eval('#bnav button', b => b.map(x => [x.textContent, Math.round(x.getBoundingClientRect().height), x.getAttribute('aria-current')])); assert.ok(n.length >= 2 && n.length <= 5, 'buttons: ' + n.length); n.forEach(x => assert.ok(x[1] >= 44, 'target ' + x[0] + ' ' + x[1]));
+      assert.strictEqual(n.filter(x => x[2] === 'true').length, 1, 'exactly one current'); const before = await p.textContent('#ctx'); const other = (await p.$$('#bnav button:not([aria-current])'))[0]; await other.click();
+      await p.waitForFunction(b => document.getElementById('ctx').textContent !== b, before); assert.strictEqual(await p.$$eval('#bnav button[aria-current=true]', x => x.length), 1);
+      assert.ok(await p.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 1), 'no horizontal overflow');
+      await p.setViewportSize({ width: 1280, height: 800 }); assert.ok(!(await p.isVisible('#bnav')), 'hidden on desktop');
+    });
     for (const w of [360, 390]) {
       await t('UX6 ' + w + 'px: no horizontal overflow on the course screens; touch targets >= 44px; focus ring visible', async () => {
         const p = await open({ width: w, height: 800 }); for (const tab of ['dash', 'soldiers', 'nav']) { try { await goTab(p, tab); } catch (e) { continue; } await p.waitForTimeout(500);

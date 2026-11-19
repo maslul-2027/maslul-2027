@@ -11,13 +11,14 @@ Hebrew RTL and the white/black/red/turquoise design are unchanged.
 | Duplicate reads | `call()` shares one in-flight promise only for identical **read-only** routes (list/get/summary…). Writes are never merged or suppressed (issue #7); double-submit protection stays with the existing button locks. No cache, so no stale data. |
 | Connectivity | An offline banner appears when the browser goes offline and disappears when it returns. |
 | Accessibility | Global `prefers-reduced-motion` rule (all animation/transition near-zero, drawer transition off); existing focus rings and 44px touch targets verified at 360/390. |
+| Mobile navigation (issue #7 step 1) | Persistent bottom bar at <=900px: up to 4 area buttons (the current area is always included) + "עוד ☰" which opens the existing drawer. It only clicks the existing area buttons, so permissions/visibility rules are unchanged. Hidden on desktop and while the drawer is open. |
 | Small phones | A `max-width:400px` block: tighter header/padding, 2-column KPI grid, media and long text cannot overflow. |
 
 ## Evidence (synthetic data only)
 - Screenshots: `docs/ux-sprint1/before-*.png` vs `after-*.png` at 360 and 390 px (`node scripts/ux_screenshots.js <index.html> <label>`).
-- New suite `tests/ui_ux_sprint1.js` (7 browser tests). Run against the old `Index.html` (`UX_INDEX=<path>`) it fails 5 of 7 (the new behaviours); on the new file 7/7 pass.
+- New suite `tests/ui_ux_sprint1.js` (8 browser tests). Run against the old `Index.html` (`UX_INDEX=<path>`) it fails 5 of 7 (the new behaviours); on the new file 7/7 pass.
 - Adjusted pins: `tests/src_manifest_dev62.txt` (Index.html hash), `EXP_SUITES` 59 -> 60 in `scripts/clean_machine_verify.*`.
-- Full `node tests/run_all.js --ui --strict` is re-run in CI (Node 22).
+- Full `node tests/run_all.js --ui --strict` passed locally (60/60 suites) and in CI on this branch.
 
 ## Not done / honest limits
 - Not deployed anywhere. The change is **source only** until the TEST deployment is verified (see `docs/DEPLOY_AND_ROLLBACK.md`). No claim is made that the TEST `/exec` URL shows it.
