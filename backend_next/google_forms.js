@@ -49,7 +49,39 @@ function createProvider(request) {
     return { formId, questionIds };
   }
 
-  return { create, configure };
+  async function listResponses({ formId, questionIds }, pageToken) {
+    const ids = FORM_FIELDS.map(field => questionIds?.[field.id]);
+    if (!formId || ids.some(id => typeof id !== 'string' || !id) || new Set(ids).size !== ids.length) {
+      throw new Error('Google Form response mapping is incomplete');
+    }
+    const url = new URL(API_ROOT + '/' + encodeURIComponent(formId) + '/responses');
+    if (pageToken) url.searchParams.set('pageToken', pageToken);
+    const page = await request({ url: url.href, method: 'GET' });
+    const responses = [];
+    const invalid = [];
+
+    for (const response of page.responses || []) {
+      const payload = {};
+      const invalidFields = [];
+      for (const field of FORM_FIELDS) {
+        const answers = response.answers?.[questionIds[field.id]]?.textAnswers?.answers;
+        const value = answers?.[0]?.value;
+        if (answers?.length === 1 && typeof value === 'string' && value.trim()) {
+          payload[field.id] = value.trim();
+        } else if (field.required || (answers?.length && (answers.length !== 1 || typeof value !== 'string'))) {
+          invalidFields.push(field.id);
+        }
+      }
+      if (!response.responseId || invalidFields.length) {
+        invalid.push({ responseId: response.responseId || null, fields: invalidFields });
+        continue;
+      }
+      responses.push({ formId, responseId: response.responseId, payload });
+    }
+    return { responses, invalid, nextPageToken: page.nextPageToken || null };
+  }
+
+  return { create, configure, listResponses };
 }
 
 module.exports = { createProvider };
