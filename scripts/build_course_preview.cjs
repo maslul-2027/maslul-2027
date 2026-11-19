@@ -82,7 +82,7 @@ assert.ok(original.includes('<body>'));
 const html = original.replace('</head>', '<link rel="stylesheet" href="./design.css"><link rel="stylesheet" href="./course-design.css"></head>').replace('<body>', `<body>
 <script src="./course-engine.js"></script>
 <div data-course-banner dir="rtl">
-  קורס סינתטי · השינויים נשמרים עד לרענון הדף. <a href="./">חזרה לדמו</a>
+  קורס סינתטי · השינויים נשמרים עד לרענון הדף.
   <details><summary>בדיקת פעולות מערכת</summary>
     <form id="course-actions">
       <label>פעולה <select name="method" dir="ltr"></select></label>
@@ -93,18 +93,6 @@ const html = original.replace('</head>', '<link rel="stylesheet" href="./design.
   </details>
 </div>
 <script>
-if (window.parent !== window && new URLSearchParams(location.search).has('embedded')) {
-  document.querySelector('[data-course-banner] a').hidden = true;
-  window.addEventListener('message', event => {
-    if (event.origin !== location.origin || event.source !== window.parent) return;
-    const tab = event.data?.courseTab;
-    if (!['dash', 'soldiers', 'attendance', 'tasks'].includes(tab)) return;
-    if (typeof S !== 'undefined') {
-      S.tab = tab;
-      if (S.courseId && S.org) showTab(tab);
-    }
-  });
-}
 const actionForm = document.getElementById('course-actions');
 const params = actionForm.elements;
 const output = document.getElementById('course-action-result');
@@ -121,5 +109,48 @@ actionForm.addEventListener('submit', event => {
 });
 </script>`);
 fs.writeFileSync('preview/course-engine.js', engine);
-fs.writeFileSync('preview/course.html', html);
+const unified = html.replace('<base target="_top">', '<link rel="manifest" href="./manifest.webmanifest">')
+  .replace('<main>', '<main id="workspace" tabindex="-1">')
+  .replace('<body>', '<body class="unified"><a class="skip-workspace" href="#workspace">דילוג לתוכן</a>')
+  .replace(/<div class="notice" id="stageNotice">[^<]*<\/div>/, '<p id="stageNotice" class="notice">קורס לדוגמה · נתונים סינתטיים בלבד</p>')
+  .replace('</body>', `<nav class="quick-nav" aria-label="מסכי עבודה">
+    <button type="button" data-screen="dash" aria-current="page">בית</button>
+    <button type="button" data-screen="soldiers">חניכים</button>
+    <button type="button" data-screen="attendance">דיווח</button>
+    <button type="button" data-screen="tasks">מעקבים</button>
+    <button type="button" id="all-screens">כל המסכים</button>
+  </nav>
+  <script>
+  const quickNav = document.querySelector('.quick-nav');
+  const originalShowTab = showTab;
+  showTab = function (screen) {
+    const result = originalShowTab(screen);
+    for (const item of quickNav.querySelectorAll('[data-screen]')) {
+      if (item.dataset.screen === screen) item.setAttribute('aria-current', 'page');
+      else item.removeAttribute('aria-current');
+    }
+    return result;
+  };
+  quickNav.addEventListener('click', event => {
+    const screen = event.target.dataset.screen;
+    if (screen && S.courseId) {
+      showTab(screen);
+      const workspace = document.getElementById('workspace');
+      workspace.focus({ preventScroll: true });
+      workspace.scrollIntoView({ block: 'start' });
+    }
+  });
+  document.getElementById('all-screens').addEventListener('click', () => {
+    const menu = document.getElementById('menuBtn');
+    if (menu.getClientRects().length && menu.getAttribute('aria-expanded') !== 'true') menu.click();
+    const firstScreen = document.querySelector('#grps button');
+    if (firstScreen) firstScreen.focus();
+  });
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).catch(() => {});
+  }
+  </script></body>`);
+assert.ok(unified.includes('class="quick-nav"') && !unified.includes('<iframe'));
+fs.writeFileSync('preview/course.html', unified);
+fs.writeFileSync('preview/index.html', unified);
 console.log(`PASS: ${methods.length} actions match inventory; synthetic course read and write verified`);
