@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מסלול 2027 · בדיקת פעולות</title>
+<style>
+body { font: 1rem system-ui, sans-serif; margin: 2rem auto; padding: 0 1rem; max-width: 48rem; }
+label, select, textarea, button { display: block; margin-block: .7rem; }
+select, textarea, button { font: inherit; }
+textarea, pre { direction: ltr; width: 100%; box-sizing: border-box; }
+pre { background: #f3f5f6; padding: 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+<a href="/">חזרה לקורס</a>
+<h1>בדיקת פעולות</h1>
+<p>סביבת בדיקה מקומית עם נתונים סינתטיים. פעולות שדורשות שירות חיצוני עשויות להחזיר שגיאה.</p>
+<form id="action">
+  <label for="method">פעולה</label>
+  <select id="method" dir="ltr">
+    <option value="">בחרו פעולה</option>
+    __ROUTE_OPTIONS__
+  </select>
+  <label for="args">פרמטרים (JSON)</label>
+  <textarea id="args" rows="6">{}</textarea>
+  <button id="submit">הפעלת פעולה</button>
+</form>
+<pre id="output" aria-live="polite"></pre>
+<script>
+const form = document.getElementById('action');
+const method = document.getElementById('method');
+const args = document.getElementById('args');
+const submit = document.getElementById('submit');
+const output = document.getElementById('output');
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!method.value) {
+    output.textContent = 'בחרו פעולה';
+    return;
+  }
+  submit.disabled = true;
+  try {
+    const payload = JSON.parse(args.value);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      throw new Error('הפרמטרים חייבים להיות אובייקט JSON');
+    }
+    const response = await fetch('/rpc', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'api', args: [method.value, payload] }),
+    });
+    if (!response.ok) throw new Error('שגיאת HTTP ' + response.status);
+    output.textContent = JSON.stringify(await response.json(), null, 2);
+  } catch (error) {
+    output.textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
+});
+</script>
+</html>

@@ -42,8 +42,11 @@ window.google = {script: {get run() {
   }
   return runner;
 }}};
-</script><p dir="rtl" role="status">תצוגה מקומית עם נתונים סינתטיים. השינויים נשמרים עד לסגירת התהליך.</p>`;
+</script><p dir="rtl" role="status">תצוגה מקומית עם נתונים סינתטיים. השינויים נשמרים עד לסגירת התהליך. <a href="/actions">מפת הפעולות</a></p>`;
 const original = fs.readFileSync(path.join(__dirname, '../src/Index.html'), 'utf8');
+const routes = Object.keys(app.API_).sort();
+const actions = fs.readFileSync(path.join(__dirname, 'local_course_actions.html'), 'utf8')
+  .replace('__ROUTE_OPTIONS__', routes.map(route => '<option>' + route + '</option>').join(''));
 const html = original.replace(/<body[^>]*>/i, match => match + bridge);
 
 http.createServer(async (req, res) => {
@@ -51,6 +54,9 @@ http.createServer(async (req, res) => {
   if (req.headers.host !== host + ':' + port) return res.writeHead(403).end();
   if (req.method === 'GET' && req.url === '/') {
     return res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(html);
+  }
+  if (req.method === 'GET' && req.url === '/actions') {
+    return res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(actions);
   }
   if (req.method !== 'POST' || req.url !== '/rpc') return res.writeHead(404).end();
   if (req.headers.origin !== origin) return res.writeHead(403).end();
