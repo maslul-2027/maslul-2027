@@ -802,7 +802,19 @@ var SCREENS=[
    var D=listBlock('טיוטות','ai.drafts',{courseId:S.courseId},null,[['created_at','זמן'],['soldier_name','חייל'],['status','סטטוס'],['id','החלטה',function(r){return isAdmin()&&r.status==='draft'?el('button',{text:'אשר',onclick:function(){vcall('ai.reviewDraft',{id:r.id,decision:'approve'},null,function(){D.refresh();});}}):'—';}]]);v.appendChild(D);}},
  {id:'settings',label:'הגדרות וספים',admin:1,render:function(v){v.appendChild(el('div',{class:'notice',text:'ספים מקצועיים שלא הוגדרו = הכלל כבוי (לא נוצר ערך ברירת מחדל). שינוי נרשם עם נימוק והיסטוריה.'}));
    var L=listBlock('הגדרות','settings.list',{courseId:S.courseId},null,[['label','הגדרה'],['value','ערך',function(r){return r.is_set?r.value:'לא הוגדר (כבוי)';}],['key','עריכה',function(r){return el('button',{class:'sec',text:'עדכן',onclick:function(){var b=this.parentNode;b.innerHTML='';var i=el('input',{placeholder:'ערך חדש'}),why=el('input',{placeholder:'נימוק'}),m=el('div',{class:'msg'});b.appendChild(i);b.appendChild(why);b.appendChild(el('button',{text:'שמור',onclick:function(){vcall('settings.set',{courseId:S.courseId,key:r.key,value:i.value,reason:why.value},m,function(){L.refresh();});}}));b.appendChild(m);}});}]]);v.appendChild(L);}},
- {id:'courses',label:'קורסים ומשתמשים',admin:1,render:function(v){v.appendChild(vform('קורס חדש',[{n:'name',l:'שם',req:1},{n:'start_date',l:'תאריך פתיחה',t:'date',req:1}],function(x,m){return vcall('courses.create',{name:x.name,start_date:x.start_date},m,saved(m,function(){loadCourses();}));},{readonly:1}));
+ {id:'courses',label:'קורסים ומשתמשים',admin:1,render:function(v){
+   var sources=[['new','מבנה ברירת מחדל']].concat(S.courses.map(function(c){
+     return [c.id,c.name+(c.status==='archived'?' (ארכיון)':'')];
+   }));
+   v.appendChild(vform('קורס חדש',[
+     {n:'name',l:'שם',req:1},
+     {n:'start_date',l:'תאריך פתיחה',t:'date',req:1},
+     {n:'clone_from',l:'מקור למבנה ולהגדרות',t:'select',req:1,d:'new',o:sources}
+   ],function(x,m){
+     var data={name:x.name,start_date:x.start_date};
+     if(x.clone_from!=='new')data.clone_from=x.clone_from;
+     return vcall('courses.create',data,m,saved(m,function(){loadCourses();}));
+   },{readonly:1}));
    v.appendChild(el('section',{class:'card'},[el('h3',{text:'קורס נוכחי: '+(course().name||'')}),el('div',{class:'bar'},[el('button',{class:'danger',disabled:archived(),text:'העבר לארכיון',onclick:function(){if(confirm('להעביר לארכיון? הקורס יינעל לכתיבה.'))vcall('courses.archive',{courseId:S.courseId},null,function(){loadCourses();});}}),el('button',{class:'sec',disabled:!archived(),text:'פתיחה מחדש',onclick:function(){reasonInline(this.parentNode,'סיבה לפתיחה מחדש',true,function(n){return call('courses.reopen',{courseId:S.courseId,reason:n}).then(function(x){if(x.ok)loadCourses();return x;});});}})])]));
    var orgCourseId=S.courseId, orgUnits=[];
    function orgUnitLabel(entry){return entry.department?'צוות · '+entry.department.name+' · '+entry.unit.name:'מחלקה · '+entry.unit.name;}
