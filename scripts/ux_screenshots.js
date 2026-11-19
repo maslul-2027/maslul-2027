@@ -1,0 +1,11 @@
+// Before/after screenshots for UX sprint 1 on synthetic data. Usage: node scripts/ux_screenshots.js <index.html> <label>
+const http=require('http'),fs=require('fs'),path=require('path');const {load}=require('../tests/harness');const {goTab}=require('../tests/uihelp');const {chromium}=require('playwright');
+const X=load();const admin={email:'admin@x.com',role:'admin',courseScope:'*'};const c1=X.Courses.create(admin,{name:'קורס לדוגמה',start_date:'2099-01-01'}).id;X.Courses.addUser(admin,{email:'admin@x.com',role:'admin',display_name:'מנהל'});
+const org=X.Courses.org(admin,c1);['דנה לוי','אבי כהן','רות מזרחי'].forEach((n,i)=>X.Soldiers.create(admin,c1,{full_name:n,personal_number:'90'+i,gender:'M',department_id:org.departments[0].id,team_id:org.teams[0].id}));
+const html=fs.readFileSync(process.argv[2],'utf8'),label=process.argv[3];
+const shim=`<script>(function(){function mk(){var ok,bad;var o={withSuccessHandler:function(f){ok=f;return o;},withFailureHandler:function(f){bad=f;return o;}};['api','whoAmI'].forEach(function(m){o[m]=function(a,b){fetch('/rpc',{method:'POST',body:JSON.stringify({m:m,a:a,b:b})}).then(function(r){return r.json()}).then(function(j){ok&&ok(j)},function(e){bad&&bad(e)});};});return o;}window.google={script:{get run(){return mk();}}};})();</script>`;
+const srv=http.createServer((q,r)=>{if(q.method==='POST'){let b='';q.on('data',d=>b+=d);q.on('end',()=>{const p=JSON.parse(b);X.Auth._emailProvider=()=>'admin@x.com';r.setHeader('content-type','application/json');r.end(JSON.stringify(p.m==='api'?X.api(p.a,p.b):X.whoAmI()));});}else{r.setHeader('content-type','text/html; charset=utf-8');r.end(html.replace('<head>','<head>'+shim));}});
+(async()=>{await new Promise(r=>srv.listen(0,r));const u='http://127.0.0.1:'+srv.address().port,br=await chromium.launch();
+for(const w of [360,390]){const pg=await (await br.newContext({viewport:{width:w,height:780}})).newPage();await pg.goto(u);await pg.waitForSelector('#course option',{state:'attached'});await pg.waitForTimeout(700);
+await pg.screenshot({path:`docs/ux-sprint1/${label}-${w}-home.png`});await goTab(pg,'soldiers');await pg.waitForTimeout(800);await pg.screenshot({path:`docs/ux-sprint1/${label}-${w}-soldiers.png`});}
+await br.close();srv.close();})();

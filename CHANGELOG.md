@@ -1,3 +1,8 @@
+## UX sprint 1 (issue #2; source only, NOT deployed)
+- `src/Index.html`: live course/screen context line in the sticky header; top progress bar + `aria-busy` during server calls; in-flight de-duplication of identical calls (double tap = one request); offline banner; global reduced-motion; <=400px hardening. No data-contract, permission or privacy change.
+- Tests: new `tests/ui_ux_sprint1.js` (7 browser tests; 5 fail on the old Index.html). Pins updated: `tests/src_manifest_dev62.txt`, `EXP_SUITES` 60.
+- Docs: `docs/UX_SPRINT1.md`, `docs/DEPLOY_AND_ROLLBACK.md` (runbook, not executed), before/after screenshots in `docs/ux-sprint1/`.
+
 ## R5.2.16.4.4 FINAL TEST CANDIDATE (2026-11-19; source + tests changed — closes the D2 rounds)
 Owner decision D2 (MIN_GROUP = 5, distinct soldiers, sub-cohorts) applied to the REMAINING aggregate paths found by a cross-cutting audit of every API route. No new product rule, no scoring / permission / schema / OAuth / manifest change.
 - `src/Readiness.gs`: `readiness.summary` is now a GROUP route only (cohort-gated counts, NO per-soldier element). New explicit operational route `readiness.notEntered` (ids only, same `result.read` scope) feeds the dashboard action queue. `src/Code.gs` registers it; `src/Index.html` calls it.
