@@ -8,5 +8,13 @@
   "background_color": "#f6f8f9",
   "theme_color": "#ffffff",
   "lang": "he",
-  "dir": "rtl"
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
