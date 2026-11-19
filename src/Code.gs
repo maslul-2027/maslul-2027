@@ -199,7 +199,18 @@ function api(method, args) {
     const fn = Object.prototype.hasOwnProperty.call(API_, method) ? API_[method] : null;
     if (!fn) throw new AppError('NOT_FOUND', 'פעולה לא מוכרת.');
     const ctx = Auth.context();
-    return { ok: true, data: fn(ctx, args || {}) };
+    // Durable double-submit protection (issue #9 review): a WRITE that carries a client idempotency key (idem_) is executed at most once per
+    // (user, route, key) within the cache window; a retry with the same key (second tap, lost response) gets the ORIGINAL result. Reads and keyless calls are unchanged.
+    let a = args || {}, cacheKey = null, cache = null;
+    if (Object.prototype.hasOwnProperty.call(a, 'idem_')) {
+      const k = a.idem_; a = Object.assign({}, a); delete a.idem_;
+      if (typeof k === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(k) && !/\.(list|get|mine|summary|overview|home|counts|events|org|insights|trends|strengthsGaps|notEntered)$/.test(method) && typeof CacheService !== 'undefined') {
+        try { cache = CacheService.getScriptCache(); cacheKey = 'idem:' + String(ctx.email || '').toLowerCase() + ':' + method + ':' + k; const hit = cache.get(cacheKey); if (hit) return JSON.parse(hit); } catch (e2) { cache = null; cacheKey = null; }
+      }
+    }
+    const out = { ok: true, data: fn(ctx, a) };
+    if (cache && cacheKey) { try { const j = JSON.stringify(out); if (j.length < 90000) cache.put(cacheKey, j, 300); } catch (e3) { /* best effort */ } }
+    return out;
   } catch (e) {
     if (e instanceof AppError || (e && e.name === 'AppError')) return { ok: false, code: e.code, message: e.message };
     console.error(e && e.stack ? e.stack : String(e));            // details to server log only

@@ -140,9 +140,11 @@ body.nav-open{overflow:hidden}
 var NET={n:0,live:{}};
 function netBusy(d){NET.n=Math.max(0,NET.n+d);if(document.body)document.body.setAttribute('aria-busy',NET.n>0?'true':'false');}
 var READ_RE=/\.(list|get|mine|summary|overview|home|counts|events|org|insights|trends|strengthsGaps|notEntered)$/;
-function call(method,args){var a=args||{},key;try{key=READ_RE.test(String(method))?method+'\u0001'+JSON.stringify(a):null;}catch(e){key=null;}
+var IDEM={};function idemKey(method,key){var now=Date.now(),e=IDEM[key];if(e&&now-e.t<60000)return e.k;var k='i'+now.toString(36)+Math.random().toString(36).slice(2,12);IDEM[key]={k:k,t:now};return k;}
+function call(method,args){var a=args||{},key,rk=null;var isRead=READ_RE.test(String(method));try{key=isRead?method+'\u0001'+JSON.stringify(a):null;if(!isRead)rk=method+'\u0001'+JSON.stringify(a);}catch(e){key=null;}
   if(key&&NET.live[key])return NET.live[key];
-  var p=new Promise(function(res,rej){google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e)}).api(method,a);});
+  var send=a;if(!isRead&&rk&&a&&typeof a==='object'&&!Array.isArray(a)){send=Object.assign({},a);send.idem_=idemKey(method,rk);}
+  var p=new Promise(function(res,rej){var okh=function(r){if(rk&&r&&r.ok===false)delete IDEM[rk];else if(rk&&IDEM[rk])IDEM[rk].t=Date.now()-55000;res(r);};google.script.run.withSuccessHandler(okh).withFailureHandler(function(e){rej(e)}).api(method,send);});
   netBusy(1);var fin=function(){if(key&&NET.live[key]===p)delete NET.live[key];netBusy(-1);};if(key)NET.live[key]=p;p.then(fin,fin);return p;}
 var S={ctx:null,courses:[],courseId:null,org:{departments:[],teams:[]},tab:'dash',mine:{course_wide:true,has_assignment:true,department_ids:[],team_ids:[]},types:[],users:[],reqId:null,navF:{departmentId:'',teamId:'',typeId:'',from:'',to:'',includeCancelled:false},filters:{q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false},soldiers:[]};
 var ACTION={SOLDIER_CREATE:'נוצר',SOLDIER_EDIT:'עריכת פרטים',SOLDIER_REASSIGN:'שינוי שיוך',SOLDIER_ACTIVITY:'שינוי סטטוס פעילות',SOLDIER_CANCEL:'ביטול',SOLDIER_RESTORE:'שחזור'};

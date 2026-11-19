@@ -35,8 +35,9 @@ async function t(name, fn) { try { await fn(); pass++; console.log('PASS', name)
       await p.evaluate(cid => Promise.all([call('soldiers.list', { courseId: cid, opts: {} }), call('soldiers.list', { courseId: cid, opts: {} }), call('soldiers.list', { courseId: cid, opts: {} })]), c1); assert.strictEqual(n, 1, 'three identical reads -> one request');
       await p.evaluate(cid => call('soldiers.list', { courseId: cid, opts: {} }), c1); assert.strictEqual(n, 2, 'a later call is a NEW request (no stale cache)');
       let w = 0; await p.unroute('**/rpc'); await p.route('**/rpc', async r => { const b = JSON.parse(r.request().postData() || '{}'); if (b.m === 'api' && b.a === 'soldiers.create') w++; await new Promise(z => setTimeout(z, 100)); r.continue(); });
+      const seen = []; await p.unroute('**/rpc'); await p.route('**/rpc', async r => { const b = JSON.parse(r.request().postData() || '{}'); if (b.m === 'api' && b.a === 'soldiers.create') { w++; if (b.b && b.b.idem_) seen.push(b.b.idem_); } await new Promise(z => setTimeout(z, 100)); r.continue(); });
       const wa = { courseId: c1, data: { full_name: '' } }; await p.evaluate(a => Promise.all([call('soldiers.create', a), call('soldiers.create', a)]), wa); assert.strictEqual(w, 2, 'WRITES are never merged (non-idempotent): two calls -> two requests');
-      await p.evaluate(a => call('soldiers.create', a), wa); assert.strictEqual(w, 3, 'a write after the previous one settled is sent again');
+      await p.evaluate(a => call('soldiers.create', a), wa); assert.strictEqual(w, 3, 'a write after the previous one settled is sent again'); assert.ok(seen.length >= 1 && seen.every(k => /^[A-Za-z0-9_-]{8,64}$/.test(k)), 'writes carry an idempotency key'); assert.strictEqual(seen[0], seen[1], 'identical writes (double tap) reuse ONE key so the server executes once');
     });
     await t('UX3 immediate loading feedback: progress bar + aria-busy while a call is pending, cleared after (also after a failure)', async () => {
       const p = await open(); await p.route('**/rpc', async r => { await new Promise(z => setTimeout(z, 400)); r.continue(); });
