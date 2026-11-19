@@ -25,3 +25,8 @@ Hebrew RTL and the white/black/red/turquoise design are unchanged.
 - Not deployed anywhere. The change is **source only** until the TEST deployment is verified (see `docs/DEPLOY_AND_ROLLBACK.md`). No claim is made that the TEST `/exec` URL shows it.
 - Real-device and real Apps Script HtmlService rendering are not tested; only Chromium against the local bridge.
 - Further candidates (not in this PR): partial in-place screen updates instead of re-rendering, explicit back/close on every nested card, per-button success toasts where only inline text exists today.
+
+## Synthetic app (data entry in the browser, no backend)
+`node scripts/build_synthetic_app.js` builds `synthetic_app/index.html`: the REAL `src/Index.html` + the REAL server code (`src/*.gs`, same load order as `tests/harness.js`) running in the browser against an in-memory store kept in `localStorage`.
+All ~170 routes with Google-independent logic work (soldier entry, fitness, meetings/tasks, attendance, qualifications, settings, courses/users...); routes that need Google services (Drive files, PDF/Excel export, OCR provider, Sheets backup) are not available there.
+Synthetic seed only (12 invented soldiers), banner + reset button, no network request, no login, no real data; each visitor has a private copy. **Not an operational app and not authenticated.** CI uploads the file as the `synthetic-app` artifact (nothing is deployed). Test: `tests/ui_synthetic_app.js` (4).
