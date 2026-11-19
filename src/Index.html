@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מערכת מעקב קורס</title>
+<style>
+:root{--app-bg:#F6F7F8;--surface:#FFFFFF;--surface-muted:#F1F3F5;--text:#202428;--text-muted:#667078;--border:#E1E5E8;--accent:#C62828;--accent-soft:#FCEEEE;--ink:var(--text);--muted:var(--text-muted);--line:var(--border);--bg:var(--app-bg);--card:var(--surface);--ok:#1b6e35;--bad:#B3261E;--warn:#8a5a00;--focus:#1a56c4;--font:system-ui,-apple-system,'Segoe UI',Roboto,'Noto Sans Hebrew','Arial Hebrew',Arial,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--font);color:var(--ink);line-height:1.45}
+header{background:var(--accent);color:#fff;padding:14px 18px}header h1{font-size:18px;margin:0}header p{margin:4px 0 0;font-size:12px;color:#dbe3e9}
+main{max-width:980px;margin:16px auto;padding:0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.notice{background:#fff8e6;border:1px solid #f0dfb2;padding:10px;border-radius:10px;color:#66521e;font-size:13px;margin-bottom:12px}
+label{display:block;font-size:13px;margin:10px 0 4px}input,select,textarea{width:100%;font-size:16px;padding:10px;min-height:44px;border:1px solid #c9d2da;border-radius:8px;background:#fff}
+input[type=checkbox],input[type=radio]{width:auto;min-height:0;margin-inline-end:6px}.ins summary,details>summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+button{font-size:16px;padding:10px 14px;border:0;border-radius:8px;background:var(--accent);color:#fff;min-height:44px;cursor:pointer}
+button.sec{background:#e9eef2;color:var(--ink)}button.tab{background:#e9eef2;color:var(--ink)}button.tab.on{background:var(--accent);color:#fff}tr.bad{background:#fff4f2}.warn{color:var(--warn)}button.danger{background:var(--bad)}button:disabled{opacity:.5}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:700px){.row,.row3{grid-template-columns:1fr}}
+.msg{margin-top:10px;font-size:14px}.msg.ok{color:var(--ok)}.msg.err{color:var(--bad)}
+.ferr{margin-top:4px;font-size:13px}[aria-invalid=true]{border-color:var(--bad)!important;outline:1px solid var(--bad)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover,tr.click:focus{background:#f0f4f7;outline:none}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:#e9eef2}.badge.off{background:#fde8e6;color:var(--bad)}.badge.can{background:#f3e8d0;color:var(--warn)}
+dl{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;margin:0}dt{color:var(--muted);font-size:13px}dd{margin:0}
+h3{margin:0 0 8px}.muted{color:var(--muted);font-size:13px}.hide{display:none}
+@media(max-width:700px){table.resp thead{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;padding:0}table.resp tr{display:block;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;padding:6px}table.resp td{display:flex;justify-content:space-between;border:0;padding:4px 6px}table.resp td::before{content:attr(data-l);content:attr(data-l) / '';color:var(--muted);font-size:12px;margin-inline-end:10px}}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;margin:8px 0}.card{overflow-wrap:anywhere}
+/* product-dev1 */
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,th.sortable:focus-visible,tr.click:focus-visible{outline:3px solid #2f6fed;outline-offset:2px}
+tr[hidden]{display:none!important}
+.grps{margin-top:0}.grps button.grp{background:#e9eef2;color:var(--ink);font-weight:bold}.grps button.grp.on{background:var(--accent);color:#fff}
+#tabs{margin-top:6px}
+@media(max-width:700px){.grps,#tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}.grps button,#tabs button{flex:0 0 auto;white-space:nowrap}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:10px}
+.kpi{display:block;text-align:start;background:#f5f7f9;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;min-height:92px;width:100%}
+button.kpi:hover{background:#eaf0f5}.kpi .kv{font-size:24px;font-weight:bold;line-height:1.2}.kpi .kl{font-size:13px;color:var(--muted);margin-top:2px}.kpi .ks{font-size:12px;color:var(--muted);margin-top:4px}
+.kpi.red .kv{color:var(--bad)}.kpi.amber .kv{color:var(--warn)}
+.todo{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px;border:1px solid var(--line);border-inline-start:5px solid #c9d2da;border-radius:10px;margin-bottom:8px;flex-wrap:wrap}
+.todo.red{border-inline-start-color:var(--bad)}.todo.amber{border-inline-start-color:#d49a1a}.todo .tt{flex:1 1 220px}
+.tbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0}.tbar input,.tbar select{width:auto;min-width:150px;flex:1 1 150px;font-size:14px;padding:8px}.tbar .cnt{font-size:12px;color:var(--muted)}
+th.sortable{cursor:pointer;user-select:none}th[aria-sort=ascending]::after{content:' ▲';font-size:10px}th[aria-sort=descending]::after{content:' ▼';font-size:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.chip{min-height:44px;padding:4px 12px;border-radius:18px;background:#fff;border:1px solid #cbd5e1;color:inherit;font-size:14px}.ctab{width:100%;border-collapse:collapse}.ctab th,.ctab td{padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top}.ctab .cnew{font-weight:600}.ctab .nosnap{color:var(--muted)}
+.loading{color:var(--muted);font-size:14px;padding:8px 0}.tw{max-width:100%;overflow-x:auto}
+/* ===== product-dev6.2 (uxqa1) — unified light RTL design system (system fonts only; no CDN) ===== */
+header.top{background:var(--surface);color:var(--text);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:30}
+header.top h1{font-size:17px;margin:0;color:var(--text)}header.top p{margin:2px 0 0;font-size:12px;color:var(--text-muted)}header.top .brand{flex:1;min-width:0}
+header.top::before{content:'';width:6px;align-self:stretch;background:var(--accent);border-radius:3px}
+#menuBtn{display:none;background:var(--surface-muted);color:var(--text);border:1px solid var(--border);width:44px;padding:0;font-size:20px}
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0;align-items:start;max-width:1320px;margin:0 auto}
+#side{position:sticky;top:64px;align-self:start;padding:14px 12px;border-inline-end:1px solid var(--border);min-height:calc(100vh - 64px);background:var(--surface)}
+#side h2{font-size:12px;color:var(--text-muted);margin:0 6px 8px;font-weight:600}
+.grps{flex-direction:column;align-items:stretch;gap:4px;margin-top:0}.grps button.grp{background:transparent;color:var(--text);text-align:start;font-weight:600;border-radius:8px;border-inline-start:3px solid transparent;font-size:15px;width:100%}
+.grps button.grp:hover{background:var(--surface-muted)}.grps button.grp.on{background:var(--accent-soft);color:var(--accent);border-inline-start-color:var(--accent)}
+main{max-width:none;margin:0;padding:16px}
+#tabs{flex-wrap:wrap;overflow:visible;gap:6px;margin:0 0 12px}
+button.tab{background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px}button.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+button{background:var(--accent);font-family:inherit}button.sec{background:var(--surface-muted);color:var(--text);border:1px solid var(--border)}button.danger{background:var(--bad)}
+.header.pagehead,header.pagehead{background:transparent;color:var(--text,#1f2328);padding:0;margin:4px 0 12px;border:0;box-shadow:none;position:static}header.pagehead h2{margin:0 0 2px;font-size:1.35rem;color:inherit;background:transparent}header.pagehead p{margin:0;color:var(--muted,#5b6470)}
+.card{border-radius:10px;box-shadow:none}.kpi{background:var(--surface-muted);border-radius:10px}.badge{background:var(--surface-muted)}
+th{background:var(--surface-muted);font-weight:600}table{background:var(--surface)}input,select,textarea{border-color:#c5ccd1;font-family:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible,th.sortable:focus-visible,tr.click:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+a{color:#a31f1f}.notice{background:var(--accent-soft);border-color:#f0cfcf;color:#6b1c1c}
+fieldset.ecset{border:1px solid var(--border);border-radius:10px;margin:14px 0;padding:10px 14px;background:var(--surface-muted)}fieldset.ecset legend{font-weight:700;padding:0 6px}
+.attcount{font-weight:600;margin:8px 0}.attlist{max-height:420px;overflow:auto;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.attrow{display:flex;gap:14px;align-items:center;padding:6px 12px;border-bottom:1px solid var(--border);min-height:48px;flex-wrap:wrap}.attrow.abs{background:var(--accent-soft)}.attrow .nm{flex:1 1 160px;font-weight:600}
+label.inl{display:inline-flex;align-items:center;margin:0;min-height:44px;gap:4px;cursor:pointer}label.inl input{width:22px;height:22px}
+.insights{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}.ins{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--surface)}.ins h4{margin:0 0 4px;font-size:14px}.ins details{margin-top:6px;font-size:12px;color:var(--text-muted)}.ins summary{cursor:pointer;min-height:44px;display:flex;align-items:center;color:var(--accent)}
+.rptprev{border:1px solid var(--border);background:#fff;padding:0;overflow:auto;max-width:100%}.rptprev iframe{width:100%;height:70vh;border:0}
+#scrim{display:none}
+@media(max-width:900px){
+  .shell{display:block}#menuBtn{display:inline-block}
+  #side{position:fixed;top:0;bottom:0;right:0;width:min(82vw,300px);z-index:50;transform:translateX(105%);visibility:hidden;transition:transform .18s,visibility 0s .18s;box-shadow:-6px 0 24px rgba(0,0,0,.18);overflow:auto;padding-top:64px}
+  body.nav-open #side{transform:none;visibility:visible;transition:transform .18s}body.nav-open #scrim{display:block;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:40}
+  .grps,#tabs{overflow:visible;flex-wrap:wrap}.grps{flex-wrap:nowrap}main{padding:12px}
+}
+@media(prefers-reduced-motion:reduce){#side{transition:none}}
+@media print{#side,header.top,#menuBtn{display:none}}
+
+/* UX final pass: compact course toolbar, adaptive form grid, neutral notices, tidy empty states, "show more" for long tables */
+.card.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 14px}.card.toolbar label{margin:0;font-weight:600}.card.toolbar select{width:auto;min-width:220px;max-width:100%;padding:7px 10px;font-size:15px}.card.toolbar .msg{margin:0;font-size:13px}
+.row{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.notice{background:#f6f7f8;border:1px solid #e1e5e8;border-inline-start:3px solid #c62828;color:#3b4148}
+tr.nodata td{text-align:center;padding:22px 10px;color:var(--text-muted)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.kpi{border:1px solid #e1e5e8;border-radius:8px;padding:10px 12px;background:#f6f7f8}.kpi .kv{font-size:22px;font-weight:700}.kpi .kl{font-size:12.5px;color:#5b6470}
+.showmore{margin:8px 0 0}
+
+details.flt{border:1px solid #e1e5e8;border-radius:8px;padding:6px 12px;margin:10px 0;background:#fafbfc}details.flt>summary{cursor:pointer;font-size:14px;font-weight:600;min-height:44px;display:flex;align-items:center}
+.row3{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+@media(max-width:700px){#stageNotice{font-size:12.5px;padding:7px 10px}.hdr small,header small{font-size:11px}}
+
+/* ===== R5.2.16 (UX + accessibility candidate): light theme only, no external resources ===== */
+#tabs[hidden]{display:none}
+.req{color:var(--bad)}
+.chk{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;min-height:44px;margin-top:10px}.chk input[type=checkbox]{width:24px;height:24px;margin:0;flex:0 0 auto}.chk label{margin:0;flex:1 1 auto;font-size:14px}.chk .ferr{flex-basis:100%}
+.tbar input,.tbar select,.card.toolbar select{min-height:44px}
+.rowbtn{background:transparent;color:var(--accent);border:0;padding:0 4px;min-height:44px;min-width:44px;font:inherit;font-weight:600;text-align:start;text-decoration:underline;text-underline-offset:3px;cursor:pointer;max-width:100%}
+.rowbtn:hover{background:transparent;color:#8e1d1d}
+.thbtn{background:transparent;color:inherit;border:0;padding:0 2px;min-height:44px;min-width:44px;font:inherit;font-weight:700;text-align:start;cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.thbtn:hover{background:transparent;text-decoration:underline}
+th.sortable{cursor:default}
+.kt{font-size:12px;font-weight:700;margin-top:4px;color:var(--text)}
+.sev{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:10px;margin-inline-end:6px;background:#f3e8d0;color:#6b4500}.sev.red{background:#fde8e6;color:#8c1d18}
+#navClose{display:none}
+body.nav-open{overflow:hidden}
+.tab.priv{background:#fde8e6;color:#8c1d18}button.tab.priv.on{background:var(--accent);color:#fff}
+.twscroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.reqnote{font-size:12px;color:var(--text-muted);margin:6px 0 0}
+@media(max-width:900px){#navClose{display:block;width:100%;margin:0 0 10px}}
+</style>
+</head>
+<body>
+<header class="top"><button id="menuBtn" type="button" aria-label="פתיחת תפריט ניווט" aria-expanded="false" aria-controls="side">☰</button><div class="brand"><h1>מערכת מעקב קורס</h1><p id="who">טוען…</p></div></header>
+<div class="shell">
+<aside id="side" aria-label="ניווט ראשי"><h2>תחומי המערכת</h2><nav id="grps" class="bar grps" aria-label="תחומי המערכת"></nav></aside>
+<div id="scrim" aria-hidden="true"></div>
+<main>
+  <div class="notice" id="stageNotice">עותק הכנה ל-Staging עם שערי קבלה פתוחים — לא מוכן לשימוש מבצעי. אין להזין נתוני אמת לפני אישור אבטחת מידע.</div>
+  <section class="card toolbar"><label for="course">קורס</label><select id="course"></select><div id="org" class="msg muted"></div></section>
+  <div id="mineMsg" class="notice hide" role="status"></div>
+  <div id="tabs" class="bar" aria-label="מסכים בתחום" hidden></div>
+  <div id="view"></div>
+</main>
+</div>
+<script>
+/* All server data is rendered with textContent / DOM nodes only (never innerHTML) — names and notes are untrusted. */
+function call(method,args){return new Promise(function(res,rej){google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e)}).api(method,args||{});});}
+var S={ctx:null,courses:[],courseId:null,org:{departments:[],teams:[]},tab:'dash',mine:{course_wide:true,has_assignment:true,department_ids:[],team_ids:[]},types:[],users:[],reqId:null,navF:{departmentId:'',teamId:'',typeId:'',from:'',to:'',includeCancelled:false},filters:{q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false},soldiers:[]};
+var ACTION={SOLDIER_CREATE:'נוצר',SOLDIER_EDIT:'עריכת פרטים',SOLDIER_REASSIGN:'שינוי שיוך',SOLDIER_ACTIVITY:'שינוי סטטוס פעילות',SOLDIER_CANCEL:'ביטול',SOLDIER_RESTORE:'שחזור'};
+function $(id){return document.getElementById(id);}
+function el(tag,props,kids){var e=document.createElement(tag);props=props||{};Object.keys(props).forEach(function(k){
+  if(k==='text')e.textContent=props[k];else if(k==='class')e.className=props[k];else if(k.slice(0,2)==='on')e[k]=props[k];else if(k==='value')e.value=props[k];else if(props[k]!==false&&props[k]!==null&&props[k]!==undefined)e.setAttribute(k,props[k]===true?'':props[k]);});
+  (kids||[]).forEach(function(c){if(c!=null)e.appendChild(typeof c==='string'?document.createTextNode(c):c);});return e;}
+function setMsg(e,t,ok){e.textContent=t;e.className='msg '+(ok?'ok':'err');}
+function isAdmin(){return S.ctx&&S.ctx.role==='admin';}
+function depName(id){var d=S.org.departments.filter(function(x){return x.id===id})[0];return d?d.name:'';}
+function teamName(id){var d=S.org.teams.filter(function(x){return x.id===id})[0];return d?d.name:'';}
+function course(){return S.courses.filter(function(c){return c.id===S.courseId})[0]||{};}
+function archived(){return course().status==='archived';}
+function started(){var s=course().start_date;return !!s&&String(s)<=new Date().toISOString().slice(0,10);}
+function fail(e,box){setMsg(box,e&&e.message?e.message:'שגיאת תקשורת. נסו שוב.',false);}
+function selectOf(items,val,blank){var s=el('select');if(blank!==undefined)s.appendChild(el('option',{value:'',text:blank}));items.forEach(function(i){s.appendChild(el('option',{value:i.id,text:i.name}));});s.value=val||'';return s;}
+function wide(){return isAdmin()||S.mine.course_wide;}
+function depsAllowed(){return S.org.departments.filter(function(d){return wide()||S.mine.department_ids.indexOf(d.id)!==-1;});}
+function teamsOf(dep){return S.org.teams.filter(function(t){return (!dep||t.department_id===dep)&&(wide()||S.mine.team_ids.indexOf(t.id)!==-1);});}
+
+google.script.run.withSuccessHandler(function(r){
+  if(!r.ok){$('who').textContent=r.message;return;}
+  S.ctx=r.data;$('who').textContent=r.data.displayName+' · '+(r.data.role==='admin'?'מנהל מערכת':'מפקד')+' · v'+r.data.version;loadCourses();
+}).whoAmI();
+function loadCourses(){call('courses.list').then(function(r){var s=$('course');s.innerHTML='';
+  if(!r.ok){setMsg($('org'),r.message,false);return;}S.courses=r.data;
+  r.data.forEach(function(c){s.appendChild(el('option',{value:c.id,text:c.name+(c.status==='archived'?' (ארכיון)':'')}));});
+  s.onchange=pickCourse;pickCourse();}).catch(function(e){fail(e,$('org'));});}
+function pickCourse(){S.courseId=$('course').value;S.filters={q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false};if(!S.courseId){$('view').innerHTML='';return;}
+  call('courses.org',{courseId:S.courseId}).then(function(r){if(!r.ok){setMsg($('org'),r.message,false);return;}
+    S.org=r.data;$('org').className='msg';$('org').textContent=r.data.departments.length+' מחלקות · '+r.data.teams.length+' צוותים'+(archived()?' · הקורס בארכיון (קריאה בלבד)':'');
+    afterOrg();}).catch(function(e){fail(e,$('org'));});}
+
+/* ---------------- registry list ---------------- */
+var qTimer=null;
+function personalFormBlock(){
+  var wrap=el('div',{id:'pfBlock',class:'bar'}),msg=el('div',{id:'pfMsg',class:'msg',role:'status'}),copyB=el('button',{id:'pfCopy',class:'sec',text:'העתקת קישור לטופס פרטים אישיים',disabled:true}),open=el('a',{id:'pfOpen',class:'sec',text:'פתיחה לבדיקה',target:'_blank',rel:'noopener noreferrer',hidden:true,style:'display:none'}),manual=el('input',{id:'pfManual',readonly:true,'aria-label':'הקישור לטופס',hidden:true,style:'display:none'});
+  wrap.appendChild(copyB);wrap.appendChild(open);
+  var box=el('div',{},[wrap,manual,msg]);
+  vcall('forms.generalLink',{courseId:S.courseId},null,function(d){
+    if(!d.configured){msg.className='notice';msg.textContent=d.message;msg.setAttribute('data-state','setup-needed');return;}
+    copyB.disabled=false;open.href=d.url;open.hidden=false;open.style.display='';
+    copyB.onclick=function(){var done=function(){setMsg(msg,'הקישור הועתק.',true);},fail=function(){manual.value=d.url;manual.hidden=false;manual.style.display='';manual.focus();manual.select();setMsg(msg,'ההעתקה האוטומטית נחסמה בדפדפן — הקישור מסומן, העתק ידנית.',false);};
+      try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(d.url).then(done,fail);return;}}catch(e){}
+      try{manual.value=d.url;manual.hidden=false;manual.style.display='';manual.select();if(document.execCommand('copy')){manual.hidden=true;manual.style.display='none';done();return;}}catch(e){}fail();};});
+  return box;}
+function showList(){
+  var v=$('view');v.innerHTML='';
+  var f=S.filters,box=el('section',{class:'card'});
+  var q=el('input',{id:'fq',type:'search',placeholder:'חיפוש לפי שם או מספר אישי',value:f.q,'aria-label':'חיפוש'});
+  var dep=selectOf(depsAllowed(),f.departmentId,'כל המחלקות');dep.id='fdep';
+  var team=selectOf(teamsOf(f.departmentId),f.teamId,'כל הצוותים');team.id='fteam';
+  var pk=el('input',{id:'fpk',placeholder:'פק״ל',value:f.pakal});
+  var act=el('select',{id:'fact'},[el('option',{value:'',text:'כל הסטטוסים'}),el('option',{value:'true',text:'פעילים'}),el('option',{value:'false',text:'לא פעילים'})]);act.value=f.active;
+  box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{for:'fq',text:'חיפוש'}),q]),el('div',{},[el('label',{for:'fpk',text:'פק״ל'}),pk])]));
+  var fd=el('details',{class:'flt',id:'fltBox'},[el('summary',{text:'סינון לפי מחלקה, צוות וסטטוס'}),el('div',{class:'row3'},[el('div',{},[el('label',{for:'fdep',text:'מחלקה'}),dep]),el('div',{},[el('label',{for:'fteam',text:'צוות'}),team]),el('div',{},[el('label',{for:'fact',text:'סטטוס'}),act])])]);if(window.innerWidth>700||f.departmentId||f.teamId||f.active)fd.open=true;box.appendChild(fd);
+  var bar=el('div',{class:'bar'});
+  if(isAdmin()){bar.appendChild(el('button',{id:'addBtn',text:'הוסף חייל',disabled:archived(),onclick:function(){showForm(null);}}));var cc=el('input',{type:'checkbox',id:'fcan'});cc.checked=f.includeCancelled;cc.onchange=function(){f.includeCancelled=cc.checked;load();};bar.appendChild(el('label',{class:'inl'},[cc,'הצג מבוטלים']));}
+  if(isAdmin())bar.appendChild(el('button',{id:'toReports',class:'sec',text:'הפקת דוחות',onclick:function(){showTab('reports');}}));
+  bar.appendChild(el('span',{id:'count',class:'muted'}));box.appendChild(bar);
+  box.appendChild(personalFormBlock());
+  var out=el('div',{id:'listOut'});box.appendChild(out);box.appendChild(el('div',{id:'listMsg',class:'msg',role:'status'}));v.appendChild(box);
+  q.oninput=function(){f.q=q.value;clearTimeout(qTimer);qTimer=setTimeout(load,250);};
+  pk.oninput=function(){f.pakal=pk.value;clearTimeout(qTimer);qTimer=setTimeout(load,250);};
+  dep.onchange=function(){f.departmentId=dep.value;f.teamId='';showList();};
+  team.onchange=function(){f.teamId=team.value;load();};act.onchange=function(){f.active=act.value;load();};
+  load();
+}
+var loadSeq=0;
+function load(){var f=S.filters,opts={q:f.q,departmentId:f.departmentId,teamId:f.teamId,pakal:f.pakal},my=++loadSeq;var lo=$('listOut');if(lo){lo.innerHTML='';lo.appendChild(el('div',{class:'loading',text:'טוען…'}));}
+  if(f.active!=='')opts.active=(f.active==='true');if(f.includeCancelled)opts.includeCancelled=true;
+  call('soldiers.list',{courseId:S.courseId,opts:opts}).then(function(r){var out=$('listOut');if(!out||my!==loadSeq)return;out.innerHTML='';
+    if(!r.ok){setMsg($('listMsg'),r.message,false);return;}$('listMsg').textContent='';S.soldiers=r.data;
+    $('count').textContent=r.data.length+' חיילים';
+    if(!r.data.length){var anyF=f.q||f.departmentId||f.teamId||f.pakal||f.active!==''||f.includeCancelled;out.appendChild(el('p',{class:'muted',id:'noSoldiers',text:anyF?'לא נמצאו חיילים לפי הסינון. נסו לנקות חיפוש או סינון.':(isAdmin()?'עדיין אין חיילים בקורס. אפשר להוסיף חייל או לייבא מ-Excel (תחום "ניהול").':'אין חיילים להצגה. אם אין לך שיוך לצוות — פנה למנהל המערכת.')}));return;}
+    var t=el('table',{class:'resp'},[el('thead',{},[el('tr',{},['שם','מספר אישי','מחלקה','צוות','פק״ל','סטטוס'].map(function(h){return el('th',{text:h});}))])]);
+    var tb=el('tbody');r.data.forEach(function(s){
+      var tr=el('tr',{});
+      var st=el('td',{'data-l':'סטטוס'});
+      if(s.record_status==='cancelled')st.appendChild(el('span',{class:'badge can',text:'מבוטל'}));else st.appendChild(el('span',{class:'badge'+(s.active?'':' off'),text:s.active?'פעיל':'לא פעיל'}));
+      tr.appendChild(el('td',{'data-l':'שם',text:s.full_name}));tr.appendChild(el('td',{'data-l':'מספר אישי',dir:'ltr',text:s.personal_number}));
+      tr.appendChild(el('td',{'data-l':'מחלקה',text:s.department_name}));tr.appendChild(el('td',{'data-l':'צוות',text:s.team_name}));
+      tr.appendChild(el('td',{'data-l':'פק״ל',text:s.pakal}));tr.appendChild(st);rowify(tr,function(){showCard(s.id);},'פתיחת כרטיס חייל');tb.appendChild(tr);});
+    t.appendChild(tb);out.appendChild(tableTools(t,{filter:false}));},function(e){if(my!==loadSeq)return;var o=$('listOut');if(o){o.innerHTML='';o.appendChild(el('button',{class:'sec',text:'נסו שוב',onclick:load}));}fail(e,$('listMsg'));});}
+
+/* ---------------- soldier card ---------------- */
+/* ---- product-dev6.2: emergency contact (איש קשר לחירום) — admin only; one primary contact; never in lists ---- */
+function ecFields(pre){pre=pre||{};var n=el('input',{id:'fEcName',maxlength:'100',autocomplete:'off',value:pre.name||''}),r=el('input',{id:'fEcRel',maxlength:'50',autocomplete:'off',value:pre.relation||''}),p=el('input',{id:'fEcPhone',dir:'ltr',inputmode:'tel',type:'tel',maxlength:'20',autocomplete:'off',value:pre.phone||''}),m=el('div',{id:'ecMsg',class:'ferr msg',role:'alert'});
+  var node=el('fieldset',{class:'ecset',id:'ecSet'},[el('legend',{text:'איש קשר לחירום'}),el('p',{class:'muted',text:'איש קשר אחד לשימוש בחירום בלבד. הפרטים גלויים למנהל המערכת בלבד ואינם מופיעים ברשימות, בלוחות מחוונים או בדוחות.'}),
+    el('div',{class:'row'},[el('div',{},[el('label',{for:'fEcName',text:'שם מלא של איש הקשר'}),n]),el('div',{},[el('label',{for:'fEcRel',text:'קרבה לחייל'}),r])]),el('div',{},[el('label',{for:'fEcPhone',text:'טלפון'}),p]),m]);
+  function vals(){return{name:n.value.trim(),relation:r.value.trim(),phone:p.value.trim()};}
+  function state(){var v=vals(),c=(v.name?1:0)+(v.relation?1:0)+(v.phone?1:0);return c===0?'empty':c===3?'full':'partial';}
+  function check(){[n,r,p].forEach(function(i){i.removeAttribute('aria-invalid');});m.textContent='';if(state()!=='partial')return true;
+    [n,r,p].forEach(function(i){if(!i.value.trim())i.setAttribute('aria-invalid','true');});m.textContent='יש למלא את כל שלושת השדות (שם, קרבה, טלפון) או להשאיר את כולם ריקים.';m.className='ferr msg err';return false;}
+  return{node:node,vals:vals,state:state,check:check};}
+function ecSection(studentId){
+  var c=el('section',{class:'card',id:'secEmergency'}),body=el('div'),m=el('div',{class:'msg',role:'status'});c.appendChild(el('h3',{text:'איש קשר לחירום'}));c.appendChild(body);c.appendChild(m);
+  function draw(d){body.innerHTML='';if(!d.present){body.appendChild(el('p',{class:'muted',id:'ecNone',text:'לא הוזן איש קשר לחירום.'}));}
+    else{var dl=el('dl');[['שם',d.name],['קרבה',d.relation]].forEach(function(x){dl.appendChild(el('dt',{text:x[0]}));dl.appendChild(el('dd',{text:x[1]}));});dl.appendChild(el('dt',{text:'טלפון'}));var dd=el('dd');dd.appendChild(el('a',{href:'tel:'+d.phone,dir:'ltr',id:'ecTel',text:d.phone_display||d.phone}));dd.appendChild(document.createTextNode(' '));
+      dd.appendChild(el('button',{class:'sec',id:'ecCopy',type:'button',text:'העתקה',onclick:function(){try{navigator.clipboard.writeText(d.phone).then(function(){setMsg(m,'המספר הועתק.',true);},function(){setMsg(m,'ההעתקה נחסמה בדפדפן.',false);});}catch(e){setMsg(m,'ההעתקה נחסמה בדפדפן.',false);}}}));dl.appendChild(dd);body.appendChild(dl);}
+    body.appendChild(el('div',{class:'bar'},[el('button',{id:'ecEdit',class:'sec',disabled:archived(),text:d.present?'עריכת איש קשר':'הוספת איש קשר',onclick:function(){edit(d);}})]));}
+  function edit(d){body.innerHTML='';var f=ecFields(d.present?d:{}),save=el('button',{id:'ecSave',text:'שמירה'});body.appendChild(f.node);
+    save.onclick=function(){if(f.state()!=='full'){f.check();if(f.state()==='empty'){f.node.querySelector('#ecMsg').textContent='יש להזין את פרטי איש הקשר.';}return;}f.check();save.disabled=true;
+      call('emergency.set',{courseId:S.courseId,soldierId:studentId,contact:f.vals()}).then(function(r){save.disabled=false;if(!r.ok){setMsg(m,r.message,false);return;}setMsg(m,'איש הקשר נשמר.',true);load();},function(e){save.disabled=false;fail(e,m);});};
+    body.appendChild(el('div',{class:'bar'},[save,el('button',{class:'sec',type:'button',text:'ביטול',onclick:load})]));f.node.querySelector('input').focus();}
+  function load(){body.innerHTML='';body.appendChild(el('div',{class:'loading',text:'טוען…'}));call('emergency.get',{courseId:S.courseId,soldierId:studentId}).then(function(r){if(!r.ok){body.innerHTML='';setMsg(m,r.message,false);return;}draw(r.data);},function(e){body.innerHTML='';fail(e,m);});}
+  load();return c;}
+function showCard(id,flash){
+  var v=$('view');v.innerHTML='';
+  call('soldiers.card',{id:id}).then(function(r){
+    if(!r.ok){var b=el('section',{class:'card'},[el('button',{class:'sec',text:'חזרה לרשימה',onclick:showList}),el('div',{class:'msg err',text:r.message})]);v.appendChild(b);return;}
+    var c=r.data,s=c.soldier,wrap=el('div');
+    var head=el('section',{class:'card'});
+    head.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'back',text:'חזרה לרשימה',onclick:showList})]));
+    head.appendChild(el('h2',{id:'cardName',text:s.full_name,style:'margin:12px 0 4px'}));
+    var badges=el('div');if(s.record_status==='cancelled')badges.appendChild(el('span',{class:'badge can',text:'מבוטל'}));else badges.appendChild(el('span',{class:'badge'+(s.active?'':' off'),text:s.active?'פעיל':'לא פעיל'}));head.appendChild(badges);
+    var dl=el('dl',{style:'margin-top:12px'});
+    function row(k,val,ltr){dl.appendChild(el('dt',{text:k}));dl.appendChild(el('dd',ltr?{dir:'ltr',text:val||'—'}:{text:val||'—'}));}
+    row('מספר אישי',s.personal_number,true);row('קורס',c.course.name);row('מחלקה',c.department_name);row('צוות',c.team_name);
+    row('מגדר',s.gender==='F'?'נקבה':'זכר');row('פק״ל',s.pakal);row('תאריך גיוס',fmtDate(s.enlistment_date));
+    if(isAdmin()){row('שליש סוציומטרי',s.sociometric_third);row('הערת מפקד כללית',s.commander_note);}
+    head.appendChild(dl);
+    var msg=el('div',{id:'cardMsg',class:'msg',role:'status'});if(flash){setMsg(msg,flash,true);}
+    if(isAdmin()){var bar=el('div',{class:'bar'});var lock=archived();
+      if(s.record_status==='cancelled'){bar.appendChild(el('button',{id:'btnRestore',text:'שחזר',disabled:lock,onclick:function(){reasonBox('שחזור (סיבה אופציונלית)',false,function(reason,done){call('soldiers.restore',{id:id,reason:reason}).then(function(x){done(x,'שוחזר');});});}}));}
+      else{bar.appendChild(el('button',{id:'btnEdit',text:'עריכה',disabled:lock,onclick:function(){showForm(s);}}));
+        bar.appendChild(el('button',{id:'btnMove',class:'sec',text:'שינוי שיוך',disabled:lock,onclick:function(){showMove(s);}}));
+        bar.appendChild(el('button',{id:'btnAct',class:'sec',text:s.active?'סמן כלא פעיל':'סמן כפעיל',disabled:lock,onclick:function(){reasonBox(s.active?'סיבה לסימון כלא פעיל':'סיבה לסימון כפעיל',true,function(reason,done){call('soldiers.setActive',{id:id,active:!s.active,expected_updated_at:s.updated_at,reason:reason}).then(function(x){done(x,'הסטטוס עודכן');});});}}));
+        bar.appendChild(el('button',{id:'btnCancel',class:'danger',text:'בטל חייל',disabled:lock,onclick:function(){reasonBox('סיבת הביטול',true,function(reason,done){call('soldiers.cancel',{id:id,reason:reason}).then(function(x){done(x,'החייל בוטל');});});}}));}
+      head.appendChild(bar);head.appendChild(el('div',{id:'actBox'}));}
+    head.appendChild(msg);wrap.appendChild(head);
+    if(isAdmin()&&s.record_status!=='cancelled')wrap.appendChild(ecSection(s.id));
+    function reasonBox(label,required,send){var box=$('actBox');box.innerHTML='';var inp=el('input',{id:'reason',placeholder:label});var go=el('button',{id:'reasonGo',text:'אישור'});var m=el('div',{class:'msg',id:'reasonMsg'});
+      go.onclick=function(){if(required&&!inp.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}go.disabled=true;
+        send(inp.value,function(x,okText){go.disabled=false;if(x.ok)showCard(id,okText);else setMsg(m,x.message,false);});};
+      box.appendChild(el('div',{class:'bar'},[inp,go,el('button',{class:'sec',text:'ביטול',onclick:function(){box.innerHTML='';}})]));box.appendChild(m);inp.focus();}
+    // navigation (only if real data exists)
+    if(c.navigation&&c.navigation.count>0){var n=el('section',{class:'card',id:'secNav'},[el('h3',{text:'ניווט'}),el('p',{text:c.navigation.count+' מבחנים · ממוצע '+c.navigation.mean_display})]);
+      var t=el('table',{},[el('tbody',{},c.navigation.records.map(function(x){return el('tr',{},[el('td',{text:fmtDate(x.test_date)}),el('td',{text:x.type_name}),el('td',{text:x.final_display})]);}))]);n.appendChild(t);wrap.appendChild(n);}
+    if(c.documents&&c.documents.length){var d=el('section',{class:'card',id:'secDocs'},[el('h3',{text:'מסמכים'}),el('p',{class:'muted',text:'פתיחה והורדה יתווספו בשלב המסמכים.'})]);
+      c.documents.forEach(function(x){d.appendChild(el('div',{text:x.document_type+' · הועלה ע״י '+x.uploaded_by+' · '+fmtStamp(x.uploaded_at)+(x.file_name?' · '+x.file_name:'')}));});wrap.appendChild(d);}
+    var h=el('section',{class:'card',id:'secHist'},[el('h3',{text:'היסטוריית שינויים'})]);
+    if(!c.history.length)h.appendChild(el('p',{class:'muted',text:'אין אירועים.'}));
+    c.history.forEach(function(x){var line=(ACTION[x.action]||x.action)+' · '+x.at+(x.actor?' · '+x.actor:'')+(x.reason?' · סיבה: '+x.reason:'');
+      var item=el('div',{style:'margin-bottom:8px'},[el('div',{text:line})]);
+      if(x.before||x.after)item.appendChild(el('div',{class:'muted',dir:'ltr',text:diffText(x.before,x.after)}));h.appendChild(item);});
+    wrap.appendChild(h);v.appendChild(wrap);
+  }).catch(function(e){v.appendChild(el('div',{class:'msg err',text:'שגיאת תקשורת. נסו שוב.'}));});
+}
+function diffText(b,a){var keys=Object.keys(Object.assign({},b||{},a||{}));return keys.map(function(k){return k+': '+JSON.stringify(b?b[k]:undefined)+' → '+JSON.stringify(a?a[k]:undefined);}).join(' | ');}
+
+/* ---------------- add / edit form ---------------- */
+function showForm(s){
+  var edit=!!s,v=$('view');v.innerHTML='';
+  var f=el('section',{class:'card'},[el('h3',{text:edit?'עריכת חייל':'הוספת חייל'})]);
+  var name=el('input',{id:'fName',value:edit?s.full_name:'',maxlength:'100'}),pn=el('input',{id:'fPn',dir:'ltr',inputmode:'numeric',maxlength:'12',value:edit?s.personal_number:''});
+  var gender=el('select',{id:'fGender'},[el('option',{value:'',text:'בחירה…'}),el('option',{value:'M',text:'זכר'}),el('option',{value:'F',text:'נקבה'})]);gender.value=edit?s.gender:'';
+  var pakal=el('input',{id:'fPakal',value:edit?s.pakal:'',maxlength:'50'}),enl=el('input',{id:'fEnl',type:'date',value:edit?s.enlistment_date:''});
+  var soc=el('input',{id:'fSoc',value:edit?s.sociometric_third:'',maxlength:'20'}),note=el('textarea',{id:'fNote',rows:'2',maxlength:'1000'});note.value=edit?s.commander_note:'';
+  var dep=selectOf(S.org.departments,'','בחירה…'),team=selectOf([],'','בחירה…');dep.id='fDep';team.id='fTeam';
+  dep.onchange=function(){team.innerHTML='';team.appendChild(el('option',{value:'',text:'בחירה…'}));teamsOf(dep.value).forEach(function(t){team.appendChild(el('option',{value:t.id,text:t.name}));});};
+  var reason=el('input',{id:'fReason',placeholder:'סיבת העריכה (חובה)'});
+  function L(t,i){return [el('label',{for:i.id,text:t}),i];}
+  f.appendChild(el('div',{class:'row'},[el('div',{},L('שם מלא',name)),el('div',{},L('מספר אישי (ספרות, עד 12)',pn))]));
+  f.appendChild(el('div',{class:'row'},[el('div',{},L('מגדר',gender)),el('div',{},L('פק״ל',pakal))]));
+  f.appendChild(el('div',{class:'row'},[el('div',{},L('תאריך גיוס',enl)),el('div',{},L('שליש סוציומטרי',soc))]));
+  if(!edit)f.appendChild(el('div',{class:'row'},[el('div',{},L('מחלקה',dep)),el('div',{},L('צוות',team))]));
+  else f.appendChild(el('p',{class:'muted',text:'שיוך למחלקה/צוות משתנה רק דרך "שינוי שיוך" בכרטיס.'}));
+  f.appendChild(el('div',{},L('הערת מפקד כללית',note)));if(edit)f.appendChild(el('div',{},L('סיבה',reason)));
+  var ec=ecFields({});if(isAdmin()){f.appendChild(ec.node);if(edit)call('emergency.get',{courseId:S.courseId,soldierId:s.id}).then(function(r){if(r.ok&&r.data.present){$('fEcName').value=r.data.name;$('fEcRel').value=r.data.relation;$('fEcPhone').value=r.data.phone;ec.orig=ec.vals();}});}
+  var msg=el('div',{id:'fMsg',class:'msg',role:'status'}),save=el('button',{id:'fSave',text:'שמור'});
+  save.onclick=function(){if(isAdmin()&&!ec.check()){setMsg(msg,'יש לתקן את שדות איש הקשר. הנתונים לא נשלחו.',false);return;}save.disabled=true;var data={full_name:name.value,personal_number:pn.value,gender:gender.value,pakal:pakal.value,enlistment_date:enl.value,sociometric_third:soc.value,commander_note:note.value};
+    var p;if(edit){var patch={};['full_name','personal_number','gender','pakal','enlistment_date','sociometric_third','commander_note'].forEach(function(k){if(String(data[k])!==String(s[k]||''))patch[k]=data[k];});
+      p=call('soldiers.update',{id:s.id,patch:patch,expected_updated_at:s.updated_at,reason:reason.value});}
+    else{data.department_id=dep.value;data.team_id=team.value;p=call('soldiers.create',{courseId:S.courseId,data:data});}
+    p.then(function(r){if(r.ok&&isAdmin()&&ec.state()==='full'&&JSON.stringify(ec.vals())!==JSON.stringify(ec.orig||{})){var sid=r.data.id;return call('emergency.set',{courseId:S.courseId,soldierId:sid,contact:ec.vals()}).then(function(x){save.disabled=false;showCard(sid,x.ok?(edit?'נשמר.':'החייל נוסף.'):((edit?'פרטי החייל נשמרו':'החייל נוסף')+', אך איש הקשר לא נשמר: '+x.message+' — אפשר להוסיף אותו בכרטיס.'));});}
+    save.disabled=false;if(r.ok)showCard(r.data.id,edit?'נשמר.':'החייל נוסף.');else setMsg(msg,r.message+(r.code==='CONFLICT'?' (חזרו לכרטיס לרענון)':''),false);}).catch(function(e){save.disabled=false;fail(e,msg);});};
+  f.appendChild(el('div',{class:'bar'},[save,el('button',{class:'sec',text:'ביטול',onclick:function(){edit?showCard(s.id):showList();}})]));f.appendChild(msg);v.appendChild(f);name.focus();
+}
+
+/* ---------------- reassignment ---------------- */
+function showMove(s){
+  var box=$('actBox');box.innerHTML='';
+  var dep=selectOf(S.org.departments,s.department_id),team=selectOf(teamsOf(s.department_id),s.team_id);dep.id='mDep';team.id='mTeam';
+  dep.onchange=function(){team.innerHTML='';teamsOf(dep.value).forEach(function(t){team.appendChild(el('option',{value:t.id,text:t.name}));});};
+  var reason=el('input',{id:'mReason',placeholder:'סיבת השינוי (חובה)'});
+  var exc=el('input',{type:'checkbox',id:'mExc'}),excRow=el('label',{id:'mExcRow',class:started()?'':'hide'},[exc,'חריג מאושר: הקורס כבר התחיל, מנהל המערכת מאשר את ההעברה']);
+  var msg=el('div',{id:'mMsg',class:'msg'}),go=el('button',{id:'mGo',text:'העבר'});
+  go.onclick=function(){go.disabled=true;call('soldiers.reassign',{id:s.id,target:{department_id:dep.value,team_id:team.value,approved_exception:exc.checked},expected_updated_at:s.updated_at,reason:reason.value}).then(function(r){go.disabled=false;
+    if(r.ok)showCard(s.id,'השיוך עודכן.');else{if(r.code==='REASSIGN_AFTER_START')excRow.classList.remove('hide');setMsg(msg,r.message,false);}}).catch(function(e){go.disabled=false;fail(e,msg);});};
+  box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{for:'fdep',text:'מחלקה'}),dep]),el('div',{},[el('label',{for:'fteam',text:'צוות'}),team])]));
+  box.appendChild(el('div',{},[el('label',{text:'סיבה'}),reason]));box.appendChild(excRow);
+  box.appendChild(el('div',{class:'bar'},[go,el('button',{class:'sec',text:'ביטול',onclick:function(){box.innerHTML='';}})]));box.appendChild(msg);
+}
+
+/* ---------------- tabs ---------------- */
+function afterOrg(){
+  Promise.all([call('assignments.mine',{courseId:S.courseId}),call('navtypes.list',{courseId:S.courseId})]).then(function(rs){
+    S.mine=rs[0].ok?rs[0].data:{course_wide:false,has_assignment:false,department_ids:[],team_ids:[]};S.types=rs[1].ok?rs[1].data:[];
+    var mm=$('mineMsg');if(!isAdmin()&&!S.mine.has_assignment){mm.textContent='אין לך שיוך פעיל בקורס זה — פנה למנהל המערכת כדי שישייך אותך למחלקה או לצוות.';mm.classList.remove('hide');}else mm.classList.add('hide');
+    var go=function(){renderTabs();showTab(S.tab);};
+    if(isAdmin())call('users.list').then(function(u){S.users=u.ok?u.data:[];go();});else go();
+  }).catch(function(e){fail(e,$('org'));});
+}
+function renderTabs(){var t=$('tabs');t.innerHTML='';
+  var defs=[['soldiers','חיילים','tabSoldiers'],['nav','ניווט','tabNav']];if(isAdmin())defs.push(['assign','שיוכי מפקדים','tabAssign']);
+  defs.forEach(function(d){t.appendChild(el('button',{id:d[2],class:'tab'+(S.tab===d[0]?' on':''),role:'tab','aria-selected':S.tab===d[0]?'true':'false',text:d[1],onclick:function(){showTab(d[0]);}}));});}
+function showTab(n){S.tab=n;renderTabs();if(n==='nav')showNav();else if(n==='assign')showAssign();else showList();}
+function stat(v){return v===null||v===undefined||v===''?'אין מספיק נתונים':v;}
+function reasonInline(box,label,required,send){box.innerHTML='';var inp=el('input',{placeholder:label,class:'reasonIn'}),go=el('button',{class:'reasonOk',text:'אישור'}),m=el('div',{class:'msg'});
+  go.onclick=function(){if(required&&!inp.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}go.disabled=true;send(inp.value,function(r,okText){go.disabled=false;if(r.ok)okText&&setMsg(m,okText,true);else setMsg(m,r.message,false);});};
+  box.appendChild(el('div',{class:'bar'},[inp,go,el('button',{class:'sec',text:'סגור',onclick:function(){box.innerHTML='';}})]));box.appendChild(m);inp.focus();}
+
+/* ---------------- navigation screen ---------------- */
+var FIELDS=[['nDate','תאריך','date'],['nDist','מרחק משוער (ק״מ, קפיצות 0.5)','number','0.5'],['nPlan','ציון תכנון (0–5)','number','0.5'],['nDeb','ציון תחקיר (0–5)','number','0.5'],['nDone','נקודות שנדקרו','number','1'],['nTotal','סך נקודות','number','1']];
+function newReq(){S.reqId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random();}
+function showNav(){
+  var v=$('view');v.innerHTML='';newReq();var f=S.navF;
+  v.appendChild(el('section',{class:'card',id:'navEntry'}));
+  var fl=el('section',{class:'card',id:'navFilters'});
+  var dep=selectOf(depsAllowed(),f.departmentId,'כל המחלקות'),team=selectOf(teamsOf(f.departmentId),f.teamId,'כל הצוותים'),ty=selectOf(S.types,f.typeId,'כל הסוגים');dep.id='nfDep';team.id='nfTeam';ty.id='nfType';
+  var from=el('input',{type:'date',id:'nfFrom',value:f.from,'aria-label':'מתאריך'}),to=el('input',{type:'date',id:'nfTo',value:f.to,'aria-label':'עד תאריך'});
+  fl.appendChild(el('h3',{text:'סינון'}));
+  fl.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{for:'nfDep',text:'מחלקה'}),dep]),el('div',{},[el('label',{for:'nfTeam',text:'צוות'}),team]),el('div',{},[el('label',{for:'nfType',text:'סוג ניווט'}),ty]),el('div',{},[el('label',{for:'nfFrom',text:'מתאריך'}),from])]));
+  fl.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{for:'nfTo',text:'עד תאריך'}),to])]));
+  if(isAdmin()){var cc=el('input',{type:'checkbox',id:'nfCan'});cc.checked=f.includeCancelled;cc.onchange=function(){f.includeCancelled=cc.checked;loadResults();};fl.appendChild(el('label',{class:'inl'},[cc,'הצג תוצאות מבוטלות (היסטוריה)']));}
+  dep.onchange=function(){f.departmentId=dep.value;f.teamId='';showNav();};team.onchange=function(){f.teamId=team.value;loadResults();};
+  ty.onchange=function(){f.typeId=ty.value;loadResults();loadSnap();};from.onchange=function(){f.from=from.value;loadResults();loadSnap();};to.onchange=function(){f.to=to.value;loadResults();loadSnap();};
+  v.appendChild(fl);
+  v.appendChild(el('section',{class:'card',id:'navSnap'}));v.appendChild(el('section',{class:'card',id:'navResults'}));v.appendChild(el('div',{id:'navDetail'}));
+  if(isAdmin()){v.appendChild(el('section',{class:'card',id:'navCorr'}));v.appendChild(el('section',{class:'card',id:'navTypes'}));}
+  buildEntry();loadSnap();loadResults();if(isAdmin()){loadCorr();buildTypes();}
+}
+function buildEntry(){
+  var box=$('navEntry');box.innerHTML='';box.appendChild(el('h3',{text:'הזנת תוצאת ניווט'}));
+  if(archived()){box.appendChild(el('p',{class:'muted',text:'הקורס בארכיון — הזנה חסומה.'}));return;}
+  var sel=el('select',{id:'nSoldier'}),tsel=el('select',{id:'nType'});
+  S.types.filter(function(t){return t.active;}).forEach(function(t){tsel.appendChild(el('option',{value:t.id,text:t.name}));});
+  var ins={};box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{for:'nSoldier',text:'חייל'}),sel]),el('div',{},[el('label',{for:'nType',text:'סוג ניווט'}),tsel])]));
+  var grid=el('div',{class:'row'});FIELDS.forEach(function(d){var i=el('input',{id:d[0],type:d[2],step:d[3]||null});ins[d[0]]=i;grid.appendChild(el('div',{},[el('label',{for:d[0],text:d[1]}),i]));});box.appendChild(grid);
+  var notes=el('textarea',{id:'nNotes',rows:'2'});box.appendChild(el('label',{for:'nNotes',text:'הערות'}));box.appendChild(notes);
+  var m=el('div',{id:'nMsg',class:'msg',role:'status'}),save=el('button',{id:'nSave',text:'שמור ניווט'});
+  if(!S.types.some(function(t){return t.active;}))m.textContent='אין סוגי ניווט פעילים'+(isAdmin()?' — הוסף למטה.':' — פנה למנהל.'),m.className='msg err';
+  call('soldiers.list',{courseId:S.courseId,opts:{active:true}}).then(function(r){S.soldiers=r.ok?r.data:[];if(!S.soldiers.length){sel.appendChild(el('option',{value:'',text:'אין חיילים בתחום האחריות שלך'}));save.disabled=true;}
+    S.soldiers.forEach(function(x){sel.appendChild(el('option',{value:x.id,text:x.full_name+' · '+x.personal_number}));});});
+  save.onclick=function(){var missing=[];FIELDS.forEach(function(d){var i=ins[d[0]];var bad=i.value===''&&d[0]!=='nNotes';i.setAttribute('aria-invalid',bad?'true':'false');i.style.borderColor=bad?'var(--bad)':'';if(bad)missing.push(d[1]);});
+    if(!sel.value)missing.push('חייל');if(!tsel.value)missing.push('סוג ניווט');if(missing.length){setMsg(m,'חסר או לא תקין: '+missing.join(' · '),false);return;}
+    save.disabled=true;var data={request_id:S.reqId,soldier_id:sel.value,test_date:ins.nDate.value,navigation_type_id:tsel.value,distance_km:ins.nDist.value,plan_score:ins.nPlan.value,debrief_score:ins.nDeb.value,points_completed:ins.nDone.value,points_total:ins.nTotal.value,notes:notes.value};
+    call('nav.create',{courseId:S.courseId,data:data}).then(function(r){save.disabled=false;if(r.ok){setMsg(m,(r.data.duplicate?'הרשומה כבר נשמרה. ':'נשמר. ')+'ציון סופי: '+(Math.round(r.data.record.final_score*10)/10),true);newReq();FIELDS.forEach(function(d){ins[d[0]].value='';});notes.value='';loadResults();loadSnap();}else setMsg(m,r.message,false);}).catch(function(){save.disabled=false;setMsg(m,'שגיאת תקשורת. נסו שוב.',false);});};
+  box.appendChild(el('div',{class:'bar'},[save]));box.appendChild(m);
+}
+function snapOpts(){var f=S.navF,o={};if(f.typeId)o.typeId=f.typeId;if(f.from)o.from=f.from;if(f.to)o.to=f.to;return o;}
+function loadSnap(){call('nav.groups',{courseId:S.courseId,opts:snapOpts()}).then(function(r){var b=$('navSnap');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'תמונת מצב נוכחית'}));
+  b.appendChild(el('p',{class:'muted',text:'כולל רק חיילים לא מבוטלים ותוצאות לא מבוטלות. היסטוריה מלאה — ברשימת התוצאות.'}));
+  if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}var g=r.data;if(g.scope_note)b.appendChild(el('p',{class:'warn',text:g.scope_note}));
+  var rows=[[g.course.name+' (כל ההיקף)',g.course]].concat(g.departments.map(function(d){return ['מחלקה: '+d.name,d];})).concat(g.teams.map(function(t){return ['צוות: '+t.name,t];}));
+  var t=el('table',{id:'snapTable'},[el('thead',{},[el('tr',{},['קבוצה','חיילים','עם תוצאות','תוצאות','ממוצע'].map(function(h){return el('th',{text:h});}))])]);
+  var tb=el('tbody');rows.forEach(function(x){var q=x[1];if(q.suppressed){tb.appendChild(el('tr',{class:'sup'},[el('td',{text:(x[0].indexOf(':')>0?x[0].split(':')[0]+': ':'')+'קבוצה קטנה מ-5 חיילים — מוסתרת'}),el('td',{text:'—'}),el('td',{text:'—'}),el('td',{text:'—'}),el('td',{text:'—'})]));return;}var okW=q.soldiers_with_results!==null&&q.soldiers_with_results!==undefined,SUPP='מדוכא מטעמי פרטיות';tb.appendChild(el('tr',{class:okW&&q.soldiers_with_results<q.soldiers?'bad':''},[el('td',{text:x[0]}),el('td',{text:String(q.soldiers)}),el('td',{text:okW?q.soldiers_with_results+' / '+q.soldiers:SUPP}),el('td',{text:q.count===null||q.count===undefined?SUPP:String(q.count)}),el('td',{text:q.mean_display===null&&q.cohort_suppressed?SUPP:stat(q.mean_display)})]));});
+  t.appendChild(tb);b.appendChild(t);
+  var miss=g.soldiers.filter(function(x){return x.count===0;});
+  var mm=el('p',{id:'missingRes',class:miss.length?'warn':'muted',text:miss.length?'חסרה תוצאה ל-'+miss.length+' חיילים: '+miss.map(function(x){return x.full_name;}).join(', '):'לכל החיילים בתחום יש תוצאה.'});b.appendChild(mm);}).catch(function(){});}
+function listOpts(){var f=S.navF,o={courseId:S.courseId};['departmentId','teamId','typeId','from','to'].forEach(function(k){if(f[k])o[k]=f[k];});if(f.includeCancelled)o.includeCancelled=true;return o;}
+function loadResults(){call('nav.list',listOpts()).then(function(r){var b=$('navResults');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'תוצאות קודמות'}));
+  if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}if(!r.data.length){b.appendChild(el('p',{class:'muted',id:'noResults',text:'אין תוצאות להצגה.'}));return;}
+  var t=el('table',{class:'resp',id:'resTable'},[el('thead',{},[el('tr',{},['תאריך','חייל','צוות','סוג','ציון סופי','הוזן ע״י'].map(function(h){return el('th',{text:h});}))])]);var tb=el('tbody');
+  r.data.forEach(function(x){var st=el('td',{'data-l':'חייל'});st.appendChild(document.createTextNode(x.soldier_name));if(x.record_status==='cancelled')st.appendChild(el('span',{class:'badge can',text:'מבוטלת'}));if(x.soldier_cancelled)st.appendChild(el('span',{class:'badge can',text:'חייל מבוטל'}));
+    tb.appendChild(rowify(el('tr',{},[el('td',{'data-l':'תאריך',text:fmtDate(x.test_date)}),st,el('td',{'data-l':'צוות',text:x.team_name}),el('td',{'data-l':'סוג',text:x.type_name}),el('td',{'data-l':'ציון',text:x.final_display}),el('td',{'data-l':'הוזן ע״י',text:x.created_by_name})]),function(){showResult(x);},'פתיחת תוצאת ניווט'));});
+  t.appendChild(tb);b.appendChild(t);}).catch(function(){});}
+function showResult(x){var d=$('navDetail');d.innerHTML='';var c=el('section',{class:'card',id:'resDetail'});
+  c.appendChild(el('h3',{text:'תוצאה: '+x.soldier_name+' · '+fmtDate(x.test_date)}));
+  var dl=el('dl');function row(k,val){dl.appendChild(el('dt',{text:k}));dl.appendChild(el('dd',{text:String(val===''||val===null||val===undefined?'—':val)}));}
+  row('סוג ניווט',x.type_name);row('מרחק (ק״מ)',x.distance_km);row('ציון תכנון',x.plan_score);row('ציון תחקיר',x.debrief_score);row('נקודות',x.points_completed+' מתוך '+x.points_total);row('ציון נקודות',x.points_score_display);row('ציון סופי',x.final_display);row('הערות',x.notes);row('הוזן ע״י',x.created_by_name+(x.created_by?' ('+x.created_by+')':''));
+  c.appendChild(dl);var acts=el('div',{class:'bar'}),box=el('div',{id:'resBox'}),msg=el('div',{id:'resMsg',class:'msg'});
+  var lock=archived(),cancelled=x.record_status==='cancelled';
+  if(isAdmin()){if(cancelled)acts.appendChild(el('button',{id:'resRestore',text:'שחזר',disabled:lock,onclick:function(){reasonInline(box,'סיבה (אופציונלי)',false,function(rs,done){call('record.restore',{table:'NavigationTests',id:x.id}).then(function(r){done(r,'שוחזר');if(r.ok){loadResults();loadSnap();$('navDetail').innerHTML='';}});});}}));
+    else{acts.appendChild(el('button',{id:'resEdit',text:'עריכה',disabled:lock,onclick:function(){resultForm(x,box,true);}}));acts.appendChild(el('button',{id:'resCancel',class:'danger',text:'בטל תוצאה',disabled:lock,onclick:function(){reasonInline(box,'סיבת הביטול',true,function(rs,done){call('record.cancel',{table:'NavigationTests',id:x.id,reason:rs}).then(function(r){done(r,'בוטל');if(r.ok){loadResults();loadSnap();$('navDetail').innerHTML='';}});});}}));}}
+  else if(x.own&&!lock)acts.appendChild(el('button',{id:'resCorr',text:'בקשת תיקון',onclick:function(){resultForm(x,box,false);}}));
+  c.appendChild(acts);c.appendChild(box);c.appendChild(msg);
+  var h=el('div',{id:'resHist'},[el('h4',{text:'היסטוריית שינויים'})]);c.appendChild(h);d.appendChild(c);
+  call('record.history',{table:'NavigationTests',id:x.id}).then(function(r){if(!r.ok){h.appendChild(el('p',{class:'muted',text:r.message}));return;}if(!r.data.length)h.appendChild(el('p',{class:'muted',text:'אין אירועים.'}));
+    var AC={CREATE:'הוזן',EDIT:'עריכת מנהל',CANCEL:'ביטול',RESTORE:'שחזור',CORRECTION_REQUEST:'בקשת תיקון',CORRECTION_APPLIED:'תיקון הוחל',CORRECTION_APPROVED:'תיקון אושר',CORRECTION_REJECTED:'תיקון נדחה'};
+    r.data.forEach(function(e){var it=el('div',{style:'margin-bottom:6px'},[el('div',{text:(AC[e.action]||e.action)+' · '+e.at+(e.actor?' · '+e.actor:'')+(e.reason?' · סיבה: '+e.reason:'')})]);if(e.before||e.after)it.appendChild(el('div',{class:'muted',dir:'ltr',text:diffText(e.before,e.after)}));h.appendChild(it);});});
+  c.scrollIntoView&&c.scrollIntoView({block:'nearest'});}
+function resultForm(x,box,asAdmin){box.innerHTML='';var f=el('div',{class:'card'});var ins={},vals={nDate:x.test_date,nDist:x.distance_km,nPlan:x.plan_score,nDeb:x.debrief_score,nDone:x.points_completed,nTotal:x.points_total};
+  var key={nDate:'test_date',nDist:'distance_km',nPlan:'plan_score',nDeb:'debrief_score',nDone:'points_completed',nTotal:'points_total'};
+  var g=el('div',{class:'row'});FIELDS.forEach(function(d){var i=el('input',{id:'e'+d[0],type:d[2],step:d[3]||null,value:String(vals[d[0]])});ins[d[0]]=i;g.appendChild(el('div',{},[el('label',{for:'e'+d[0],text:d[1]}),i]));});f.appendChild(g);
+  var ty=selectOf(S.types.filter(function(t){return t.active||t.id===x.navigation_type_id;}),x.navigation_type_id);ty.id='eType';f.appendChild(el('label',{for:'eType',text:'סוג ניווט'}));f.appendChild(ty);
+  var notes=el('textarea',{id:'eNotes',rows:'2'});notes.value=x.notes||'';f.appendChild(el('label',{for:'eNotes',text:'הערות'}));f.appendChild(notes);
+  var reason=el('input',{id:'eReason',placeholder:asAdmin?'סיבת העריכה (חובה)':'סיבת בקשת התיקון (חובה)'});f.appendChild(el('label',{for:'eReason',text:'סיבה'}));f.appendChild(reason);
+  var m=el('div',{id:'eMsg',class:'msg'}),go=el('button',{id:'eGo',text:asAdmin?'שמור עריכה':'שלח בקשת תיקון'});
+  go.onclick=function(){var ch={};Object.keys(key).forEach(function(k){if(String(ins[k].value)!==String(vals[k]))ch[key[k]]=ins[k].value;});if(ty.value!==x.navigation_type_id)ch.navigation_type_id=ty.value;if(notes.value!==(x.notes||''))ch.notes=notes.value;
+    if(!Object.keys(ch).length){setMsg(m,'לא בוצע שינוי.',false);return;}if(!reason.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}go.disabled=true;
+    var p=asAdmin?call('record.edit',{table:'NavigationTests',id:x.id,patch:ch,reason:reason.value}):call('correction.request',{table:'NavigationTests',id:x.id,changes:ch,reason:reason.value});
+    p.then(function(r){go.disabled=false;if(r.ok){setMsg(m,asAdmin?'נשמר.':'הבקשה נשלחה לאישור מנהל.',true);loadResults();loadSnap();if(isAdmin())loadCorr();}else setMsg(m,r.message,false);}).catch(function(){go.disabled=false;setMsg(m,'שגיאת תקשורת. נסו שוב.',false);});};
+  f.appendChild(el('div',{class:'bar'},[go,el('button',{class:'sec',text:'סגור',onclick:function(){box.innerHTML='';}})]));f.appendChild(m);box.appendChild(f);}
+var CLBL={event_date:'תאריך אירוע',activity_type_id:'סוג פעילות',description:'תיאור',present:'נוכח',early_exit:'יציאה מוקדמת',absence_approved:'העדרות מאושרת',notes:'הערות',march_date:'תאריך מסע',location:'מיקום',km_no_stretcher:'ק״מ ללא אלונקה',km_stretcher:'ק״מ עם אלונקה',soldier_id:'חייל',exam_id:'מבחן',attempt:'ניסיון',attempt_date:'תאריך ניסיון',score:'ציון',owner_role:'אחראי',done:'בוצע',meeting_date:'תאריך שיחה',test_date:'תאריך מבחן',test_type_id:'סוג מבחן',pullups:'מתח',parallel_bars:'מקבילים',trap_bar:'מוט טרפז',run150x2:'ריצת 150×2',run3km:'ריצת 3 ק״מ',weapon_type:'סוג נשק',distance_m:'מרחק (מ׳)',examiner_score:'ציון בוחן',weapon_zeroed:'כוונון נשק',ylm_score:'ציון יל״מ',navigation_type_id:'סוג ניווט',distance_km:'מרחק (ק״מ)',plan_score:'ציון תכנון',debrief_score:'ציון תחקיר',points_completed:'נקודות שבוצעו',points_total:'סה״כ נקודות',status:'סטטוס',restrictions:'מגבלות',start_date:'תאריך התחלה',next_review_date:'תאריך בדיקה הבאה',event_type:'סוג אירוע'},
+  TLBL={NavigationTests:'מבחן ניווט',FitnessResults:'תוצאת כש״ג',MarksmanshipResults:'תוצאת קליעה',ExamResults:'תוצאת מבחן',AttendanceRecords:'נוכחות',ReadinessRecords:'כשירות',SoldierEvents:'אירוע חייל'};
+function corrLabel(k){return CLBL[k]||'שדה לא מזוהה';}
+function corrVal(k,v){if(v===null||v===undefined||v==='')return null;if(v===true||v==='TRUE'||v==='true')return 'כן';if(v===false||v==='FALSE'||v==='false')return 'לא';
+  if(k==='soldier_id'){var m=(V.sol||[]).filter(function(x){return x.id===v;})[0];return m?m.name:'חייל אחר';}
+  if(k==='navigation_type_id'){var t=(S.types||[]).filter(function(x){return x.id===v;})[0];return t?t.name:'(סוג לא מוצג)';}
+  if(/_id$/.test(k))return '(מזהה פנימי)';return String(v);}
+/* one correction request as a readable table: field (Hebrew) | previous value (stored snapshot taken when the request was made) | requested value. textContent only. */
+function corrView(q){var ch={},bf=null;try{ch=JSON.parse(q.changes_json)||{};}catch(e){}if(q.has_snapshot&&q.before&&typeof q.before==='object')bf=q.before;
+  var wrap=el('div',{class:'corr-view'}),t=el('table',{class:'ctab'}),h=el('tr');['שדה','ערך קודם','ערך מבוקש'].forEach(function(x){h.appendChild(el('th',{text:x}));});t.appendChild(h);
+  Object.keys(ch).forEach(function(k){var tr=el('tr',{'data-field':k}),pv=bf?(Object.prototype.hasOwnProperty.call(bf,k)?corrVal(k,bf[k]):undefined):undefined,nv=corrVal(k,ch[k]);
+    tr.appendChild(el('td',{text:corrLabel(k)}));tr.appendChild(el('td',{class:'cprev'+(bf&&pv!==undefined?'':' nosnap'),text:pv===undefined?'אין ערך קודם שמור':(pv===null?'(ריק)':pv)}));tr.appendChild(el('td',{class:'cnew',text:nv===null?'(ריק)':nv}));t.appendChild(tr);});
+  wrap.appendChild(el('div',{class:'tw'},[t]));if(!bf)wrap.appendChild(el('p',{class:'muted nosnapnote',text:'בקשה ישנה — הערך שהיה בעת הגשתה לא נשמר, ולכן לא מוצג ערך קודם.'}));return wrap;}
+function loadCorr(){call('correction.list',{courseId:S.courseId,status:'pending'}).then(function(r){var b=$('navCorr');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'בקשות תיקון ממתינות'}));
+  if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}if(!r.data.length){b.appendChild(el('p',{class:'muted',id:'noCorr',text:'אין בקשות ממתינות.'}));return;}
+  r.data.forEach(function(q){var it=el('div',{class:'card','data-req':q.id});
+    it.appendChild(el('div',{class:'corr-head'},[el('strong',{text:(TLBL[q.table_name]||'רשומה')+(q.soldier_name?' — '+q.soldier_name:'')})]));
+    it.appendChild(el('div',{class:'muted',text:'מבקש: '+q.requested_by+' · '+fmtStamp(q.requested_at)}));it.appendChild(corrView(q));it.appendChild(el('div',{class:'corr-reason',text:'סיבת הבקשה: '+q.reason}));
+    if(q.soldier_id)it.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',text:'לכרטיס '+q.soldier_name,onclick:function(){showCard(q.soldier_id);}})]));
+    var note=el('input',{placeholder:'הערת מנהל (אופציונלי)'}),m=el('div',{class:'msg'});
+    function dec(d){return function(){call('correction.review',{requestId:q.id,decision:d,note:note.value}).then(function(x){if(x.ok){loadCorr();loadResults();loadSnap();}else setMsg(m,x.message,false);});};}
+    it.appendChild(note);it.appendChild(el('div',{class:'bar'},[el('button',{class:'approve',text:'אשר',disabled:archived(),onclick:dec('approve')}),el('button',{class:'sec reject',text:'דחה',disabled:archived(),onclick:dec('reject')})]));it.appendChild(m);b.appendChild(it);});});}
+function buildTypes(){var b=$('navTypes');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'סוגי ניווט'}));var m=el('div',{id:'typeMsg',class:'msg'});
+  var refresh=function(){call('navtypes.list',{courseId:S.courseId}).then(function(r){if(r.ok){S.types=r.data;buildEntry();buildTypes();}});};
+  S.types.forEach(function(t){var row=el('div',{class:'bar','data-type':t.id},[el('span',{text:t.name+(t.active?'':' (לא פעיל)'),style:'flex:1'}),
+    el('button',{class:'sec tToggle',disabled:archived(),text:t.active?'השבת':'הפעל',onclick:function(){call('navtypes.setActive',{id:t.id,active:!t.active}).then(function(r){if(r.ok)refresh();else setMsg(m,r.message,false);});}}),
+    el('button',{class:'sec tRename',disabled:archived(),text:'שנה שם',onclick:function(){var nm=el('input',{value:t.name}),go=el('button',{text:'שמור',onclick:function(){call('navtypes.rename',{id:t.id,name:nm.value}).then(function(r){if(r.ok)refresh();else setMsg(m,r.message,false);});}});row.innerHTML='';row.appendChild(nm);row.appendChild(go);}})]);b.appendChild(row);});
+  var nn=el('input',{id:'newType',placeholder:'שם סוג ניווט חדש'});b.appendChild(el('div',{class:'bar'},[nn,el('button',{id:'addType',disabled:archived(),text:'הוסף סוג',onclick:function(){call('navtypes.create',{courseId:S.courseId,name:nn.value}).then(function(r){if(r.ok)refresh();else setMsg(m,r.message,false);});}})]));b.appendChild(m);}
+
+/* ---------------- commander assignments (admin) ---------------- */
+function showAssign(){
+  var v=$('view');v.innerHTML='';var box=el('section',{class:'card',id:'assignBox'});v.appendChild(box);
+  box.appendChild(el('h3',{text:'שיוכי מפקדים לתחומי אחריות'}));
+  box.appendChild(el('p',{class:'muted',text:'מפקד רואה רק חיילים שבתחום האחריות הפעיל שלו. שיוך למחלקה = שני הצוותים שלה; שיוך לצוות = אותו צוות בלבד; בלי שיוך פעיל — אין גישה לחיילים.'}));
+  var cmds=S.users.filter(function(u){return u.role==='commander'&&u.active!==false&&String(u.course_scope).split(',').map(function(x){return x.trim();}).indexOf(S.courseId)!==-1;});
+  var user=el('select',{id:'aUser'},cmds.map(function(u){return el('option',{value:u.email,text:u.display_name+' · '+u.email});})),type=el('select',{id:'aType'},[el('option',{value:'course',text:'כל הקורס'}),el('option',{value:'department',text:'מחלקה'}),el('option',{value:'team',text:'צוות'})]),target=el('select',{id:'aTarget'});
+  function fillTarget(){target.innerHTML='';if(type.value==='course'){target.appendChild(el('option',{value:S.courseId,text:course().name||'הקורס'}));}else if(type.value==='department'){S.org.departments.forEach(function(d){target.appendChild(el('option',{value:d.id,text:d.name}));});}else{S.org.teams.forEach(function(t){target.appendChild(el('option',{value:t.id,text:t.name+' ('+depName(t.department_id)+')'}));});}}
+  type.onchange=fillTarget;fillTarget();var m=el('div',{id:'aMsg',class:'msg',role:'status'});
+  var reasonIn=el('input',{id:'aReason',placeholder:'סיבת השיוך (חובה)'});
+  var add=el('button',{id:'aAdd',text:'הוסף שיוך',disabled:archived()||!cmds.length,onclick:function(){if(!reasonIn.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}call('assignments.create',{data:{course_id:S.courseId,user_email:user.value,scope_type:type.value,scope_id:target.value,reason:reasonIn.value}}).then(function(r){if(r.ok){reasonIn.value='';setMsg(m,'השיוך נוסף.',true);loadAssign();}else setMsg(m,r.message,false);});}});
+  if(!cmds.length)m.textContent='אין מפקדים בקורס. הוסיפו מפקד (users.add) ושייכו אותו לקורס.',m.className='msg err';
+  box.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{text:'מפקד'}),user]),el('div',{},[el('label',{text:'רמת שיוך'}),type]),el('div',{},[el('label',{text:'יעד'}),target]),el('div',{},[el('label',{text:'סיבה'}),reasonIn])]));box.appendChild(el('div',{class:'bar'},[add]));box.appendChild(m);
+  box.appendChild(el('div',{id:'aList'}));box.appendChild(el('div',{id:'aAct'}));loadAssign();
+}
+function loadAssign(){call('assignments.list',{courseId:S.courseId}).then(function(r){var b=$('aList');if(!b)return;b.innerHTML='';if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}
+  if(!r.data.length){b.appendChild(el('p',{class:'muted',id:'noAssign',text:'אין שיוכים. מפקדים ללא שיוך פעיל אינם רואים חיילים.'}));return;}
+  var T={course:'כל הקורס',department:'מחלקה',team:'צוות'};var t=el('table',{class:'resp',id:'assignTable'},[el('thead',{},[el('tr',{},['מפקד','רמה','יעד','סטטוס',''].map(function(h){return el('th',{text:h});}))])]);var tb=el('tbody');
+  r.data.forEach(function(a){var act=el('td',{'data-l':'פעולות'});
+    act.appendChild(el('button',{class:'sec aToggle',disabled:archived(),text:a.active?'בטל שיוך':'שחזר',onclick:function(){reasonInline($('aAct'),a.active?'סיבת הביטול':'סיבת השחזור',true,function(rs,done){call('assignments.setActive',{id:a.id,active:!a.active,expected_updated_at:a.updated_at,reason:rs}).then(function(x){done(x,'עודכן');if(x.ok)loadAssign();});});}}));
+    act.appendChild(el('button',{class:'sec aEdit',disabled:archived()||!a.active,text:'ערוך',onclick:function(){editAssign(a);}}));
+    tb.appendChild(el('tr',{class:a.active?'':'bad','data-aid':a.id},[el('td',{'data-l':'מפקד',text:a.user_email}),el('td',{'data-l':'רמה',text:T[a.scope_type]}),el('td',{'data-l':'יעד',text:a.scope_name}),el('td',{'data-l':'סטטוס'},[el('span',{class:'badge'+(a.active?'':' off'),text:a.active?'פעיל':'מבוטל'})]),act]));});
+  t.appendChild(tb);b.appendChild(t);});}
+function editAssign(a){var b=$('aAct');b.innerHTML='';var type=el('select',{id:'eaType'},[el('option',{value:'course',text:'כל הקורס'}),el('option',{value:'department',text:'מחלקה'}),el('option',{value:'team',text:'צוות'})]);type.value=a.scope_type;var target=el('select',{id:'eaTarget'});
+  function fill(){target.innerHTML='';var items=type.value==='course'?[{id:S.courseId,name:course().name||'הקורס'}]:(type.value==='department'?S.org.departments:S.org.teams);items.forEach(function(i){target.appendChild(el('option',{value:i.id,text:i.name}));});if(type.value===a.scope_type)target.value=a.scope_id;}
+  type.onchange=fill;fill();var reason=el('input',{id:'eaReason',placeholder:'סיבת השינוי (חובה)'}),m=el('div',{id:'eaMsg',class:'msg'});
+  var go=el('button',{id:'eaGo',text:'שמור',onclick:function(){call('assignments.update',{id:a.id,patch:{scope_type:type.value,scope_id:target.value},expected_updated_at:a.updated_at,reason:reason.value}).then(function(r){if(r.ok){b.innerHTML='';loadAssign();}else setMsg(m,r.message,false);});}});
+  b.appendChild(el('div',{class:'card'},[el('div',{class:'row'},[el('div',{},[el('label',{text:'רמה'}),type]),el('div',{},[el('label',{text:'יעד'}),target])]),el('label',{text:'סיבה'}),reason,el('div',{class:'bar'},[go,el('button',{class:'sec',text:'סגור',onclick:function(){b.innerHTML='';}})]),m]));}
+
+</script>
+<script>
+/* ===== v1.0.0 screens — descriptor driven. Everything is rendered with textContent/DOM nodes (never innerHTML with data). Enforcement is on the SERVER; hiding here is convenience only. ===== */
+var V={sol:[],cache:{}};
+function vcall(m,a,box,ok){return call(m,a).then(function(r){if(!r.ok){if(box)setMsg(box,r.message,false);return null;}if(ok)ok(r.data);return r.data;},function(e){if(box)fail(e,box);return null;});}
+function vsol(cb){vcall('soldiers.list',{courseId:S.courseId,opts:{}},null,function(d){V.sol=d.filter(function(s){return (s.record_status===undefined||s.record_status==='active')&&s.active!==false;}).map(function(s){return{id:s.id,name:s.full_name,personal_number:s.personal_number,department_id:s.department_id,team_id:s.team_id};});cb();});}
+function cell(v){if(v===null||v===undefined||v==='')return '—';if(typeof v==='boolean')return v?'כן':'לא';if(typeof v==='object')return Array.isArray(v)?v.length+' פריטים':JSON.stringify(v);if(typeof v==='string'){if(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(v))return fmtStamp(v);if(/^\d{4}-\d{2}-\d{2}$/.test(v))return fmtDate(v);}return String(v);}
+/* table tools: sort (header click / Enter, plus a select that also works on phones where the header row is hidden), optional text filter, row count */
+function sortTable(t,ci,dir){var tb=t.tBodies[0],ths=t.querySelectorAll('thead th');if(!tb)return;
+  Array.prototype.forEach.call(ths,function(x,k){if(k===ci)x.setAttribute('aria-sort',dir);else x.removeAttribute('aria-sort');});
+  var rows=Array.prototype.filter.call(tb.rows,function(r){return !r.classList.contains('nodata')&&!r.classList.contains('noresults');});
+  var blank=function(x){return x===''||x==='—';},num=function(x){return /^-?\d+(\.\d+)?%?$/.test(x)?parseFloat(x):null;};
+  rows.sort(function(a,b){var x=a.cells[ci]?a.cells[ci].textContent.trim():'',y=b.cells[ci]?b.cells[ci].textContent.trim():'';
+    if(blank(x)||blank(y))return blank(x)&&blank(y)?0:(blank(x)?1:-1);                 /* empty values always last */
+    var nx=num(x),ny=num(y),r=(nx!==null&&ny!==null)?nx-ny:x.localeCompare(y,'he',{numeric:true});return dir==='ascending'?r:-r;});
+  rows.forEach(function(r){tb.appendChild(r);});}
+function tableTools(t,opt){opt=opt||{};var wrap=el('div',{class:'tw'}),tb=t.tBodies[0],data=tb?Array.prototype.filter.call(tb.rows,function(r){return !r.classList.contains('nodata');}):[],n=data.length;
+  var heads=Array.prototype.map.call(t.querySelectorAll('thead th'),function(h){return h.textContent;});
+  if(n>=2){var bar=el('div',{class:'tbar'}),cnt=el('span',{class:'cnt',role:'status','aria-live':'polite'}),sel=el('select',{'aria-label':'מיון לפי'},[el('option',{value:'',text:'מיון…'})]),inp=null;
+    heads.forEach(function(h,k){if(!h)return;sel.appendChild(el('option',{value:k+':ascending',text:h+' ▲'}));sel.appendChild(el('option',{value:k+':descending',text:h+' ▼'}));});
+    sel.onchange=function(){if(!sel.value)return;var a=sel.value.split(':');sortTable(t,+a[0],a[1]);};
+    Array.prototype.forEach.call(t.querySelectorAll('thead th'),function(th,k){th.classList.add('sortable');var txt=th.textContent;if(!txt)return;
+      var go=function(){var d=th.getAttribute('aria-sort')==='ascending'?'descending':'ascending';sortTable(t,k,d);sel.value='';cnt.textContent='ממוין לפי '+txt+' — '+(d==='ascending'?'סדר עולה':'סדר יורד');};
+      th.textContent='';th.appendChild(el('button',{type:'button',class:'thbtn',text:txt,'aria-label':'מיון לפי '+txt,onclick:go}));});
+    var LIM=25,open=n<=LIM,more=null;var upd=function(){var term=inp?inp.value.trim().toLowerCase():'',shown=0,seen=0;Array.prototype.filter.call(tb.rows,function(r){return data.indexOf(r)!==-1;}).forEach(function(r){var ok=!term||r.textContent.toLowerCase().indexOf(term)!==-1;if(ok){seen++;}r.hidden=!ok||(!term&&!open&&seen>LIM);if(!r.hidden)shown++;});if(more)more.hidden=open||!!term;
+      var nr=tb.querySelector('tr.noresults');if(!shown&&!nr){nr=el('tr',{class:'noresults'},[el('td',{colspan:heads.length||1,class:'muted',text:'לא נמצאו תוצאות לחיפוש.'})]);tb.appendChild(nr);}else if(shown&&nr)nr.parentNode.removeChild(nr);
+      cnt.textContent=(term||!open)?('מוצגות '+shown+' מתוך '+n):(n+' שורות');};
+    if(opt.filter!==false&&n>8){inp=el('input',{type:'search','aria-label':'סינון הטבלה',placeholder:'סינון בטבלה…',oninput:upd});bar.appendChild(inp);}
+    bar.appendChild(sel);bar.appendChild(cnt);wrap.appendChild(bar);if(!open){more=el('button',{class:'ghost showmore',type:'button',text:'הצג את כל '+n+' השורות',onclick:function(){open=true;upd();}});}upd();}
+  wrap.appendChild(t);if(typeof more!=='undefined'&&more)wrap.appendChild(more);return wrap;}
+/* A2: an interactive row is a normal table row whose FIRST cell carries a real button (reachable by Tab, Enter and Space); the row itself keeps its table semantics and
+   a mouse click on the row still opens it (ignored when the click lands on another control). No role=button on <tr>, no nested interactive controls. */
+function rowify(tr,open,label){var td=tr.cells[0];if(!td)return tr;tr.classList.add('click');
+  var inner=td.querySelector('a,button,input,select,textarea'),txt=td.textContent.trim();
+  var btn=el('button',{type:'button',class:'rowbtn',onclick:function(e){e.stopPropagation();open();}});
+  if(inner){btn.textContent='פתיחה';btn.setAttribute('aria-label',(label||'פתיחת שורה')+(txt?': '+txt:''));td.appendChild(btn);}
+  else{while(td.firstChild)btn.appendChild(td.firstChild);if(label)btn.setAttribute('aria-label',label+(txt?' '+txt:''));td.appendChild(btn);}
+  tr.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('a,button,input,select,textarea'))return;open();});return tr;}
+function vtable(cols,rows,onrow,emptyText){var t=el('table',{class:'resp'}),h=el('tr');cols.forEach(function(c){h.appendChild(el('th',{scope:'col',text:c[1]}));});t.appendChild(el('thead',{},[h]));var b=el('tbody');
+  if(!rows||!rows.length){b.appendChild(el('tr',{class:'nodata'},[el('td',{colspan:cols.length,text:emptyText||'אין נתונים',class:'muted'})]));}
+  (rows||[]).forEach(function(r){var tr=el('tr',{});cols.forEach(function(c){var v=c[2]?c[2](r):r[c[0]];var td=el('td',{'data-l':c[1]});if(v instanceof Node)td.appendChild(v);else td.textContent=cell(v);tr.appendChild(td);});if(onrow)rowify(tr,function(){onrow(r);});b.appendChild(tr);});t.appendChild(b);return tableTools(t);}
+/* field: {n,l,t:text|number|date|select|soldier|textarea|check|file, o:[[v,l]], d:default, req} */
+function vfield(f,ins){var id='f_'+f.n,inp,pick=null,eid='err_'+f.n,u=2;while(document.getElementById(id)||document.getElementById(eid)){id='f_'+f.n+'_'+u;eid='err_'+f.n+'_'+u;u++;}
+  if(f.t==='select'||f.t==='soldier'){inp=el('select',{id:id});
+    /* A3: a REQUIRED select without an explicit default starts on a blank placeholder (no silent auto-select of the first option); an explicit f.d is kept. */
+    var hasDef=f.d!==undefined&&f.d!==null&&f.d!=='';if(!f.req||f.t==='soldier'||!hasDef)inp.appendChild(el('option',{value:'',text:'— בחר —'}));
+    (f.t==='soldier'?V.sol.map(function(s){return[s.id,s.name];}):(typeof f.o==='function'?f.o():f.o)||[]).forEach(function(o){inp.appendChild(el('option',{value:o[0],text:o[1]}));});if(f.d)inp.value=f.d;
+    if(f.t==='soldier'&&V.sol.length>12){var all=V.sol.slice();pick=el('input',{id:'fq_'+f.n,type:'search','aria-label':'חיפוש חייל ברשימה',placeholder:'חיפוש חייל לפי שם…',oninput:function(){var q=pick.value.trim().toLowerCase(),cur=inp.value;inp.innerHTML='';inp.appendChild(el('option',{value:'',text:'— בחר —'}));all.filter(function(x){return !q||x.name.toLowerCase().indexOf(q)!==-1||x.id===cur;}).forEach(function(x){inp.appendChild(el('option',{value:x.id,text:x.name}));});inp.value=cur;}});}}
+  else if(f.t==='textarea')inp=el('textarea',{id:id,rows:3});else if(f.t==='check')inp=el('input',{id:id,type:'checkbox'});else if(f.t==='file')inp=el('input',{id:id,type:'file'});
+  else{inp=el('input',{id:id,type:f.t||'text'});if(f.ph)inp.setAttribute('placeholder',f.ph);if(f.t==='number')inp.setAttribute('step','any');if(f.d!==undefined)inp.value=f.d;}
+  ins[f.n]=inp;
+  if(f.req){inp.setAttribute('aria-required','true');inp.required=true;}
+  /* every field owns ONE error element, tied to the control with aria-describedby (not a live region: the focus move reads it once) */
+  var er=el('div',{id:eid,class:'msg err ferr',hidden:true});inp.setAttribute('aria-describedby',eid);inp._eid=eid;
+  var clr=function(){if(er.hidden)return;er.hidden=true;er.textContent='';inp.removeAttribute('aria-invalid');};inp.addEventListener('input',clr);inp.addEventListener('change',clr);
+  if(f.fmt==='mmss'){inp.setAttribute('inputmode','numeric');inp.setAttribute('autocomplete','off');}
+  var lab=el('label',{for:id},[f.l,f.req?el('span',{class:'req','aria-hidden':'true',text:' *'}):null]);
+  if(f.t==='check')return el('div',{class:'chk'},[inp,lab,er]);
+  return el('div',{},[lab,pick,inp,er]);}
+/* B8 — LOCAL format check for mm:ss (same rule as the server: 1-2 digit minutes, 2 digit seconds 00-59). The server check stays authoritative; this only avoids a round trip. */
+function mmssError(v){v=String(v==null?'':v).trim();if(v==='')return '';var m=/^(\d{1,2}):(\d{2})$/.exec(v);if(!m)return 'זמן לא תקין — נדרש פורמט דקות:שניות (mm:ss), למשל 13:00';if(+m[2]>59)return 'השניות חייבות להיות בין 00 ל-59, למשל 13:00';return '';}
+/* returns the first invalid mm:ss control (or null); the caller moves the focus */function checkTimes(fields,ins){var first=null;fields.forEach(function(f){if(f.fmt!=='mmss')return;var i=ins[f.n],e=document.getElementById(i._eid||('err_'+f.n)),msg=mmssError(i.value);if(msg){if(e){e.textContent=f.l.split(' — ')[0]+': '+msg;e.hidden=false;}i.setAttribute('aria-invalid','true');if(!first)first=i;}else if(!(f.req&&String(i.value==null?'':i.value).trim()==='')){if(e){e.hidden=true;e.textContent='';}i.removeAttribute('aria-invalid');}});return first;}
+function reqMsg(f,i){var l=String(f.l).split(' — ')[0].replace(/\s*\(.*\)\s*$/,'');if(f.t==='check')return l+': יש לסמן כדי להמשיך';if(f.t==='select'||f.t==='soldier'){var n=Array.prototype.filter.call(i.options,function(o){return o.value!=='';}).length;return n?l+': יש לבחור ערך':l+': אין אפשרויות זמינות לבחירה';}if(f.t==='file')return l+': יש לצרף קובץ';return l+': שדה חובה — יש למלא ערך';}
+/* A3: LOCAL required validation by f.req (UX only — the server stays authoritative). Returns the first invalid control. */
+function checkRequired(fields,ins){var first=null;fields.forEach(function(f){if(!f.req)return;var i=ins[f.n],e=document.getElementById(i._eid||('err_'+f.n)),ok=f.t==='check'?i.checked:f.t==='file'?!!(i.files&&i.files.length):String(i.value==null?'':i.value).trim()!=='';if(!ok){if(e){e.textContent=reqMsg(f,i);e.hidden=false;}i.setAttribute('aria-invalid','true');if(!first)first=i;}});return first;}
+function validateForm(fields,ins){var a=checkRequired(fields,ins),b=checkTimes(fields,ins),first=null;[a,b].forEach(function(x){if(x&&(!first||(first.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_PRECEDING)))first=x;});var n=fields.filter(function(f){var e=document.getElementById((ins[f.n]&&ins[f.n]._eid)||('err_'+f.n));return e&&!e.hidden;}).length;return{first:first,count:n};}
+function readVals(fields,ins){var v={};fields.forEach(function(f){var i=ins[f.n];if(f.t==='check')v[f.n]=i.checked;else if(f.t==='file')v[f.n]=i.files&&i.files[0];else v[f.n]=i.value;});return v;}
+function vform(title,fields,run,opt){opt=opt||{};var ins={},box=el('div',{class:'msg'}),c=el('section',{class:'card'});c.appendChild(el('h3',{text:title}));var g=el('div',{class:'row'});fields.forEach(function(f){g.appendChild(vfield(f,ins));});c.appendChild(g);if(fields.some(function(f){return f.req;}))c.insertBefore(el('p',{class:'reqnote',text:'שדות המסומנים ב-* הם שדות חובה.'}),g);
+  var btn=el('button',{type:'button',text:opt.btn||'שמירה',disabled:archived()&&!opt.readonly,onclick:function(){var vr=validateForm(fields,ins);if(vr.first){setMsg(box,'יש לתקן '+vr.count+' שדות מסומנים. הנתונים לא נשלחו.',false);box.setAttribute('role','status');vr.first.focus();return;}box.removeAttribute('role');btn.disabled=true;Promise.resolve(run(readVals(fields,ins),box)).then(function(){btn.disabled=archived();});}});c.appendChild(el('div',{class:'bar'},[btn]));c.appendChild(box);return c;}
+function clean(o){var r={};Object.keys(o).forEach(function(k){if(o[k]!==''&&o[k]!==undefined&&o[k]!==null)r[k]=o[k];});return r;}
+function rid(){return(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random();}
+function listBlock(title,m,args,pick,cols,onrow,extra){var c=el('section',{class:'card'}),out=el('div'),msg=el('div',{class:'msg',role:'status'}),seq=0;c.appendChild(el('div',{class:'bar'},[el('h3',{text:title,style:'margin:0'}),el('button',{class:'sec',text:'רענון',onclick:go})]));c.appendChild(msg);c.appendChild(out);
+  function go(){var my=++seq;out.innerHTML='';msg.textContent='';msg.className='msg';out.appendChild(el('div',{class:'loading',text:'טוען…'}));c.setAttribute('aria-busy','true');
+    call(m,typeof args==='function'?args():args).then(function(r){if(my!==seq)return;c.removeAttribute('aria-busy');out.innerHTML='';if(!r.ok){setMsg(msg,r.message,false);return;}setMsg(msg,'',true);var d=r.data,rows=pick?pick(d):d;out.appendChild(vtable(cols,rows,onrow));if(extra)extra(d,out);},
+      function(e){if(my!==seq)return;c.removeAttribute('aria-busy');out.innerHTML='';fail(e,msg);out.appendChild(el('button',{class:'sec',text:'נסו שוב',onclick:go}));});}go();c.refresh=go;return c;}
+function saved(box,refresh){return function(d){if(d){setMsg(box,'נשמר.',true);if(refresh)refresh();}};}
+/* ---- product-dev6.2: dates (he-IL, no timezone drift), attendance picker, event detail ---- */
+function fmtDate(d){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||''));return m?m[3]+'.'+m[2]+'.'+m[1]:'—';}
+function todayIso(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function fmtStamp(t){var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})/.exec(String(t||''));return m?m[3]+'.'+m[2]+'.'+m[1]+' '+m[4]:'—';}
+function scopeLabel(r){return r.scope_type==='course'?'כל הקורס':r.scope_type==='department'?('מחלקה '+depName(r.scope_id)):r.scope_type==='team'?('צוות '+teamName(r.scope_id)):'—';}
+function scopeOptions(){var o=[];if(wide())o.push(['course:'+S.courseId,'כל הקורס']);depsAllowed().forEach(function(d){o.push(['department:'+d.id,'מחלקה: '+d.name]);});S.org.teams.forEach(function(t){if(wide()||S.mine.team_ids.indexOf(t.id)!==-1)o.push(['team:'+t.id,'צוות: '+t.name]);});return o;}
+/* attendance form: everyone present by default; the user marks only absentees / early exits. The server re-validates scope and soldiers (Mods.scopeAllowed_). */
+function attendanceForm(types,onSaved){
+  var c=el('section',{class:'card',id:'attForm'}),box=el('div',{class:'msg',role:'status',id:'attMsg'}),state={abs:{},early:{},q:'',req:rid(),busy:false,soldiers:[]};
+  c.appendChild(el('h3',{text:'אירוע נוכחות'}));c.appendChild(el('p',{class:'muted',text:'כברירת מחדל כל החיילים בתחום האירוע נוכחים. מסמנים רק חיילים שנעדרו או יצאו מוקדם.'}));
+  var dt=el('input',{type:'date',id:'attDate',value:todayIso(),'aria-label':'תאריך'}),tp=selectOf(types,'');if(types.length&&!tp.value)tp.value=types[0].id;tp.id='attType';tp.setAttribute('aria-label','סוג פעילות');
+  var sc=el('select',{id:'attScope','aria-label':'תחולה'});scopeOptions().forEach(function(o){sc.appendChild(el('option',{value:o[0],text:o[1]}));});
+  var g=el('div',{class:'row'},[el('div',{},[el('label',{for:'attDate',text:'תאריך'}),dt]),el('div',{},[el('label',{for:'attType',text:'סוג פעילות'}),tp]),el('div',{},[el('label',{for:'attScope',text:'תחולה'}),sc])]);c.appendChild(g);
+  if(!sc.options.length){c.appendChild(el('div',{class:'msg err',text:'אין לך תחום אחריות שבו אפשר לרשום נוכחות.'}));return c;}
+  var count=el('div',{class:'attcount',id:'attCount',role:'status','aria-live':'polite'}),search=el('input',{type:'search',id:'attSearch',placeholder:'חיפוש חייל…','aria-label':'חיפוש חייל'}),listBox=el('div',{class:'attlist',id:'attList'});
+  var selAll=el('button',{class:'sec',type:'button',id:'attSelAll',text:'סמן את כל המוצגים כנעדרים'}),clr=el('button',{class:'sec',type:'button',id:'attClear',text:'נקה סימונים'});
+  c.appendChild(el('div',{class:'tbar'},[search,selAll,clr]));c.appendChild(count);c.appendChild(listBox);
+  function scopeSoldiers(){var v=sc.value.split(':'),t=v[0],id=v[1];return V.sol.filter(function(s){return t==='course'||(t==='department'&&s.department_id===id)||(t==='team'&&s.team_id===id);});}
+  function nAbs(){return Object.keys(state.abs).length;}function nEar(){return Object.keys(state.early).length;}
+  function paintCount(){var n=state.soldiers.length;count.textContent='בתחום האירוע '+n+' חיילים · נוכחים '+(n-nAbs())+' · נעדרים '+nAbs()+' · יציאה מוקדמת '+nEar();}
+  function shown(){var q=state.q.trim();return state.soldiers.filter(function(s){return !q||String(s.name).indexOf(q)!==-1||String(s.personal_number||'').indexOf(q)!==-1;});}
+  function paint(){listBox.innerHTML='';var rows=shown();if(!rows.length){listBox.appendChild(el('div',{class:'muted',text:state.soldiers.length?'אין חיילים התואמים לחיפוש.':'אין חיילים פעילים בתחום שנבחר.'}));paintCount();return;}
+    rows.forEach(function(s){var a=el('input',{type:'checkbox','data-sid':s.id,'data-kind':'abs','aria-label':'נעדר: '+s.name}),e=el('input',{type:'checkbox','data-sid':s.id,'data-kind':'early','aria-label':'יציאה מוקדמת: '+s.name});a.checked=!!state.abs[s.id];e.checked=!!state.early[s.id];
+      a.onchange=function(){if(a.checked){state.abs[s.id]=1;delete state.early[s.id];e.checked=false;}else delete state.abs[s.id];paintCount();};
+      e.onchange=function(){if(e.checked){state.early[s.id]=1;delete state.abs[s.id];a.checked=false;}else delete state.early[s.id];paintCount();};
+      listBox.appendChild(el('div',{class:'attrow'+(state.abs[s.id]?' abs':'')},[el('span',{class:'nm',text:s.name}),el('label',{class:'inl'},[a,'נעדר']),el('label',{class:'inl'},[e,'יציאה מוקדמת'])]));});paintCount();}
+  function rescope(){state.abs={};state.early={};state.soldiers=scopeSoldiers();state.req=rid();paint();}
+  sc.onchange=rescope;search.oninput=function(){state.q=search.value;paint();};
+  selAll.onclick=function(){shown().forEach(function(s){state.abs[s.id]=1;delete state.early[s.id];});paint();};clr.onclick=function(){state.abs={};state.early={};paint();};
+  var save=el('button',{id:'attSave',text:'שמירת אירוע',disabled:archived()}),bar=el('div',{class:'bar'},[save]);c.appendChild(bar);c.appendChild(box);
+  save.onclick=function(){if(state.busy)return;if(!dt.value){setMsg(box,'יש לבחור תאריך.',false);dt.setAttribute('aria-invalid','true');return;}dt.removeAttribute('aria-invalid');if(!tp.value){setMsg(box,'יש לבחור סוג פעילות.',false);return;}
+    var v=sc.value.split(':'),nA=nAbs(),nE=nEar(),total=state.soldiers.length;if(!total){setMsg(box,'אין חיילים פעילים בתחום שנבחר.',false);return;}
+    state.busy=true;save.disabled=true;setMsg(box,'שומר…',true);
+    var ab=Object.keys(state.abs).map(function(id){return{soldier_id:id};});
+    call('attendance.create',{courseId:S.courseId,data:{request_id:state.req,event_date:dt.value,activity_type_id:tp.value,scope_type:v[0],scope_id:v[1],absent:ab,early_exit:Object.keys(state.early)}}).then(function(r){state.busy=false;save.disabled=archived();
+      if(!r.ok){setMsg(box,r.message,false);return;}   /* the request id is kept, so a retry after a lost answer cannot create a second event */
+      setMsg(box,r.data.duplicate?'האירוע כבר נשמר קודם — לא נוצר אירוע נוסף.':'האירוע נשמר: '+(r.data.records-nA)+' נוכחים, '+nA+' נעדרים, '+nE+' יציאה מוקדמת (סה״כ '+r.data.records+' רישומים).',true);
+      state.req=rid();state.abs={};state.early={};paint();if(onSaved)onSaved();},function(e){state.busy=false;save.disabled=archived();fail(e,box);});};
+  vsol(function(){rescope();});return c;}
+/* read-only event detail (attendance.roll — server already limits it to soldiers the caller may see) */
+function openEventDetail(ev){var old=$('evDetail');if(old)old.parentNode.removeChild(old);var d=el('section',{class:'card',id:'evDetail',tabindex:'-1','aria-label':'פרטי אירוע נוכחות'}),m=el('div',{class:'msg',role:'status'});
+  d.appendChild(el('div',{class:'bar'},[el('h3',{style:'margin:0',text:'אירוע נוכחות — '+fmtDate(ev.event_date)+' · '+(ev.type_name||'')}),el('button',{class:'sec',id:'evClose',text:'סגירה',onclick:function(){d.parentNode.removeChild(d);}})]));
+  d.appendChild(el('p',{class:'muted',text:'תחולה: '+scopeLabel(ev)+' · סה״כ '+ev.total}));d.appendChild(m);$('view').appendChild(d);d.focus();
+  vcall('attendance.roll',{courseId:S.courseId,eventId:ev.id},m,function(rows){var abs=rows.filter(function(r){return !r.present;}),ear=rows.filter(function(r){return r.present&&r.early_exit;});
+    if(!rows.length){d.appendChild(el('div',{class:'muted',text:'אין רישומים להצגה בהיקף שלך.'}));return;}
+    function sect(t,a){d.appendChild(el('h3',{text:t+' ('+a.length+')'}));d.appendChild(a.length?vtable([['soldier_name','שם'],['early_exit','יציאה מוקדמת',function(r){return r.early_exit?'כן':'לא';}],['notes','הערה']],a):el('div',{class:'muted',text:'אין.'}));}
+    sect('נעדרים',abs);sect('יציאה מוקדמת (נוכחים)',ear);d.appendChild(el('p',{class:'muted',text:'נוכחים מלאים: '+(rows.length-abs.length-ear.length)+' מתוך '+rows.length+'.'}));});}
+var STATUS={fit:'כשיר',fit_with_restrictions:'כשיר עם מגבלות',unfit:'לא כשיר'};
+function kv(d){var dl=el('dl');Object.keys(d).forEach(function(k){dl.appendChild(el('dt',{text:k}));dl.appendChild(el('dd',{text:cell(d[k])}));});return dl;}
+var DOMLAB={fitness:'כש״ג',navigation:'ניווט',marksmanship:'קליעה',exams:'מבחנים',readiness:'כשירות',attendance:'נוכחות',marches:'מסעות'};
+function ovSummary(d){if(d.suppressed)return el('div',{class:'notice',text:d.reason});var w=el('div',{class:'kpis'});function tile(l,v){w.appendChild(el('div',{class:'kpi'},[el('div',{class:'kv',text:cell(v)}),el('div',{class:'kl',text:l})]));}tile('חיילים בהיקף',d.soldiers);if(d.active_soldiers!==undefined)tile('פעילים',d.active_soldiers);var c=d.completeness||{};Object.keys(DOMLAB).forEach(function(k){var x=c[k];if(x&&typeof x==='object'&&x.with_data!==undefined)tile(DOMLAB[k]+' — עם נתונים',x.suppressed||x.with_data===null?'מדוכא מטעמי פרטיות':x.with_data+' מתוך '+(x.with_data+x.missing));});tile('מדד',d.health&&d.health.index!==null&&d.health.index!==undefined?d.health.index:'לא מוגדר');return w;}
+function vsum(title,m,args,fmt){var c=el('section',{class:'card'});c.appendChild(el('h3',{text:title}));var b=el('div');c.appendChild(b);vcall(m,args,b,function(d){b.appendChild(fmt?fmt(d):kv(d));});return c;}
+/* ---------- screens ---------- */
+/* ---------- course dashboard ("מצב קורס"): what is the state, what needs attention — every number comes from the existing permission-checked API ---------- */
+var URG={red:'דחוף',yellow:'לתשומת לב'},FLBL={full_name:'שם מלא',pakal:'פק״ל',enlistment_date:'תאריך גיוס'};
+function kpi(id,label,value,sub,tone,go){var k=el(go?'button':'div',{id:id,class:'kpi'+(tone?' '+tone:'')+(go?' kpib':''),type:go?'button':null,onclick:go||null},[el('div',{class:'kv',text:String(value)}),el('div',{class:'kl',text:label}),sub?el('div',{class:'ks',text:sub}):null,tone==='red'?el('div',{class:'kt',text:'⚠ דורש טיפול'}):tone==='amber'?el('div',{class:'kt',text:'לתשומת לב'}):null]);return k;}
+/* product-dev6.2: local explainable insights panel (group level only; each card shows window, N, source, formula, freshness, caveat) */
+function insightsPanel(cid){var c=el('section',{class:'card',id:'dashInsights','aria-busy':'true'}),box=el('div',{class:'insights'}),m=el('div',{class:'msg',role:'status'});
+  c.appendChild(el('h3',{text:'תובנות סטטיסטיות מקומיות'}));c.appendChild(m);c.appendChild(box);m.className='msg loading';m.textContent='טוען…';
+  call('analytics.insights',{courseId:cid,f:{}}).then(function(r){if(S.courseId!==cid||!$('dashInsights'))return;c.removeAttribute('aria-busy');m.className='msg';m.textContent='';
+    if(!r.ok){setMsg(m,r.message,false);return;}var d=r.data;c.appendChild(el('p',{class:'muted',text:d.notice+' עודכן: '+fmtStamp(d.generated_at)+'.'}));
+    if(!d.items.length)box.appendChild(el('p',{class:'muted',id:'insEmpty',text:'אין מספיק נתונים להצגת תובנות.'}));
+    d.items.forEach(function(i){var det=el('details',{},[el('summary',{text:'איך חושב?'}),el('div',{text:'חלון: '+(i.window.from||'—')+' עד '+(i.window.to||'—')+' · N='+i.n}),el('div',{text:'מקור: '+i.source.join(', ')}),el('div',{text:'נוסחה: '+i.formula}),el('div',{text:'הסתייגות: '+i.caveat}),el('div',{text:'נוצר כי: '+i.reason}),i.question?el('div',{text:'שאלת בדיקה: '+i.question}):null]);
+      box.appendChild(el('article',{class:'ins','data-ins':i.id},[el('h4',{text:i.title}),el('div',{text:i.text}),det]));});
+    if(d.suppressed.length){var sd=el('details',{class:'muted'},[el('summary',{text:'תובנות שלא הוצגו ('+d.suppressed.length+')'})]);d.suppressed.forEach(function(x){sd.appendChild(el('div',{text:x.reason}));});c.appendChild(sd);}},
+    function(e){c.removeAttribute('aria-busy');m.className='msg';fail(e,m);});return c;}
+/* product-dev6.2: analytic A4 RTL report — preview (everyone with dashboard.view, own scope) + PDF (admin). The preview is the SAME html that is converted to PDF. */
+function analyticReportCard(onGen){var c=el('section',{class:'card',id:'anaReport'}),m=el('div',{class:'msg',role:'status',id:'anaMsg'}),host=el('div',{class:'rptprev',id:'anaPrev',hidden:true}),dep=selectOf(depsAllowed(),'','כל המחלקות');dep.id='anaDep';dep.setAttribute('aria-label','מחלקה');
+  c.appendChild(el('h3',{text:'דוח אנליטי A4 (ברירת המחדל)'}));c.appendChild(el('p',{class:'muted',text:'מדדים, טבלת הישגים, השוואות, רדאר תיאורי ומגמות — מחושבים מקומית מהנתונים המורשים לך בלבד. ללא שיפוט על חיילים וללא פרטי קשר לחירום.'}));
+  function spec(){return{departmentId:dep.value||undefined};}
+  var pv=el('button',{id:'anaPreview',class:'sec',text:'צפייה בדוח האנליטי',onclick:function(){pv.disabled=true;setMsg(m,'מכין תצוגה…',true);call('reports.preview',{courseId:S.courseId,spec:spec()}).then(function(r){pv.disabled=false;if(!r.ok){setMsg(m,r.message,false);return;}setMsg(m,r.data.data.small_group?r.data.data.reason:'התצוגה מוכנה ('+r.data.data.soldiers+' חיילים, '+r.data.pages+' עמודים).',!r.data.data.small_group);
+    host.innerHTML='';var fr=el('iframe',{title:'תצוגה מקדימה של הדוח',sandbox:'',id:'anaFrame'});fr.srcdoc=r.data.html;host.appendChild(fr);host.hidden=false;},function(e){pv.disabled=false;fail(e,m);});}});
+  var bar=el('div',{class:'bar'},[el('div',{style:'min-width:180px'},[dep]),pv]);
+  if(isAdmin())bar.appendChild(el('button',{id:'anaPdf',text:'הפק PDF אנליטי',onclick:function(){var b=this;b.disabled=true;vcall('reports.generate',{courseId:S.courseId,spec:spec(),format:'pdf'},m,function(d){setMsg(m,'הדוח נוצר.',true);if(onGen)onGen();}).then(function(){b.disabled=false;});}}));
+  c.appendChild(bar);c.appendChild(m);c.appendChild(host);return c;}
+function dashScreen(v){
+  var cid=S.courseId,head=el('section',{class:'card',id:'dashHead'}),kp=el('div',{id:'dashKpis',class:'kpis'}),msg=el('div',{class:'msg',role:'status',id:'dashMsg'}),todo=el('section',{class:'card',id:'dashTodo','aria-busy':'true'}),tl=el('div',{id:'dashTodoList'}),items=[],left=0;
+  head.appendChild(el('h3',{text:'מדדי הקורס · '+(course().name||'')}));head.appendChild(el('p',{class:'muted',text:(archived()?'הקורס בארכיון — קריאה בלבד. ':'')+(wide()?'תצוגה לכל הקורס.':'תצוגה לפי השיוך שלך בלבד.')}));
+  head.appendChild(msg);head.appendChild(kp);todo.appendChild(el('h3',{text:'דורש טיפול'}));todo.appendChild(tl);v.appendChild(head);v.appendChild(todo);v.appendChild(insightsPanel(cid));
+  msg.textContent='טוען…';msg.className='msg loading';tl.appendChild(el('div',{class:'loading',text:'טוען…'}));
+  var alive=function(){return S.courseId===cid&&!!$('dashKpis');};
+  function item(sev,text,btn,tab,sols){items.push({sev:sev,text:text,btn:btn,tab:tab,sols:sols||[]});}
+  function sols(list,idk,nmk){var seen={},out=[];list.forEach(function(x){var id=x[idk],nm=x[nmk];if(id&&nm&&!seen[id]){seen[id]=1;out.push({id:id,name:nm});}});return out;}
+  function done(){if(!alive())return;if(--left>0)return;todo.removeAttribute('aria-busy');tl.innerHTML='';
+    if(!items.length){tl.appendChild(el('p',{class:'muted',id:'dashEmpty',text:'אין משימות פתוחות כרגע.'}));return;}
+    var rank={red:0,amber:1,'':2};items.sort(function(a,b){return rank[a.sev]-rank[b.sev];});
+    items.forEach(function(i){var tt=el('div',{class:'tt'},[el('div',{},[i.sev?el('span',{class:'sev '+i.sev,text:i.sev==='red'?'דחוף':'לתשומת לב'}):null,i.text])]);if(i.sols.length){var ch=el('div',{class:'chips','aria-label':'חיילים רלוונטיים'});i.sols.slice(0,5).forEach(function(x){ch.appendChild(el('button',{class:'chip',type:'button','data-sid':x.id,text:x.name,title:'פתיחת כרטיס '+x.name,onclick:function(){showCard(x.id);}}));});if(i.sols.length>5)ch.appendChild(el('span',{class:'muted',text:'ועוד '+(i.sols.length-5)+' — ראו במסך המלא'}));tt.appendChild(ch);}
+      tl.appendChild(el('div',{class:'todo '+i.sev},[tt,el('button',{class:'sec',text:i.btn,onclick:function(){showTab(i.tab);}})]));});}
+  function run(m,a,ok,bad){left++;call(m,a).then(function(r){if(!alive())return;if(r.ok)ok(r.data);else if(bad)bad(r);done();},function(e){if(alive()&&bad)bad({message:'שגיאת תקשורת'});done();});}
+  left+=2;                                                                                  /* 1 = hold until every request is registered, 1 = overview */
+  call('dash.overview',{courseId:cid,opts:{}}).then(function(r){if(!alive())return;msg.className='msg';
+    if(!r.ok){setMsg(msg,r.message||'לא ניתן לטעון את תמונת המצב.',false);kp.appendChild(el('button',{class:'sec',text:'נסו שוב',onclick:function(){showTab('dash');}}));done();return;}
+    msg.textContent='';var o=r.data;if(o.suppressed){kp.appendChild(el('div',{class:'notice',id:'dashSmallGroup',role:'status',text:o.reason}));done();return;}var fcm=(o.completeness&&o.completeness.fitness)||{},a=o.alerts||{open:0,red:0,yellow:0},rd=(o.readiness&&o.readiness.counts)||{},att=o.attendance||{},fit=o.fitness||{};
+    if(!o.soldiers){kp.appendChild(el('div',{class:'notice',id:'dashEmptyCourse',text:isAdmin()?'עדיין אין חיילים בקורס. אפשר להוסיף חייל במסך "חיילים" או לייבא מ-Excel (תחום "ניהול").':'אין חיילים להצגה בשיוך שלך. אם לא שויכת לצוות — פנה למנהל המערכת.'}));}
+    kp.appendChild(kpi('kpiSoldiers','חיילים פעילים',o.active_soldiers,'מתוך '+o.soldiers+' בקורס',null,function(){showTab('soldiers');}));
+    kp.appendChild(a.suppressed?kpi('kpiAlerts','התראות פתוחות','יש התראות פתוחות','המספרים מדוכאים מטעמי פרטיות — פירוט במסך ההתראות','amber',function(){showTab('alerts');}):kpi('kpiAlerts','התראות פתוחות',a.open,a.open?('דחופות: '+a.red+' · לתשומת לב: '+a.yellow):'אין התראות',a.red?'red':(a.open?'amber':null),function(){showTab('alerts');}));
+    kp.appendChild(kpi('kpiReady','כשירות שלא הוזנה',rd.not_entered===undefined?'—':(rd.not_entered===null?'מדוכא':rd.not_entered),rd.not_entered===null?'נתון מדוכא מטעמי פרטיות':(rd.not_entered?'חיילים ללא סטטוס כשירות':'כולם הוזנו'),rd.not_entered?'amber':null,function(){showTab('readiness');}));
+    kp.appendChild(kpi('kpiAtt','נוכחות',att.percent_display||'—',att.percent_display?(att.present+' נוכחים מתוך '+att.total+' רישומים'):(att.note||'אין מספיק נתונים'),null,function(){showTab('attendance');}));
+    kp.appendChild(kpi('kpiFit','ממוצע כש״ג',fit.mean_display||'—',fit.mean_display?(fit.complete_count+' תוצאות עם ציון'):(fit.note||'ממתין להשלמת נתונים'),null,function(){showTab('fitness');}));
+    if(fcm.suppressed||fcm.with_data===null||fcm.with_data===undefined)kp.appendChild(kpi('kpiFitGaps','כש״ג — השלמת נתונים','מדוכא','נתון מדוכא מטעמי פרטיות','amber',function(){showTab('fitgaps');}));else kp.appendChild(kpi('kpiFitGaps','כש״ג — השלמת נתונים',fcm.with_data+' / '+o.active_soldiers,fcm.missing?(fcm.missing+' חיילים ללא תוצאה'):'אין חסרים',fcm.missing?'amber':null,function(){showTab('fitgaps');}));
+    done();},function(){if(!alive())return;msg.className='msg';setMsg(msg,'שגיאת תקשורת. נסו שוב.',false);kp.appendChild(el('button',{class:'sec',text:'נסו שוב',onclick:function(){showTab('dash');}}));done();});
+  run('readiness.notEntered',{courseId:cid,opts:{}},function(d){var no=d||[];if(!no.length)return;
+    left++;call('soldiers.list',{courseId:cid,opts:{}}).then(function(r2){var nm={};if(r2.ok)r2.data.forEach(function(x){nm[x.id]=x.full_name;});item('amber','יש חיילים ללא סטטוס כשירות מוזן.','למסך כשירות','readiness',sols(no.map(function(x){return{id:x.soldier_id,n:nm[x.soldier_id]};}),'id','n'));done();},function(){item('amber','יש חיילים ללא סטטוס כשירות מוזן.','למסך כשירות','readiness');done();});});
+  run('fitness.completion',{courseId:cid,opts:{}},function(d){var c=d.counts||{};
+    if(c.incomplete)item('amber','יש חיילים עם נתוני כש״ג חסרים.','לחסרים בכש״ג','fitgaps',sols((d.rows||[]).filter(function(x){return !x.complete;}),'soldier_id','soldier_name'));});
+  run('alerts.list',{courseId:cid,opts:{status:'open'}},function(d){var reds=d.filter(function(x){return x.urgency==='red';}),ys=d.length-reds.length;
+    reds.slice(0,5).forEach(function(x){item('red',(x.soldier_name?x.soldier_name+' — ':'')+x.topic+': '+x.reason,'לטיפול','alerts',sols([x],'soldier_id','soldier_name'));});if(reds.length>5)item('red','ויש התראות דחופות נוספות.','לכל ההתראות','alerts');
+    if(ys)item('amber','יש התראות לתשומת לב.','לכל ההתראות','alerts');});
+  if(isAdmin()){
+    run('forms.list',{courseId:cid,status:'pending'},function(d){if(d.length)item('amber',d.length+' בקשות עדכון פרטים מחיילים ממתינות לאישור.','לאישור','forms',sols(d,'soldier_id','soldier_name'));});
+    run('correction.list',{courseId:cid,status:'pending'},function(d){if(d.length)item('amber',d.length+' בקשות תיקון ממתינות להחלטה.','לבדיקה','nav',sols(d,'soldier_id','soldier_name'));});
+  }
+  done();                                                                                   /* release the hold */
+}
+var GROUPS=[{k:'dash',l:'מצב קורס',t:['dash']},{k:'sol',l:'חיילים',t:['soldiers','forms','private','docs']},{k:'fit',l:'כשירות ומדדים',t:['fitgaps','fitness','mk','exams','nav','readiness','qual']},
+  {k:'att',l:'נוכחות ואירועים',t:['attendance','events']},{k:'rep',l:'התראות ודוחות',t:['alerts','reports','compare','home']},{k:'adm',l:'ניהול',t:['assign','import','ocr','ai','settings','courses','backup']}];
+function tabBtnId(id){return id==='soldiers'?'tabSoldiers':id==='nav'?'tabNav':id==='assign'?'tabAssign':'tab_'+id;}
+function tabLabel(id){var d={soldiers:'חיילים',nav:'ניווט',assign:'שיוכי מפקדים'};if(d[id])return d[id];var sc=SCREENS.filter(function(x){return x.id===id;})[0];return sc?sc.label:id;}
+function tabVisible(id){var sc=SCREENS.filter(function(x){return x.id===id;})[0];if(id==='assign')return isAdmin();return !sc||!sc.admin||isAdmin();}
+function groupOf(id){for(var i=0;i<GROUPS.length;i++)if(GROUPS[i].t.indexOf(id)!==-1)return GROUPS[i];return GROUPS[GROUPS.length-1];}
+var SCREENS=[
+ {id:'dash',label:'מצב קורס',render:dashScreen},
+ {id:'home',label:'כל הקורסים',all:1,render:function(v){v.appendChild(listBlock('כל הקורסים','dash.home',{},function(d){return d.courses;},[['name','קורס'],['status','סטטוס'],['soldiers','חיילים',function(r){return r.suppressed?'קבוצה קטנה — מוסתר':r.soldiers;}],['alerts','התראות פתוחות',function(r){return r.suppressed||!r.alerts?'—':(r.alerts.open===null?(r.alerts.has_open?'יש (מדוכא)':'אין'):r.alerts.open);}],['readiness','לא הוזנה כשירות',function(r){return r.suppressed||!r.readiness?'—':(r.readiness.not_entered===null?'מדוכא':r.readiness.not_entered);}],['fitness_mean','ממוצע כש״ג'],['attendance_percent','נוכחות %'],['health','מדד',function(r){return r.suppressed||!r.health?'—':(r.health.index===null?'לא מוגדר':r.health.index);}]],function(r){S.courseId=r.course_id;$('course').value=r.course_id;pickCourse();}));}},
+ {id:'compare',label:'השוואות וניתוח',all:1,render:function(v){var box=el('div',{id:'cmpOut'}),P=function(x){return x===null||x===undefined?'—':x;};
+   var cc=el('section',{class:'card',id:'cmpCourses'}),cm=el('div',{class:'msg',role:'status'}),checks=[];cc.appendChild(el('h3',{text:'השוואת קורסים'}));
+   if(S.courses.length<2){cc.appendChild(el('p',{class:'muted',id:'cmpNeed2',text:'ההשוואה בין קורסים זמינה כשיש לפחות שני קורסים בהרשאתך.'}));}
+   else{S.courses.forEach(function(c){var cb=el('input',{type:'checkbox',id:'cmp_'+c.id,checked:true});checks.push([cb,c.id]);cc.appendChild(el('label',{class:'inl'},[cb,c.name+(c.status==='archived'?' (ארכיון)':'')]));});
+     cc.appendChild(el('div',{class:'bar'},[el('button',{id:'cmpGo',text:'השווה',onclick:function(){var ids=checks.filter(function(x){return x[0].checked;}).map(function(x){return x[1];});if(ids.length<2){setMsg(cm,'יש לסמן לפחות שני קורסים.',false);return;}if(ids.length>10){setMsg(cm,'ניתן להשוות עד 10 קורסים.',false);return;}
+       setMsg(cm,'טוען…',true);vcall('dash.compareCourses',{courseIds:ids},cm,function(d){setMsg(cm,'',true);box.innerHTML='';box.appendChild(el('section',{class:'card'},[el('h3',{text:'תוצאות השוואה'}),el('p',{class:'muted',text:'"—" = אין מספיק נתונים (לא אפס).'}),
+         vtable([['name','קורס'],['soldiers','חיילים'],['fitness','ממוצע כש״ג',function(r){return P(r.fitness);}],['navigation','ממוצע ניווט',function(r){return P(r.navigation);}],['marksmanship','קליעה רגילה',function(r){return P(r.marksmanship);}],['ylm','יל״מ',function(r){return P(r.ylm);}],['attendance','נוכחות %',function(r){return P(r.attendance);}],['exams_pass_rate','הצלחה במבחנים',function(r){return P(r.exams_pass_rate);}],['readiness_fit_percent','כשירים %',function(r){return P(r.readiness_fit_percent);}]],d)]));});}})]));}
+   cc.appendChild(cm);v.appendChild(cc);
+   var gc=el('section',{class:'card',id:'cmpGroups'}),gm=el('div',{class:'msg',role:'status'}),gsel=el('select',{id:'cmpBy','aria-label':'השוואה לפי'},[el('option',{value:'department',text:'מחלקה'}),el('option',{value:'team',text:'צוות'})]);
+   gc.appendChild(el('h3',{text:'השוואת קבוצות בקורס'}));gc.appendChild(el('p',{class:'muted',text:'כל ממוצע מוצג בשתי שיטות — לפי תוצאות ולפי חייל. אין החלטה מקצועית איזו שיטה עיקרית, ולכן שתיהן מוצגות.'}));
+   gc.appendChild(el('div',{class:'bar'},[gsel,el('button',{id:'cmpGroupsGo',text:'הצג',onclick:function(){setMsg(gm,'טוען…',true);vcall('dash.groups',{courseId:S.courseId,by:gsel.value,opts:{}},gm,function(d){setMsg(gm,'',true);box.innerHTML='';
+     var m2=function(k,w){return function(r){var x=r[k];return x?P(x[w]):'—';};};
+     box.appendChild(el('section',{class:'card'},[el('h3',{text:'קבוצות'}),vtable([['name','קבוצה'],['soldiers','חיילים'],['f1','כש״ג — לפי תוצאות',m2('fitness','by_results')],['f2','כש״ג — לפי חייל',m2('fitness','by_soldier')],['n1','ניווט — לפי תוצאות',m2('navigation','by_results')],['n2','ניווט — לפי חייל',m2('navigation','by_soldier')],['k1','קליעה — לפי תוצאות',m2('marksmanship','by_results')],['k2','קליעה — לפי חייל',m2('marksmanship','by_soldier')],['att','נוכחות %',function(r){return P(r.attendance);}]],d,null,'אין קבוצות להצגה.')]));});}})]));gc.appendChild(gm);v.appendChild(gc);v.appendChild(box);
+   v.appendChild(vsum('סקירת הקורס','dash.overview',{courseId:S.courseId,opts:{}},function(d){return ovSummary(d);}));}},
+ {id:'fitgaps',label:'חסרים בכש״ג',render:function(v){
+   var c=el('section',{class:'card'}),msg=el('div',{class:'msg'}),out=el('div',{id:'gapOut'}),ts=el('select',{id:'gapTeam','aria-label':'סינון לפי צוות'}),cs=el('select',{id:'gapComp','aria-label':'סינון לפי רכיב'});
+   var CL=[['','כל הרכיבים'],['pullups','מתח'],['parallel_bars','מקבילים'],['trap_bar','Trap Bar'],['run150x2','ריצת 300 מ׳'],['run3km','ריצת 3 ק״מ']];CL.forEach(function(o){cs.appendChild(el('option',{value:o[0],text:o[1]}));});
+   ts.appendChild(el('option',{value:'',text:'כל הצוותים שלי'}));var teamsLoaded=false;
+   c.appendChild(el('h3',{text:'חסרים להשלמה בכש״ג (לקריאה בלבד)'}));c.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{for:'gapTeam',text:'צוות'}),ts]),el('div',{},[el('label',{for:'gapComp',text:'רכיב'}),cs])]));
+   c.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'gapRefresh',text:'רענון',onclick:go})]));c.appendChild(msg);c.appendChild(out);v.appendChild(c);
+   ts.onchange=go;cs.onchange=go;
+   function go(){out.innerHTML='';var o={};if(ts.value)o.teamId=ts.value;if(cs.value)o.component=cs.value;
+     vcall('fitness.completion',{courseId:S.courseId,opts:o},msg,function(d){setMsg(msg,'',true);
+       if(!teamsLoaded){d.teams.forEach(function(t){ts.appendChild(el('option',{value:t.id,text:t.name}));});teamsLoaded=true;}
+       var k=d.counts;out.appendChild(el('div',{id:'gapCounts',class:'kv'},[kv({'חיילים בטווח הצפייה':k.soldiers,'השלימו את כל הרכיבים':k.complete,'עדיין חסרים נתונים':k.incomplete,'ללא כל תוצאה':k.no_results,'עם תוצאה שממתינה לבדיקה':k.with_review,'שלא ניתן לנקד (נדרשת פעולת מנהל)':k.with_blocked})]));
+       var pc=el('div',{class:'muted',id:'gapByComp'});pc.textContent='לפי רכיב (חסר / ממתין לבדיקה): '+Object.keys(k.by_component).map(function(x){var b=k.by_component[x];return b.label+' '+b.missing+'/'+b.review;}).join(' · ');out.appendChild(pc);
+       out.appendChild(vtable([['soldier_name','חייל'],['team_name','צוות'],['status','מצב',function(r){return r.complete?'הושלם':'חסרים נתונים';}],['last_test_date','מבחן אחרון',function(r){return r.no_results?'אין תוצאה':r.last_test_date;}],['gaps','פירוט החסרים',function(r){return r.gaps.length?r.gaps.map(function(g){return g.label+': '+g.text;}).join(' · '):'—';}]],d.rows));
+       out.appendChild(el('div',{class:'muted',text:d.note}));});}
+   go();}},
+ {id:'fitness',label:'כש״ג',render:function(v){var types=[];vsol(function(){vcall('fitness.types',{courseId:S.courseId},null,function(t){types=t.map(function(x){return[x.id,x.name];});
+   v.appendChild(vform('הזנת מבחן כש״ג',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'test_type_id',l:'סוג מבחן',t:'select',req:1,o:types},{n:'test_date',l:'תאריך',t:'date',req:1},{n:'pullups',l:'מתח — חזרות',t:'number'},{n:'parallel_bars',l:'מקבילים — חזרות',t:'number'},{n:'trap_bar',l:'Trap Bar — חזרות (בנים 80 ק״ג / בנות 40 ק״ג)',t:'number'},{n:'run150x2',l:'ריצת הלוך־חזור 300 מ׳ — דקות:שניות (למשל 00:50)',ph:'00:50',fmt:'mmss'},{n:'run3km',l:'ריצת 3 ק״מ — דקות:שניות (למשל 13:00)',ph:'13:00',fmt:'mmss'},{n:'notes',l:'הערות'}],function(x,m){return vcall('fitness.create',{courseId:S.courseId,data:Object.assign(clean(x),{request_id:rid()})},m,saved(m,function(){L.refresh();}));}));
+   var L=listBlock('תוצאות','fitness.list',{courseId:S.courseId},null,[['test_date','תאריך'],['soldier_name','חייל'],['type_name','סוג'],['weighted_display','ציון משוקלל',function(r){return r.weighted_display===null||r.weighted_display===undefined?'ממתין להשלמת נתונים':r.weighted_display;}],['component_status','סיבה / רכיב חסר',function(r){var s=r.component_status||{},L={pullups:'מתח',parallel_bars:'מקבילים',trap_bar:'Trap Bar',run150x2:'ריצת 300 מ׳',run3km:'ריצת 3 ק״מ'};return Object.keys(s).map(function(k){return L[k]+': '+s[k];}).join(' · ');}]]);v.appendChild(L);
+   if(isAdmin())adminFitness(v);});});}},
+ {id:'mk',label:'קליעה',render:function(v){vsol(function(){v.appendChild(vform('הזנת קליעה (רגילה / יל״מ — נפרדים)',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'test_date',l:'תאריך',t:'date',req:1},{n:'weapon_type',l:'נשק',req:1},{n:'distance_m',l:'מרחק (מ׳)',t:'number',req:1},{n:'examiner_score',l:'ציון בוחן (רגילה)',t:'number'},{n:'weapon_zeroed',l:'נשק מאופס',t:'check'},{n:'ylm_score',l:'ציון יל״מ',t:'number'},{n:'notes',l:'הערות'}],function(x,m){return vcall('mk.create',{courseId:S.courseId,data:Object.assign(clean(x),{request_id:rid()})},m,saved(m,function(){L.refresh();}));}));
+   var L=listBlock('תוצאות','mk.list',{courseId:S.courseId},null,[['test_date','תאריך'],['soldier_name','חייל'],['test_kind','סוג',function(r){return {regular:'רגילה',ylm:'יל״מ',both:'רגילה + יל״מ'}[r.test_kind]||r.test_kind;}],['examiner_score','בוחן'],['ylm_score','יל״מ']]);v.appendChild(L);});}},
+ {id:'exams',label:'מבחנים',render:function(v){vsol(function(){vcall('exams.defs',{courseId:S.courseId},null,function(defs){
+   if(isAdmin())v.appendChild(vform('הגדרת מבחן',[{n:'name',l:'שם המבחן',req:1}],function(x,m){return vcall('exams.defCreate',{courseId:S.courseId,data:clean(x)},m,saved(m,function(){showTab('exams');}));},{btn:'הוספת מבחן'}));
+   v.appendChild(vform('הזנת מועד (א׳/ב׳/ג׳)',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'exam_id',l:'מבחן',t:'select',req:1,o:defs.map(function(d){return[d.id,d.name];})},{n:'attempt',l:'מועד',t:'select',req:1,o:[['A','א׳'],['B','ב׳'],['C','ג׳']]},{n:'attempt_date',l:'תאריך',t:'date',req:1},{n:'score',l:'ציון',t:'number',req:1}],function(x,m){return vcall('exams.attempt',{courseId:S.courseId,data:Object.assign(clean(x),{request_id:rid()})},m,saved(m,function(){L.refresh();M.refresh();}));},{btn:'שמירת מועד'}));
+   var L=listBlock('ניסיונות','exams.attempts',{courseId:S.courseId},null,[['attempt_date','תאריך'],['soldier_name','חייל'],['exam_name','מבחן'],['attempt','מועד'],['score','ציון']]);v.appendChild(L);
+   var M=listBlock('שיחות/ועדות נדרשות (נפתחות אוטומטית כשמועד ב׳ נכשל)','exams.meetings',{courseId:S.courseId},null,[['soldier_name','חייל'],['exam_name','מבחן'],['required','נדרש'],['done','בוצע'],['meeting_date','תאריך']]);v.appendChild(M);});});}},
+ {id:'attendance',label:'נוכחות ומסעות',render:function(v){vsol(function(){vcall('acttypes.list',{courseId:S.courseId},null,function(ts){
+   if(isAdmin())v.appendChild(vform('סוג פעילות חדש',[{n:'name',l:'שם',req:1}],function(x,m){return vcall('acttypes.create',{courseId:S.courseId,name:x.name},m,saved(m,function(){showTab('attendance');}));}));
+   var L=listBlock('אירועי נוכחות','attendance.events',{courseId:S.courseId},null,[['event_date','תאריך',function(r){return fmtDate(r.event_date);}],['type_name','פעילות'],['scope_type','תחולה',function(r){return scopeLabel(r);}],['present','נוכחים',function(r){return r.present===null||r.present===undefined?'מדוכא':r.present;}],['absent','חסרים',function(r){return r.absent===null||r.absent===undefined?'מדוכא':r.absent;}],['early_exits','יציאות מוקדמות',function(r){return r.early_exits===null||r.early_exits===undefined?'מדוכא':r.early_exits;}],['total','סה״כ']],function(r){openEventDetail(r);});
+   v.appendChild(attendanceForm(ts.filter(function(t){return t.active!==false;}),function(){L.refresh();}));v.appendChild(L);
+   v.appendChild(vform('מסע',[{n:'march_date',l:'תאריך',t:'date',req:1},{n:'location',l:'מקום',req:1},{n:'km_no_stretcher',l:'ק״מ ללא אלונקה',t:'number'},{n:'km_stretcher',l:'ק״מ עם אלונקה',t:'number'}],function(x,m){return vcall('marches.create',{courseId:S.courseId,data:Object.assign(clean(x),{request_id:rid(),scope_type:'course',scope_id:S.courseId})},m,saved(m,function(){M.refresh();}));}));
+   var M=listBlock('מסעות','marches.list',{courseId:S.courseId},null,[['march_date','תאריך'],['location','מקום'],['total_km','סה״כ ק״מ']]);v.appendChild(M);});});}},
+ {id:'readiness',label:'כשירות',render:function(v){vsol(function(){v.appendChild(el('div',{class:'notice',text:'כשירות — סטטוס ומגבלות פעילות בלבד. אין להזין אבחנות רפואיות.'}));
+   v.appendChild(vform('עדכון כשירות',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'status',l:'סטטוס',t:'select',req:1,o:Object.keys(STATUS).map(function(k){return[k,STATUS[k]];})},{n:'restrictions',l:'מגבלות פעילות (ללא אבחנה)'},{n:'start_date',l:'מתאריך',t:'date',req:1},{n:'next_review_date',l:'מועד בדיקה הבא',t:'date'}],function(x,m){return vcall('readiness.assess',{courseId:S.courseId,data:Object.assign(clean(x),{request_id:rid()})},m,saved(m,function(){L.refresh();}));}));
+   var L=listBlock('כשירות נוכחית והיסטוריה','readiness.list',{courseId:S.courseId},null,[['start_date','מתאריך'],['soldier_name','חייל'],['status','סטטוס',function(r){return STATUS[r.status]||r.status;}],['restrictions','מגבלות'],['next_review_date','בדיקה הבאה']]);v.appendChild(L);});}},
+ {id:'events',label:'אירועים והישגים',render:function(v){vsol(function(){v.appendChild(vform('אירוע / הישג',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'event_date',l:'תאריך',t:'date',req:1},{n:'event_type',l:'סוג',t:'select',req:1,o:[['achievement','הישג'],['event','אירוע']]},{n:'description',l:'תיאור',t:'textarea',req:1}],function(x,m){return vcall('events.create',{courseId:S.courseId,data:Object.assign(clean(x),{request_id:rid()})},m,saved(m,function(){L.refresh();}));}));
+   var L=listBlock('אירועים','events.list',{courseId:S.courseId},null,[['event_date','תאריך'],['soldier_name','חייל'],['type_label','סוג'],['description','תיאור']]);v.appendChild(L);});}},
+ {id:'qual',label:'הכשרות והסמכות',render:function(v){if(isAdmin())v.appendChild(vform('הגדרת הסמכה (ללא דירוג וללא מעקב תפוגה)',[{n:'name',l:'שם',req:1},{n:'completion_terms',l:'תנאי השלמה (נקבע על ידי מנהל)',req:1},{n:'scope_type',l:'תחולה',t:'select',req:1,o:[['course','כל הקורס'],['individual','אישית']]},{n:'target_date',l:'תאריך יעד',t:'date'}],function(x,m){return vcall('qual.define',{courseId:S.courseId,data:clean(x)},m,saved(m,function(){showTab('qual');}));}));
+   v.appendChild(listBlock('הסמכות','qual.list',{courseId:S.courseId},null,[['name','שם'],['completion_terms','תנאי השלמה'],['target_date','יעד'],['active','פעילה']]));v.appendChild(listBlock('שיוכים והשלמות','qual.assignments',{courseId:S.courseId,opts:{}},null,[['soldier_name','חייל'],['qualification_name','הסמכה'],['status','סטטוס'],['completion_date','הושלמה']]));}},
+ {id:'alerts',label:'התראות',render:function(v){var L=listBlock('התראות פתוחות','alerts.list',{courseId:S.courseId,opts:{status:'open'}},null,[['urgency','דחיפות'],['topic','נושא'],['soldier_name','חייל'],['reason','סיבה'],['id','טיפול',function(r){if(!isAdmin())return '—';return el('button',{class:'sec',text:'סמן כטופל',onclick:function(){reasonInline(this.parentNode,'הערת טיפול',true,function(note){return call('alerts.handle',{id:r.id,to:'handled',note:note}).then(function(x){if(x.ok)L.refresh();return x;});});}});}]]);
+   v.appendChild(L);if(isAdmin())v.appendChild(el('div',{class:'bar'},[el('button',{text:'חישוב מחדש של התראות',onclick:function(){vcall('alerts.refresh',{courseId:S.courseId},null,function(){L.refresh();});}})]));}},
+ {id:'private',label:'פרטי למ״פ',admin:1,render:function(v){v.appendChild(el('div',{class:'notice',style:'background:#fde8e6;border-color:#f0b4ae',text:'אזור פרטי של המ״פ — מופרד לחלוטין, אינו נחשף למפקדים.'}));vsol(function(){
+   v.appendChild(vform('הערה פרטית',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'note_text',l:'הערה',t:'textarea',req:1}],function(x,m){return vcall('notes.save',{courseId:S.courseId,data:clean(x)},m,saved(m,function(){}));}));
+   v.appendChild(vform('מעקב אישי',[{n:'soldier_id',l:'חייל',t:'soldier',req:1},{n:'what_to_check',l:'מה לבדוק',req:1},{n:'due_date',l:'תאריך',t:'date'}],function(x,m){return vcall('followups.create',{courseId:S.courseId,data:clean(x)},m,saved(m,function(){F.refresh();}));}));
+   var F=listBlock('מעקבים אישיים','followups.list',{courseId:S.courseId,opts:{}},null,[['due_date','תאריך'],['soldier_name','חייל'],['what_to_check','לבדוק'],['status','סטטוס']]);v.appendChild(F);
+   v.appendChild(listBlock('מועדפים','favorites.list',{courseId:S.courseId},null,[['soldier_name','חייל']]));});}},
+ {id:'forms',label:'עדכוני פרטים מחיילים',admin:1,render:function(v){vsol(function(){v.appendChild(vform('יצירת קישור לטופס (חד־פעמי)',[{n:'soldierId',l:'חייל',t:'soldier',req:1},{n:'days',l:'תוקף בימים',t:'number',d:7}],function(x,m){return vcall('forms.createLink',{courseId:S.courseId,soldierId:x.soldierId,days:Number(x.days)},m,function(d){setMsg(m,'הקוד נוצר ומוצג פעם אחת בלבד. העתיקו אותו עכשיו — לא ניתן לשחזר אותו (אפשר ליצור קוד חדש, והקודם יתבטל). קישור לחייל: <כתובת פריסת הטופס>?form=<הקוד>',true);var tk=el('input',{id:'formToken',readonly:true,dir:'ltr',value:d.token,'aria-label':'קוד הטופס'}),cb=el('button',{id:'formTokenCopy',class:'sec',text:'העתקת הקוד',onclick:function(){tk.select();var ok=false;try{ok=document.execCommand('copy');}catch(e){}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(d.token).then(function(){cb.textContent='הועתק';},function(){cb.textContent=ok?'הועתק':'בחרו והעתיקו ידנית';});else cb.textContent=ok?'הועתק':'בחרו והעתיקו ידנית';}});m.appendChild(el('div',{class:'bar'},[tk,cb]));});}));
+   // Admin-only recovery UI: metadata preview first, explicit confirmation second. No contact values are ever rendered.
+   var rc=el('section',{class:'card'}),rm=el('div',{class:'msg',role:'status'}),ro=el('div'),latest=null;
+   rc.appendChild(el('h3',{text:'בדיקת פרטי איש קשר יתומים'}));
+   rc.appendChild(el('p',{class:'muted',text:'הבדיקה מציגה מזהי בקשות ומספרי רשומות בלבד. ניקוי אפשרי רק לרשומות ללא בקשת עדכון תואמת; רשומות חשודות יישארו לבדיקה ידנית.'}));
+   var rb=el('button',{class:'sec',text:'בדיקה מקדימה',onclick:function(){rb.disabled=true;vcall('emergency.orphans',{courseId:S.courseId},rm,function(d){latest=d;ro.innerHTML='';setMsg(rm,'נמצאו '+d.orphan_groups+' קבוצות יתומות ('+d.orphan_rows+' רשומות), '+(d.review_required_groups||0)+' קבוצות לבדיקה ידנית ו־'+d.ambiguous_groups+' התנגשויות. לא בוצע שינוי.',true);(d.groups||[]).forEach(function(g){ro.appendChild(el('p',{class:'muted',text:'יתום לניקוי · בקשה '+g.request_id+' · חייל '+g.soldier_id+' · '+g.row_count+' רשומות'}));});(d.review_required||[]).forEach(function(g){ro.appendChild(el('p',{class:'muted',text:'נדרשת בדיקה ידנית · בקשה '+g.request_id+' · חייל '+g.soldier_id+' · '+g.row_count+' רשומות'}));});apply.disabled=!(d.orphan_groups>0);}).then(function(){rb.disabled=false;});}});
+   var apply=el('button',{text:'ניקוי הרשומות היתומות',disabled:true,onclick:function(){if(!latest||latest.preview!==true||latest.orphan_groups<1)return;var count=latest.orphan_groups,rows=latest.orphan_rows;if(!window.confirm('לאשר ניקוי של '+count+' קבוצות יתומות ('+rows+' רשומות)? קבוצות לבדיקה ידנית לא יימחקו.'))return;apply.disabled=true;vcall('emergency.orphans',{courseId:S.courseId,apply:true},rm,function(d){latest=null;ro.innerHTML='';setMsg(rm,'הניקוי הסתיים: '+(d.cleared_groups||0)+' קבוצות ו־'+(d.cleared_rows||0)+' רשומות. '+(d.audit_status==='failed'?'אזהרה: כתיבת Audit נכשלה.':'הפעולה תועדה.'),d.audit_status!=='failed');rb.click();}).then(function(){if(!latest)apply.disabled=true;});}});
+   rc.appendChild(el('div',{class:'bar'},[rb,apply]));rc.appendChild(ro);rc.appendChild(rm);v.appendChild(rc);
+   var L=listBlock('בקשות ממתינות לאישור','forms.list',{courseId:S.courseId,status:'pending'},null,[['soldier_name','חייל'],['changes','שינויים',function(r){return (r.changes||[]).map(function(c){return (FLBL[c.field]||c.field)+': '+(c.from===''||c.from==null?'(ריק)':c.from)+' ← '+(c.to===''||c.to==null?'(ריק)':c.to);}).join(' · ')||'—';}],['id','החלטה',function(r){return el('span',{},[el('button',{text:'אשר',onclick:function(){vcall('forms.review',{id:r.id,decision:'approve'},null,function(){L.refresh();});}}),' ',el('button',{class:'sec',text:'דחה',onclick:function(){reasonInline(this.parentNode,'סיבת דחייה',true,function(n){return call('forms.review',{id:r.id,decision:'reject',note:n}).then(function(x){if(x.ok)L.refresh();return x;});});}})]);}]]);v.appendChild(L);});}},
+ {id:'reports',label:'דוחות וייצוא',render:function(v){var SEC=[['soldiers','חיילים'],['fitness','כש״ג'],['marksmanship','קליעה'],['navigation','ניווטים'],['exams','מבחנים'],['attendance','נוכחות'],['marches','מסעות'],['qualifications','הסמכות'],['readiness','כשירות'],['events','אירועים']];var ins={};v.appendChild(analyticReportCard(function(){J.refresh();}));var c=el('section',{class:'card'}),m=el('div',{class:'msg',id:'tabMsg'});c.appendChild(el('h3',{text:'דוח טבלאי (חלופי) — בונה דוחות'}));SEC.forEach(function(s){var cb=el('input',{type:'checkbox',id:'rs_'+s[0]});ins[s[0]]=cb;c.appendChild(el('label',{class:'inl'},[cb,s[1]]));});
+   function spec(){return{sections:SEC.filter(function(s){return ins[s[0]].checked;}).map(function(s){return s[0];})};}
+   c.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',text:'תצוגה מקדימה',onclick:function(){vcall('reports.build',{courseId:S.courseId,spec:spec()},m,function(d){setMsg(m,'תצוגה מקדימה: '+(d.tables||[]).map(function(t){return t.title+' ('+t.rows.length+')';}).join(', '),true);});}}),
+    isAdmin()?el('button',{text:'הפק Excel',onclick:function(){vcall('reports.generate',{courseId:S.courseId,spec:spec(),format:'xlsx'},m,function(d){setMsg(m,'הדוח נוצר ('+d.rows_count+' שורות).',true);J.refresh();});}}):null,
+    isAdmin()?el('button',{text:'הפק PDF טבלאי',onclick:function(){vcall('reports.generate',{courseId:S.courseId,spec:Object.assign(spec(),{layout:'tabular'}),format:'pdf'},m,function(d){setMsg(m,'הדוח נוצר ('+d.rows_count+' שורות).',true);J.refresh();});}}):null,
+    isAdmin()?el('button',{class:'sec',text:'ייצוא מלא ל-Excel',onclick:function(){vcall('reports.fullExport',{courseId:S.courseId},m,function(d){setMsg(m,'הייצוא המלא נוצר.',true);J.refresh();});}}):null]));c.appendChild(m);v.appendChild(c);
+   var J=listBlock('דוחות שהופקו','reports.jobs',{courseId:S.courseId},null,[['requested_at','זמן'],['format','פורמט'],['rows_count','שורות'],['include_private','כולל פרטי',function(r){return r.include_private?'כן':'לא';}]]);v.appendChild(J);}},
+ {id:'import',label:'ייבוא Excel',admin:1,render:function(v){var T=[['soldiers','חיילים'],['navigation','ניווטים'],['marksmanship','קליעה'],['fitness','כש״ג'],['exams','מבחנים']];
+   v.appendChild(el('div',{class:'notice',text:'הדביקו טבלה מ-Excel (שורה ראשונה = כותרות, מופרד בטאבים/פסיקים). לאחר מיפוי מוצגת תצוגה מקדימה; שום דבר לא נכתב לפני אישור, ואין דריסה של נתונים קיימים ללא החלטה.'}));
+   var st={};v.appendChild(vform('ייבוא — שלב 1: הדבקה ומיפוי',[{n:'target',l:'יעד',t:'select',req:1,o:T},{n:'text',l:'טבלה מודבקת',t:'textarea',req:1},{n:'map',l:'מיפוי (יעד=עמודה, מופרד בפסיק; ריק = שם זהה לשם השדה)'}],function(x,m){var lines=x.text.split(/\r?\n/).filter(Boolean),sep=lines[0].indexOf('\t')>=0?'\t':',',h=lines[0].split(sep).map(function(s){return s.trim();});var rows=lines.slice(1).map(function(l){var p=l.split(sep),o={};h.forEach(function(k,i){o[k]=(p[i]||'').trim();});return o;});var mapping={};h.forEach(function(k){mapping[k]=k;});(x.map||'').split(',').forEach(function(p){var a=p.split('=');if(a.length===2)mapping[a[0].trim()]=a[1].trim();});
+     var inv={};Object.keys(mapping).forEach(function(k){});return vcall('import.start',{courseId:S.courseId,data:{target:x.target,file_name:'paste',mapping:mapFix(x.target,mapping,h,x.map),rows:rows}},m,function(d){setMsg(m,'נוצרה תצוגה מקדימה: '+JSON.stringify(d.counts||d.summary||{}),true);st.id=d.id||(d.job&&d.job.id);J.refresh();});}));
+   function mapFix(target,mapping,h,custom){var m={};h.forEach(function(k){m[k]=k;});(custom||'').split(',').forEach(function(p){var a=p.split('=');if(a.length===2)m[a[0].trim()]=a[1].trim();});/* server expects {targetField: sourceColumn} */var out={};Object.keys(m).forEach(function(k){out[k]=m[k];});return out;}
+   var J=listBlock('עבודות ייבוא','import.jobs',{courseId:S.courseId},null,[['created_at','זמן'],['target','יעד'],['status','סטטוס'],['id','פעולה',function(r){return el('span',{},[el('button',{class:'sec',text:'אישור וביצוע',onclick:function(){if(!confirm('לבצע את הייבוא?'))return;vcall('import.commit',{id:r.id,confirm:true},null,function(){J.refresh();});}}),' ',el('button',{class:'sec',text:'ביטול',onclick:function(){reasonInline(this.parentNode,'סיבת ביטול',true,function(n){return call('import.cancel',{id:r.id,reason:n}).then(function(x){if(x.ok)J.refresh();return x;});});}})]);}]]);v.appendChild(J);}},
+ {id:'docs',label:'מסמכים',render:function(v){vsol(function(){v.appendChild(vform('העלאת מסמך (pdf / תמונה / docx / xlsx)',[{n:'soldier_id',l:'חייל',t:'soldier'},{n:'document_type',l:'סוג מסמך',req:1},{n:'file',l:'קובץ',t:'file',req:1}],function(x,m){var f=x.file;if(!f){setMsg(m,'בחרו קובץ.',false);return;}return new Promise(function(res){var r=new FileReader();r.onload=function(){var b64=String(r.result).split(',')[1]||'';vcall('docs.upload',{courseId:S.courseId,data:{soldier_id:x.soldier_id,document_type:x.document_type,file_name:f.name,mime_type:f.type,content_base64:b64}},m,saved(m,function(){L.refresh();})).then(res);};r.readAsDataURL(f);});}));
+   var L=listBlock('ארכיון מסמכים (הרשאות נאכפות בשרת)','docs.list',{courseId:S.courseId},null,[['uploaded_at','הועלה'],['soldier_name','חייל'],['document_type','סוג'],['file_name','קובץ'],['id','הורדה',function(r){return el('button',{class:'sec',text:'הורד',onclick:function(){vcall('docs.download',{id:r.id},null,function(d){var a=el('a',{href:'data:'+(d.mime_type||'application/octet-stream')+';base64,'+d.content_base64,download:d.file_name||'file'});document.body.appendChild(a);a.click();a.remove();});}});}]]);v.appendChild(L);
+   if(isAdmin())v.appendChild(listBlock('בקשות שיוך ממתינות','docs.pendingLinks',{courseId:S.courseId},null,[['file_name','קובץ'],['linked_table','יעד'],['id','החלטה',function(r){return el('button',{text:'אשר',onclick:function(){vcall('docs.reviewLink',{id:r.id,decision:'approve'},null,function(){showTab('docs');});}});}]]));});}},
+ {id:'ocr',label:'OCR (טיוטה בלבד)',admin:1,render:function(v){v.appendChild(el('div',{class:'notice',text:'OCR יוצר טיוטה בלבד. כל שורה דורשת אישור פרטני של המ״פ; ערכים לא ברורים מסומנים. ספק OCR טרם נבחר — ראו DECISIONS_NEEDED.'}));
+   v.appendChild(vform('הרצת OCR על מסמך',[{n:'document_id',l:'מזהה מסמך',req:1},{n:'target',l:'יעד',t:'select',req:1,o:[['navigation','ניווטים'],['marksmanship','קליעה'],['fitness','כש״ג'],['exams','מבחנים']]}],function(x,m){return vcall('ocr.start',{courseId:S.courseId,data:clean(x)},m,function(d){setMsg(m,'נוצרה טיוטה — '+(d.rows?d.rows.length:'')+' שורות לבדיקה.',true);if(d.id||d.job_id)showOcr(v,d.id||d.job_id);});}));}},
+ {id:'ai',label:'עוזר',render:function(v){var ans=el('div');v.appendChild(el('div',{class:'notice',text:'עוזר תגובתי בלבד: עונה רק על בסיס נתונים קיימים בהיקף ההרשאה שלך, מפריד עובדות מהערכות. טיוטות רשמיות דורשות אישור מ״פ.'}));
+   v.appendChild(vform('שאלה',[{n:'question',l:'שאלה (עד 500 תווים)',req:1},{n:'include_private',l:'כלול מידע פרטי (מ״פ בלבד)',t:'check'}],function(x,m){return vcall('ai.ask',{courseId:S.courseId,question:x.question,include_private:isAdmin()&&x.include_private},m,function(d){ans.innerHTML='';var c=el('section',{class:'card'},[el('h3',{text:'תשובה'})]);(d.facts||[]).forEach(function(f){c.appendChild(el('p',{text:'עובדה: '+cell(f)}));});(d.assessments||[]).forEach(function(f){c.appendChild(el('p',{text:'הערכה: '+cell(f)}));});c.appendChild(el('p',{text:d.text||d.answer||''}));ans.appendChild(c);});},{btn:'שאל',readonly:1}));v.appendChild(ans);
+   vsol(function(){v.appendChild(vform('טיוטת הערכה רשמית (טיוטה — לא רשמית עד אישור מ״פ)',[{n:'soldierId',l:'חייל',t:'soldier',req:1}],function(x,m){return vcall('ai.draft',{courseId:S.courseId,soldierId:x.soldierId},m,saved(m,function(){D.refresh();}));}));});
+   var D=listBlock('טיוטות','ai.drafts',{courseId:S.courseId},null,[['created_at','זמן'],['soldier_name','חייל'],['status','סטטוס'],['id','החלטה',function(r){return isAdmin()&&r.status==='draft'?el('button',{text:'אשר',onclick:function(){vcall('ai.reviewDraft',{id:r.id,decision:'approve'},null,function(){D.refresh();});}}):'—';}]]);v.appendChild(D);}},
+ {id:'settings',label:'הגדרות וספים',admin:1,render:function(v){v.appendChild(el('div',{class:'notice',text:'ספים מקצועיים שלא הוגדרו = הכלל כבוי (לא נוצר ערך ברירת מחדל). שינוי נרשם עם נימוק והיסטוריה.'}));
+   var L=listBlock('הגדרות','settings.list',{courseId:S.courseId},null,[['label','הגדרה'],['value','ערך',function(r){return r.is_set?r.value:'לא הוגדר (כבוי)';}],['key','עריכה',function(r){return el('button',{class:'sec',text:'עדכן',onclick:function(){var b=this.parentNode;b.innerHTML='';var i=el('input',{placeholder:'ערך חדש'}),why=el('input',{placeholder:'נימוק'}),m=el('div',{class:'msg'});b.appendChild(i);b.appendChild(why);b.appendChild(el('button',{text:'שמור',onclick:function(){vcall('settings.set',{courseId:S.courseId,key:r.key,value:i.value,reason:why.value},m,function(){L.refresh();});}}));b.appendChild(m);}});}]]);v.appendChild(L);}},
+ {id:'courses',label:'קורסים ומשתמשים',admin:1,render:function(v){v.appendChild(vform('קורס חדש',[{n:'name',l:'שם',req:1},{n:'start_date',l:'תאריך פתיחה',t:'date',req:1}],function(x,m){return vcall('courses.create',{name:x.name,start_date:x.start_date},m,saved(m,function(){loadCourses();}));},{readonly:1}));
+   v.appendChild(el('section',{class:'card'},[el('h3',{text:'קורס נוכחי: '+(course().name||'')}),el('div',{class:'bar'},[el('button',{class:'danger',disabled:archived(),text:'העבר לארכיון',onclick:function(){if(confirm('להעביר לארכיון? הקורס יינעל לכתיבה.'))vcall('courses.archive',{courseId:S.courseId},null,function(){loadCourses();});}}),el('button',{class:'sec',disabled:!archived(),text:'פתיחה מחדש',onclick:function(){reasonInline(this.parentNode,'סיבה לפתיחה מחדש',true,function(n){return call('courses.reopen',{courseId:S.courseId,reason:n}).then(function(x){if(x.ok)loadCourses();return x;});});}})])]));
+   v.appendChild(vform('משתמש חדש',[{n:'email',l:'אימייל',req:1},{n:'display_name',l:'שם תצוגה',req:1},{n:'role',l:'תפקיד',t:'select',req:1,o:[['commander','מפקד'],['admin','מ״פ (מנהל)']]}],function(x,m){return vcall('users.add',{email:x.email,display_name:x.display_name,role:x.role,course_ids:x.role==='commander'?[S.courseId]:undefined},m,saved(m,function(){U.refresh();}));},{readonly:1}));
+   var U=listBlock('משתמשים','users.list',{},null,[['display_name','שם'],['email','אימייל'],['role','תפקיד'],['active','פעיל'],['id','פעולה',function(r){return el('button',{class:'sec',text:r.active?'השבת':'הפעל',onclick:function(){vcall('users.set',{userId:r.id,patch:{active:!r.active}},null,function(){U.refresh();});}});}]]);v.appendChild(U);}},
+ {id:'backup',label:'גיבויים ותפעול',admin:1,render:function(v){var m=el('div',{class:'msg'});v.appendChild(preflightCard());v.appendChild(el('section',{class:'card'},[el('h3',{text:'גיבוי'}),el('div',{class:'bar'},[el('button',{text:'גיבוי ידני עכשיו',onclick:function(){vcall('backup.create',{kind:'manual'},m,function(d){setMsg(m,d.warning||'הגיבוי נוצר.',true);B.refresh();});}})]),m]));
+   var B=listBlock('גיבויים','backup.list',{},null,[['started_at','זמן'],['kind','סוג'],['status','סטטוס',function(r){return r.status==='pruning'?'ממתין לאימות מחיקה':r.status==='expired'?'פג תוקף':r.status==='rollback_failed'?'נדרש שחזור התאוששות':r.status==='restoring'?'שחזור לא הושלם':r.status==='recovered'?'התאושש':r.status;}],['id','פעולה',function(r){if(r.status==='restoring'||r.status==='rollback_failed')return el('button',{class:'danger',text:'התאוששות…',onclick:function(){recoveryPanel(r,m);}});if(r.status!=='ok')return r.status==='pruning'?'יש לרענן לאחר בירור מצב הקובץ':'—';return el('span',{},[el('button',{class:'sec',text:'אימות',onclick:function(){vcall('backup.verify',{id:r.id},m,function(d){setMsg(m,d.ok?'הגיבוי תקין.':'הגיבוי פגום!',!!d.ok);});}}),' ',el('button',{class:'danger',text:'שחזור…',onclick:function(){restorePanel(r,m);}})]);}]]);v.appendChild(B);
+   v.appendChild(listBlock('יומן פעילות','audit.list',{},null,[['at','זמן'],['actor','משתמש'],['action','פעולה'],['table_name','טבלה']]));}}
+];
+/* Recovery: only an incomplete restore marker is eligible. The server rechecks status, admin role and the pre_restore backup under LockService. */
+function recoveryPanel(r,m){var old=$('recoveryPanel');if(old)old.parentNode.removeChild(old);var box=el('section',{class:'card',id:'recoveryPanel'},[el('h3',{text:'התאוששות משחזור שלא הושלם'}),el('div',{class:'notice',style:'background:#fde8e6;border-color:#f0b4ae',text:'פעולה זו מחזירה את הנתונים מגיבוי pre_restore שנוצר לפני השחזור שנקטע. אין להפעיל אותה אם לא ברור שהשחזור הקודם הסתיים או נקטע.'})]);$('view').insertBefore(box,$('view').firstChild);box.scrollIntoView&&box.scrollIntoView();
+  var rs=el('input',{id:'recoveryReason','aria-label':'סיבת ההתאוששות',placeholder:'סיבת ההתאוששות (חובה)'}),cf=el('input',{id:'recoveryConfirm','aria-label':'הקלידו RECOVER לאישור',placeholder:'הקלידו RECOVER',dir:'ltr',autocomplete:'off'}),go=el('button',{id:'recoveryGo',class:'danger',text:'בצע התאוששות',disabled:true}),mm=el('div',{class:'msg',role:'status'});
+  var chk=function(){go.disabled=!(cf.value==='RECOVER'&&rs.value.trim());};cf.oninput=chk;rs.oninput=chk;
+  go.onclick=function(){go.disabled=true;vcall('backup.recover',{id:r.id,data:{confirm:'RECOVER',reason:rs.value.trim()}},mm,function(d){setMsg(mm,d.warning||'ההתאוששות הושלמה ואומתה.',true);showTab('backup');});};
+  box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{text:'סיבה'}),rs]),el('div',{},[el('label',{text:'אישור'}),cf])]));box.appendChild(el('div',{class:'bar'},[go,el('button',{class:'sec',text:'ביטול',onclick:function(){box.parentNode.removeChild(box);}})]));box.appendChild(mm);}
+/* restore: show WHAT will change (server plan), ask for a reason and the typed word; the server still enforces both */
+function restorePanel(r,m){var old=$('restorePanel');if(old)old.parentNode.removeChild(old);var box=el('section',{class:'card',id:'restorePanel'},[el('h3',{text:'שחזור גיבוי — בדיקה לפני ביצוע'}),el('div',{class:'loading',text:'טוען את תוכנית השחזור…'})]);$('view').insertBefore(box,$('view').firstChild);box.scrollIntoView&&box.scrollIntoView();
+  vcall('backup.plan',{id:r.id},m,function(p){box.innerHTML='';box.appendChild(el('h3',{text:'שחזור גיבוי — בדיקה לפני ביצוע'}));
+    box.appendChild(el('div',{class:'notice',style:'background:#fde8e6;border-color:#f0b4ae',text:'השחזור מחליף את כל הנתונים הנוכחיים בנתוני הגיבוי. לפני השחזור נוצר גיבוי אוטומטי, ובכשל מתבצעת החזרה מלאה ואימות.'+(p.newer_than_app?' אזהרה: הגיבוי חדש יותר מגרסת האפליקציה.':'')}));
+    var ch=(p.tables||[]).filter(function(x){return x.change!==0;});box.appendChild(el('p',{id:'restoreSummary',text:ch.length?('טבלאות שיקבלו שינוי במספר השורות: '+ch.length+' מתוך '+p.tables.length+'.'):'מספר השורות בכל הטבלאות זהה לגיבוי (התוכן עדיין עלול להיות שונה).'}));
+    box.appendChild(vtable([['table','טבלה'],['now','שורות כעת'],['backup','שורות בגיבוי'],['change','שינוי',function(x){return x.change>0?'+'+x.change:String(x.change);}]],ch.length?ch:p.tables));
+    var rs=el('input',{id:'restoreReason','aria-label':'סיבת השחזור',placeholder:'סיבת השחזור (חובה)'}),cf=el('input',{id:'restoreConfirm','aria-label':'הקלידו RESTORE לאישור',placeholder:'הקלידו RESTORE',dir:'ltr',autocomplete:'off'}),go=el('button',{id:'restoreGo',class:'danger',text:'בצע שחזור',disabled:true}),mm=el('div',{class:'msg',role:'status'});
+    var chk=function(){go.disabled=!(cf.value==='RESTORE'&&rs.value.trim());};cf.oninput=chk;rs.oninput=chk;
+    go.onclick=function(){go.disabled=true;vcall('backup.restore',{id:r.id,data:{confirm:'RESTORE',reason:rs.value.trim()}},mm,function(d){setMsg(mm,d.warning||'השחזור הושלם ואומת.',true);});};
+    box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{text:'סיבה'}),rs]),el('div',{},[el('label',{text:'אישור'}),cf])]));box.appendChild(el('div',{class:'bar'},[go,el('button',{class:'sec',text:'ביטול',onclick:function(){box.parentNode.removeChild(box);}})]));box.appendChild(mm);});}
+function preflightCard(){var c=el('section',{class:'card',id:'pfCard'}),out=el('div',{id:'pfOut'}),m=el('div',{class:'msg'});c.appendChild(el('h3',{text:'בדיקת הרשאות Drive (Preflight)'}));c.appendChild(el('p',{class:'muted',text:'קריאה בלבד — לא משנה שום הרשאה. PASS = אומת בפועל; NOT_VERIFIED / BLOCKED אינם PASS.'}));
+  function show(d){out.innerHTML='';out.appendChild(el('p',{id:'pfOverall',text:'תוצאה כוללת: '+d.overall+' (PASS '+d.counts.PASS+' · FAIL '+d.counts.FAIL+' · NOT_VERIFIED '+d.counts.NOT_VERIFIED+' · BLOCKED '+d.counts.BLOCKED+')',style:'font-weight:bold;color:'+(d.overall==='FAIL'?'#b3261e':d.overall==='PASS'?'#1b7f3b':'#8a5a00')}));out.appendChild(vtable([['status','סטטוס'],['target','יעד'],['detail','פירוט']],d.checks));}
+  c.appendChild(el('div',{class:'bar'},[el('button',{id:'pfRun',text:'הרץ בדיקה',onclick:function(){vcall('preflight.run',{},m,show);}})]));c.appendChild(m);c.appendChild(out);
+  vcall('preflight.last',{},null,function(d){if(d)out.appendChild(el('p',{class:'muted',text:'הרצה אחרונה: '+d.at+' — '+(d.summary.overall||'')}));else out.appendChild(el('p',{class:'muted',text:'טרם הורצה בדיקה.'}));});return c;}
+function adminFitness(v){
+  var ST={DRAFT:'טיוטה — לא בשימוש',APPROVED:'מאושרת — בשימוש',SUPERSEDED:'הוחלפה'};
+  var c=el('section',{class:'card',id:'fitAdmin'});c.appendChild(el('h3',{text:'ניהול כש״ג (מנהל)'}));
+  c.appendChild(el('div',{class:'notice',text:'הציון מופק רק כשיש גרסת ניקוד מאושרת, מין מוגדר לחייל וכל חמשת הרכיבים. הטעינה יוצרת טיוטה בלבד; האישור הוא פעולה נפרדת שלך ודורשת אימות מול המקור. כללי מתח (החלטה מקצועית מחייבת): בנים — תמיד טבלת ״אפוד אישי · 7 ק״ג״ בכל סוגי המבחנים; בנות — חזרה אחת = 40, אפס חזרות = אין ציון אוטומטי. ערך מחוץ לטבלה (למשל מעל 15 חזרות לבנים) = נדרשת בדיקה, בלי ציון אוטומטי (docs/OPEN_BLOCKERS.md).'}));
+  var status=el('div',{id:'fitStatus',class:'muted',text:'טוען מצב…'}),msg=el('div',{class:'msg'}),forms=el('div',{id:'fitForms'});
+  c.appendChild(status);c.appendChild(el('div',{class:'bar'},[el('button',{id:'fitImport',text:'טען טבלאות מהתמלול (כטיוטה)',disabled:archived(),onclick:function(){var b=this;b.disabled=true;vcall('fitness.importDraft',{courseId:S.courseId,data:{}},msg,function(){setMsg(msg,'נוצרה גרסת טיוטה. בדוק אותה ואשר בטופס למטה.',true);refresh();VL.refresh();});setTimeout(function(){b.disabled=archived();},600);}})]));c.appendChild(msg);c.appendChild(forms);v.appendChild(c);
+  var VL=listBlock('גרסאות טבלאות ניקוד','fitness.versions',{courseId:S.courseId},null,[['label','גרסה'],['status','סטטוס',function(r){return ST[r.status]||r.status;}],['approved_by','אושרה ע״י',function(r){return r.approved_by||'—';}],['tables','טבלאות',function(r){return String((r.tables||[]).length);}],['issues','ממצאים',function(r){return String((r.issues||[]).length);}]]);v.appendChild(VL);
+  function refresh(){forms.innerHTML='';
+    vcall('fitness.versions',{courseId:S.courseId},null,function(vs){vcall('fitness.types',{courseId:S.courseId},null,function(ts){
+      var act=vs.filter(function(x){return x.status==='APPROVED';})[0],drafts=vs.filter(function(x){return x.status==='DRAFT';});
+      var lines=[act?'גרסת ניקוד פעילה: '+act.label+' (אושרה ע״י '+(act.approved_by||'?')+')':'גרסת ניקוד פעילה: אין — עד אישור גרסה לא יופקו ציונים ("ממתין להשלמת נתונים").'];
+      lines.push('מתח בנים: אפוד אישי 7 ק״ג — קבוע לכל סוגי המבחנים (אין בחירה). מתח בנות: טבלת ״בסיוע גומי״.');
+      status.innerHTML='';lines.forEach(function(l){status.appendChild(el('div',{text:l}));});
+      vcall('fitness.quality',{courseId:S.courseId},null,function(q){var d=el('div',{id:'fitQuality',style:'margin-top:6px'});d.appendChild(el('div',{text:'איכות נתונים: '+q.results+' תוצאות · '+q.complete+' עם ציון · '+q.incomplete+' ממתינות להשלמת נתונים'}));if(q.advice)d.appendChild(el('div',{class:'notice',text:q.advice}));if(q.soldiers_without_gender.length)d.appendChild(el('div',{class:'muted',text:'ללא מין מוגדר: '+q.soldiers_without_gender.map(function(x){return x.name;}).join(', ')}));status.appendChild(d);});
+      forms.appendChild(vform('אישור גרסת טיוטה',[{n:'versionId',l:'גרסת טיוטה',t:'select',req:1,o:drafts.map(function(d){return[d.id,d.label];})},{n:'verified',l:'אימתתי את הערכים מול מסמך המקור (כולל כללי המתח המחייבים)',t:'check'},{n:'approve_reason',l:'נימוק האישור',req:1}],function(x,m){
+        if(!x.versionId){setMsg(m,'אין גרסת טיוטה לאישור — טען קודם מהתמלול.',false);return;}
+        if(!x.verified){setMsg(m,'לא ניתן לאשר בלי סימון האימות מול המקור.',false);return;}
+        return vcall('fitness.approve',{versionId:x.versionId,data:{verified_against_source:true,reason:x.approve_reason}},m,saved(m,function(){refresh();VL.refresh();}));},{btn:'אשר גרסה'}));
+    });});}
+  refresh();}
+function showOcr(v,id){vcall('ocr.rows',{id:id},null,function(rows){var c=el('section',{class:'card'});c.appendChild(el('h3',{text:'שורות לאישור פרטני'}));c.appendChild(vtable([['row_no','#'],['data','נתונים',function(r){return JSON.stringify(r.data||r.data_json||'');}],['uncertain','לא ברור',function(r){return r.uncertain?'⚠ כן':'לא';}],['id','החלטה',function(r){return el('span',{},[el('button',{text:'אשר',onclick:function(){vcall('ocr.approveRow',{id:r.id,confirm_uncertain:!!r.uncertain},null,function(){showOcr(v,id);});}}),' ',el('button',{class:'sec',text:'דחה',onclick:function(){vcall('ocr.rejectRow',{id:r.id,note:'נדחה'},null,function(){showOcr(v,id);});}})]);}]],rows));v.appendChild(c);});}
+/* tabs: keep the original soldiers/nav/assign tabs, add the v1 screens */
+renderTabs=function(){var gr=$('grps'),t=$('tabs'),v=$('view'),ae=document.activeElement,keep=ae&&ae.id&&(gr.contains(ae)||t.contains(ae))?ae.id:null;gr.innerHTML='';t.innerHTML='';var cur=groupOf(S.tab),btns=[];
+  GROUPS.forEach(function(g){var vis=g.t.filter(tabVisible);if(!vis.length)return;
+    var b=el('button',{id:'grp_'+g.k,class:'grp'+(g===cur?' on':''),type:'button','data-tabs':vis.join(' '),'aria-current':g===cur?'true':null,text:g.l,onclick:function(){if(g!==cur)showTab(vis[0]);}});btns.push(b);gr.appendChild(b);});
+  var vis=cur.t.filter(tabVisible);
+  /* A1: a real tablist only when there are 2+ tabs; ONE shared panel (#view) that is named by the active tab; a single-tab group has no tablist at all. */
+  if(vis.length>1){t.hidden=false;t.setAttribute('role','tablist');t.setAttribute('aria-label','מסכים בתחום '+cur.l);
+    vis.forEach(function(id,ix){t.appendChild(el('button',{id:tabBtnId(id),type:'button',class:'tab'+(S.tab===id?' on':''),role:'tab','aria-selected':S.tab===id?'true':'false','aria-controls':'view',tabindex:S.tab===id?'0':'-1',text:tabLabel(id),
+      onkeydown:function(e){var n=null;/* RTL: the next tab is on the LEFT */if(e.key==='ArrowLeft')n=vis[(ix+1)%vis.length];else if(e.key==='ArrowRight')n=vis[(ix-1+vis.length)%vis.length];else if(e.key==='Home')n=vis[0];else if(e.key==='End')n=vis[vis.length-1];if(n===null)return;e.preventDefault();showTab(n);var nb=$(tabBtnId(n));if(nb)nb.focus();},
+      onclick:function(){showTab(id);var nb=$(tabBtnId(id));if(nb)nb.focus();}}));});
+    v.setAttribute('role','tabpanel');v.setAttribute('aria-labelledby',tabBtnId(S.tab));v.setAttribute('tabindex','-1');}
+  else{t.hidden=true;t.removeAttribute('role');t.removeAttribute('aria-label');v.setAttribute('role','region');v.setAttribute('aria-labelledby','pageTitle');v.removeAttribute('tabindex');}
+  if(keep&&$(keep)&&document.activeElement!==$(keep))$(keep).focus();};
+function focusHeading(){var h=$('pageTitle');if(h){h.setAttribute('tabindex','-1');h.focus();}}
+var PAGEDESC={soldiers:'רשימת החיילים בהיקף שלך, חיפוש, כרטיס חייל והוספה.',nav:'מבחני ניווט: הזנה, תוצאות ותיקונים.',assign:'שיוך מפקדים למחלקות ולצוותים.',dash:'תמונת מצב של הקורס: מדדים, תובנות ומשימות פתוחות.',home:'כל הקורסים בהרשאתך במבט אחד.',compare:'השוואות בין קורסים וקבוצות (קבוצות קטנות מ-5 חיילים מוסתרות).',fitness:'מבחני כושר גופני: הזנה, ציונים וניהול גרסאות ניקוד.',mk:'תוצאות קליעה רגילה ויל״מ.',exams:'מבחני מקצוע, מועדים ושיחות נדרשות.',attendance:'אירועי נוכחות: יצירה, פירוט ותיקון.',marches:'מסעות ומרחקים.',readiness:'כשירות נוכחית והיסטוריה.',events:'אירועים והישגים אישיים.',qual:'הכשרות והסמכות.',reports:'דוח אנליטי A4 (ברירת מחדל), דוח טבלאי חלופי וייצוא.',meetings:'סיכומי ישיבות.',tasks:'מעקב משימות.',followups:'מעקבים אישיים.'};
+function pageHead(n){var d=PAGEDESC[n]||'';return el('header',{class:'pagehead',id:'pageHead'},[el('h2',{id:'pageTitle',text:tabLabel(n)}),d?el('p',{class:'muted',text:d}):null]);}
+showTab=function(n){S.tab=n;renderTabs();var sc=SCREENS.filter(function(s){return s.id===n;})[0];if(sc){if(sc.admin&&!isAdmin()){return;}var v=$('view');v.innerHTML='';v.appendChild(pageHead(n));try{sc.render(v);}catch(e){v.appendChild(el('div',{class:'msg err',text:'שגיאת תצוגה.'}));}return;}
+  if(n==='nav')showNav();else if(n==='assign')showAssign();else showList();var vv=$('view');if(vv&&!$('pageHead'))vv.insertBefore(pageHead(n),vv.firstChild);};
+/* full soldier card: extra tabs + timeline; private data in a visually separate tab loaded by a SEPARATE admin-only call */
+var _showCard=showCard;
+showCard=function(id,flash){_showCard(id,flash);var tries=0;(function wait(){if(!$('cardName')){if(tries++<60)setTimeout(wait,50);return;}
+  call('soldiers.card',{id:id}).then(function(r){if(!r.ok||$('v1card'))return;var c=r.data,box=el('section',{class:'card',id:'v1card'}),body=el('div');
+   var sec={timeline:['ציר זמן',function(){return vtable([['date','תאריך'],['title','אירוע'],['detail','פירוט']],c.timeline);}],
+    fitness:['כש״ג',function(){return el('div',{},[kv({'ממוצע':c.fitness.mean===undefined?null:c.fitness.mean}),vtable([['test_date','תאריך'],['weighted_display','ציון']],c.fitness.history)]);}],
+    mk:['קליעה',function(){return el('div',{},[kv({'רגילה — ממוצע':c.marksmanship.regular&&c.marksmanship.regular.mean,'יל״מ — ממוצע':c.marksmanship.ylm&&c.marksmanship.ylm.mean}),vtable([['test_date','תאריך'],['examiner_score','בוחן'],['ylm_score','יל״מ']],c.marksmanship.history)]);}],
+    exams:['מבחנים',function(){return vtable([['attempt_date','תאריך'],['exam_name','מבחן'],['attempt','מועד'],['score','ציון']],c.exams.history);}],
+    att:['נוכחות ומסעות',function(){return el('div',{},[kv({'נוכחות %':c.attendance.percent}),vtable([['date','תאריך'],['present','נוכח'],['early_exit','יצא מוקדם']],c.attendance.log),vtable([['date','מסע'],['location','מקום'],['present','נוכח']],c.marches.log)]);}],
+    qual:['הסמכות',function(){return vtable([['qualification_name','הסמכה'],['status','סטטוס'],['completion_date','הושלמה']],c.qualifications.items);}],
+    ready:['כשירות',function(){return vtable([['start_date','מתאריך'],['status','סטטוס',function(r){return STATUS[r.status]||r.status;}],['restrictions','מגבלות']],c.readiness.history);}],
+    ev:['אירועים והישגים',function(){return vtable([['event_date','תאריך'],['type_label','סוג'],['description','תיאור']],c.events);}],
+    al:['התראות',function(){return vtable([['urgency','דחיפות'],['topic','נושא'],['reason','סיבה']],c.alerts);}],
+    tr:['מגמות וחוזקות/פערים',function(){var DL={navigation:'ניווט',fitness:'כש״ג',marksmanship:'קליעה'},tr=c.trends||{},sg=c.strengths_gaps||{},d=el('div');
+      d.appendChild(vtable([['dom','תחום'],['n','מספר מדידות'],['last','מדידה אחרונה'],['chg','שינוי מהמדידה הקודמת']],Object.keys(DL).map(function(k){var x=tr[k]||{points:[]},pt=x.points||[];return{dom:DL[k],n:pt.length,last:pt.length?pt[pt.length-1].value:null,chg:x.trend_available?(x.change>0?'+'+x.change:String(x.change)):'אין מספיק מדידות למגמה'};}),null,'אין נתונים'));
+      if(sg.available===false)d.appendChild(el('p',{class:'muted',text:'חוזקות ופערים: '+(sg.reason||'לא זמין')}));else{var nm=function(a){return (a||[]).map(function(x){return DL[x.domain]||x.domain;}).join(', ')||'—';};d.appendChild(kv({'חוזקות':nm(sg.strengths),'פערים':nm(sg.gaps)}));}return d;}]};
+   var bar=el('div',{class:'bar',role:'tablist','aria-label':'פרטי החייל'}),cur=null;body.id='cardPanel';body.setAttribute('role','tabpanel');body.setAttribute('tabindex','-1');
+   function mark(k){body.setAttribute('aria-labelledby','ctab_'+k);Array.prototype.forEach.call(bar.children,function(b){var on=b.getAttribute('data-k')===k;b.className='tab'+(b.getAttribute('data-k')==='priv'?' priv':'')+(on?' on':'');b.setAttribute('aria-selected',on?'true':'false');b.setAttribute('tabindex',on?'0':'-1');});}
+   function show(k){body.innerHTML='';body.appendChild(sec[k][1]());mark(k);}
+   function mkTab(k,label,fn){var b=el('button',{id:'ctab_'+k,type:'button',class:'tab','data-k':k,role:'tab','aria-selected':'false','aria-controls':'cardPanel',tabindex:'-1',text:label,onclick:function(){fn();b.focus();}});
+     b.onkeydown=function(e){var all=Array.prototype.slice.call(bar.children),ix=all.indexOf(b),n=null;/* RTL: next = left */if(e.key==='ArrowLeft')n=all[(ix+1)%all.length];else if(e.key==='ArrowRight')n=all[(ix-1+all.length)%all.length];else if(e.key==='Home')n=all[0];else if(e.key==='End')n=all[all.length-1];if(!n)return;e.preventDefault();n.click();};return b;}
+   Object.keys(sec).forEach(function(k){bar.appendChild(mkTab(k,sec[k][0],function(){show(k);}));});
+   if(isAdmin())bar.appendChild(mkTab('priv','פרטי למ״פ',function(){body.innerHTML='';body.appendChild(el('div',{class:'notice',style:'background:#fde8e6;border-color:#f0b4ae',text:'מידע פרטי של המ״פ — לא נחשף למפקדים.'}));var p=el('div');body.appendChild(p);vcall('soldiers.private',{courseId:S.courseId,soldierId:id},null,function(d){p.appendChild(kv({'הערות':(d.notes||[]).map(function(n){return n.note_text;}).join(' | ')||null,'מעקבים':(d.follow_ups||[]).length,'מועדף':d.favorite}));});mark('priv');}));
+   box.appendChild(bar);box.appendChild(body);$('view').appendChild(box);show('timeline');});})();};
+
+/* ===================== product-dev6: סיכומי ישיבות ומעקב משימות =====================
+   Commander/admin only (the server enforces it; soldiers never receive this page). Tasks are created ONLY inside the meeting-summary form.
+   Every dynamic value is rendered with textContent/DOM nodes. No team filter / KPI / column anywhere. */
+(function(){
+var MT_ST={open:'פתוחה',in_progress:'בטיפול',waiting:'ממתינה',completed:'הושלמה',cancelled:'בוטלה'},MT_PR={low:'נמוכה',normal:'רגילה',high:'גבוהה',urgent:'דחופה'};
+var MT_ACT={TASK_CREATED:'נוצרה',TASK_STATUS:'שינוי סטטוס',TASK_COMPLETED:'הושלמה',TASK_CANCELLED:'בוטלה',TASK_REOPENED:'נפתחה מחדש',TASK_REASSIGNED:'שינוי אחראי',TASK_EDIT:'עדכון פרטים'};
+var MT_FLD={status:'סטטוס',assignee_email:'אחראי',due_date:'תאריך יעד',due_time:'שעת יעד',priority:'עדיפות',title:'כותרת',notes:'הערות'};
+var M={opts:null,optsCourse:null,tf:{assignee:'',departmentId:'',from:'',to:'',status:'',meetingId:'',priority:''},openTask:null,openMeeting:undefined,hashDone:false,ind:null,indCourse:null};
+function fmtD(d){var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||''));return m?m[3]+'/'+m[2]+'/'+m[1]:'';}
+function fmtDT(s){var m=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})/.exec(String(s||''));return m?m[3]+'/'+m[2]+'/'+m[1]+' '+m[4]:'';}
+function fmtTs(s){if(!s)return '';var d=new Date(s);if(isNaN(d.getTime()))return String(s);try{return d.toLocaleString('he-IL',{timeZone:'Asia/Jerusalem',dateStyle:'short',timeStyle:'short'});}catch(e){return String(s);}}
+function uid(p){var a='';try{var b=new Uint8Array(8);crypto.getRandomValues(b);a=Array.prototype.map.call(b,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');}catch(e){a=Math.random().toString(16).slice(2,14);}return p+'-'+Date.now().toString(36)+'-'+a;}
+function name(email){var o=M.opts&&M.opts.assignees.filter(function(a){return a.email===email;})[0];return o?o.name:email;}
+function stBadge(t){var b=el('span',{class:'badge st-'+t.status,text:MT_ST[t.status]||t.status});var w=el('span',{},[b]);if(t.overdue){w.appendChild(document.createTextNode(' '));w.appendChild(el('span',{class:'badge off',text:'באיחור'}));}return w;}
+function dueText(t){return fmtD(t.due_date)+(t.due_time?' '+t.due_time:'');}
+function loadOpts(cb,box){if(M.opts&&M.optsCourse===S.courseId){cb();return;}vcall('meetings.options',{courseId:S.courseId},box,function(o){M.opts=o;M.optsCourse=S.courseId;cb();});}
+function refreshInd(){if(!S.courseId||(!isAdmin()&&!S.mine.has_assignment))return;var cid=S.courseId;call('tasks.indicators',{courseId:cid}).then(function(r){if(!r.ok||cid!==S.courseId)return;M.ind=r.data;M.indCourse=cid;paintBadge();}).catch(function(){});}
+function paintBadge(){var g=$('grp_mtg');if(!g||!M.ind||M.indCourse!==S.courseId)return;var old=g.querySelector('.mtBadge');if(old)old.remove();var n=M.ind.my_overdue+0;if(n>0){g.appendChild(document.createTextNode(' '));g.appendChild(el('span',{class:'mtBadge badge off',id:'mtBadge',text:String(n),title:'משימות שלי באיחור','aria-label':n+' משימות שלי באיחור'}));}}
+
+/* ---------- Screen A: list of meeting summaries ---------- */
+function meetingsScreen(v){
+  if(M.openMeeting!==undefined){var id=M.openMeeting;M.openMeeting=undefined;if(id===null){meetingForm(v,null);return;}vcall('meetings.get',{id:id},null,function(m){meetingForm(v,m);});return;}
+  var c=el('section',{class:'card',id:'mtList'}),msg=el('div',{class:'msg',role:'status',id:'mtListMsg'}),out=el('div',{id:'mtOut'});
+  c.appendChild(el('h3',{text:'סיכומי ישיבות'}));
+  c.appendChild(el('div',{class:'bar'},[el('button',{id:'mtNew',text:'סיכום ישיבה חדש',disabled:archived(),onclick:function(){meetingForm(v,null);}}),el('button',{class:'sec',id:'mtToTasks',text:'מעקב משימות',onclick:function(){showTab('tasks');}})]));
+  if(archived())c.appendChild(el('p',{class:'muted',text:'הקורס בארכיון — צפייה בלבד.'}));
+  var integ=el('div',{id:'mtInteg'});
+  if(isAdmin()){c.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'mtIntegBtn',text:'בדיקת שלמות (מנהל)',onclick:function(){checkInteg();}})]));c.appendChild(integ);}
+  function checkInteg(){integ.innerHTML='';integ.appendChild(el('div',{class:'loading',text:'בודק…'}));
+    call('meetings.integrity',{courseId:S.courseId}).then(function(r){integ.innerHTML='';var box=el('div',{class:'card',id:'mtIntegBox',style:'background:#fafbfc'});integ.appendChild(box);
+      if(!r.ok){box.appendChild(el('div',{class:'msg err',text:r.message}));return;}
+      var d=r.data;box.appendChild(el('h4',{style:'margin:0 0 6px',text:'בדיקת שלמות סיכומי ישיבות'}));
+      box.appendChild(el('p',{id:'mtIntegSum',text:'רישומי ביקורת חסרים: '+d.audit_gap_count+' · סיכומים מוסתרים שלא הושלמה שמירתם: '+d.orphan_count}));
+      if(d.audit_gap_count){var why=el('input',{id:'mtIntegWhy',maxlength:'300',placeholder:'סיבה להשלמת הרישום (חובה)','aria-label':'סיבה להשלמת הרישום'});box.appendChild(why);
+        d.audit_gaps.forEach(function(g){box.appendChild(el('div',{class:'bar'},[el('span',{text:g.subject+' · גרסה '+g.rev}),el('button',{class:'sec',text:'השלמת רישום ביקורת',onclick:function(){if(!why.value.trim()){setMsg(im,'יש להזין סיבה.',false);why.focus();return;}
+          call('meetings.auditRepair',{courseId:S.courseId,id:g.meeting_id,rev:g.rev,reason:why.value}).then(function(x){if(!x.ok){setMsg(im,x.message,false);return;}checkInteg();}).catch(function(e){fail(e,im);});}})]));});}
+      if(d.orphan_count)d.orphans.forEach(function(o){box.appendChild(el('p',{class:'muted',text:'שמירה שלא הושלמה (מוסתרת, נוקתה/תתחדש בניסיון חוזר): '+o.subject+' · '+fmtTs(o.created_at)}));});
+      var im=el('div',{class:'msg',role:'status',id:'mtIntegMsg'});box.appendChild(im);
+    }).catch(function(e){integ.innerHTML='';fail(e,msg);});}
+  c.appendChild(msg);c.appendChild(out);v.appendChild(c);
+  function load(){out.innerHTML='';out.appendChild(el('div',{class:'loading',id:'mtLoading',text:'טוען סיכומים…'}));setMsg(msg,'',true);
+    call('meetings.list',{courseId:S.courseId}).then(function(r){out.innerHTML='';
+      if(!r.ok){setMsg(msg,r.message,false);out.appendChild(el('button',{class:'sec',id:'mtRetry',text:'נסו שוב',onclick:load}));return;}
+      if(!r.data.length){out.appendChild(el('p',{class:'muted',id:'mtEmpty',text:'עדיין אין סיכומי ישיבות. לחצו על "סיכום ישיבה חדש" כדי להתחיל.'}));return;}
+      var t=el('table',{class:'resp',id:'mtTable'},[el('thead',{},[el('tr',{},['נושא','תאריך הישיבה','נכתב ע״י','משימות','פעולות'].map(function(h){return el('th',{text:h});}))])]),b=el('tbody');
+      r.data.forEach(function(m){var open=function(){vcall('meetings.get',{id:m.id},msg,function(x){meetingForm(v,x);});};
+        var tr=el('tr',{class:'click','data-id':m.id,onclick:function(e){if(e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;open();}},[el('td',{'data-l':'נושא',text:m.subject}),el('td',{'data-l':'תאריך',text:fmtDT(m.meeting_at)}),el('td',{'data-l':'נכתב ע״י',text:m.author_name}),el('td',{'data-l':'משימות',text:String(m.task_count)}),el('td',{'data-l':'פעולות'},[el('button',{class:'sec',text:'פתיחה',onclick:function(e){e.stopPropagation();open();}})])]);b.appendChild(tr);});
+      t.appendChild(b);out.appendChild(el('div',{class:'tw'},[t]));
+    }).catch(function(e){out.innerHTML='';fail(e,msg);out.appendChild(el('button',{class:'sec',id:'mtRetry',text:'נסו שוב',onclick:load}));});}
+  load();
+}
+
+/* ---------- Screen A (form): create / edit a summary with its tasks ---------- */
+function meetingForm(v,m){
+  v.innerHTML='';var edit=!!m,canEdit=!edit||m.can_edit,lock=archived()||!canEdit,reqId=uid('rq'),drafts=[],box=el('div',{id:'mtForm'});v.appendChild(box);
+  loadOpts(build,null);
+  function build(){
+    var head=el('section',{class:'card'},[el('div',{class:'bar'},[el('button',{class:'sec',id:'mtBack',text:'חזרה לרשימה',onclick:function(){showTab('meetings');}})]),el('h3',{id:'mtFormTitle',style:'margin-top:10px',text:edit?(lock?'סיכום ישיבה':'עריכת סיכום ישיבה'):'סיכום ישיבה חדש'})]);
+    if(edit&&!m.can_edit)head.appendChild(el('p',{class:'muted',text:'ניתן לצפות בסיכום. עריכה מותרת לכותב הסיכום או למנהל מערכת.'}));if(archived())head.appendChild(el('p',{class:'muted',text:'הקורס בארכיון — צפייה בלבד.'}));
+    box.appendChild(head);
+    var f={};function field(id,label,node,err){var w=el('div',{},[el('label',{for:id,text:label}),node,el('div',{class:'ferr msg err',id:id+'Err',role:'alert'})]);return w;}
+    f.subject=el('input',{id:'mtSubject',maxlength:'200',value:edit?m.subject:'',disabled:lock||null});
+    f.at=el('input',{id:'mtAt',type:'datetime-local',value:edit?m.meeting_at:(M.opts.now_local||''),disabled:lock||null});
+    f.part=el('textarea',{id:'mtPart',rows:'2',maxlength:'500',disabled:lock||null});f.part.value=edit?m.participants:'';
+    f.sum=el('textarea',{id:'mtSum',rows:'5',maxlength:'8000',disabled:lock||null});f.sum.value=edit?m.summary:'';
+    f.dec=el('textarea',{id:'mtDec',rows:'3',maxlength:'4000',disabled:lock||null});f.dec.value=edit?m.decisions:'';
+    box.appendChild(el('section',{class:'card',id:'mtCardDetails'},[el('h3',{text:'פרטי הישיבה'}),el('div',{class:'row'},[field('mtSubject','נושא הישיבה (חובה)',f.subject),field('mtAt','תאריך ושעה (חובה)',f.at)]),field('mtPart','משתתפים (טקסט חופשי)',f.part)]));
+    box.appendChild(el('section',{class:'card',id:'mtCardSummary'},[el('h3',{text:'סיכום והחלטות'}),field('mtSum','סיכום',f.sum),field('mtDec','החלטות',f.dec)]));
+    var tc=el('section',{class:'card',id:'mtCardTasks'}),tl=el('div',{id:'mtTasks'});tc.appendChild(el('h3',{text:'משימות מהישיבה'}));tc.appendChild(el('p',{class:'muted',text:'משימות נוצרות רק כאן, כחלק מהסיכום. אפשר ללא משימות, או עם כמה משימות.'}));tc.appendChild(tl);box.appendChild(tc);
+    function empty(){return {key:uid('k'),id:'',saved:null,removed:false,n:null};}
+    function addDraft(sv){var d=empty();if(sv){d.id=sv.id;d.saved=sv;}drafts.push(d);renderDrafts();return d;}
+    function renderDrafts(){drafts.forEach(function(d){if(d.n)d.v={title:d.n.title.value,as:d.n.as.value,due:d.n.due.value,time:d.n.time.value,pr:d.n.pr.value,notes:d.n.notes.value};});tl.innerHTML='';var live=drafts.filter(function(d){return !d.removed;});
+      if(!live.length)tl.appendChild(el('p',{class:'muted',id:'mtNoTasks',text:'אין משימות בסיכום זה.'}));
+      live.forEach(function(d,i){var s=d.saved,ro=lock||(s&&!s.can.edit),idp='mtT'+drafts.indexOf(d);
+        var n={title:el('input',{id:idp+'Title',maxlength:'300',disabled:ro||null}),as:el('select',{id:idp+'As',disabled:ro||null}),due:el('input',{id:idp+'Due',type:'date',disabled:ro||null}),time:el('input',{id:idp+'Time',type:'time',disabled:ro||null}),pr:el('select',{id:idp+'Pr',disabled:ro||null}),notes:el('textarea',{id:idp+'Notes',rows:'2',maxlength:'2000',disabled:ro||null})};
+        n.as.appendChild(el('option',{value:'',text:'בחירת אחראי…'}));M.opts.assignees.forEach(function(a){n.as.appendChild(el('option',{value:a.email,text:a.name+(a.role==='admin'?' (מנהל)':'')}));});
+        if(s&&!M.opts.assignees.some(function(a){return a.email===s.assignee_email;}))n.as.appendChild(el('option',{value:s.assignee_email,text:s.assignee_name}));
+        M.opts.priorities.forEach(function(p){n.pr.appendChild(el('option',{value:p.id,text:p.label}));});
+        var q=d.v||(s?{title:s.title,as:s.assignee_email,due:s.due_date,time:s.due_time,pr:s.priority,notes:s.notes}:{title:'',as:'',due:'',time:'',pr:'normal',notes:''});n.title.value=q.title;n.as.value=q.as;n.due.value=q.due;n.time.value=q.time;n.pr.value=q.pr;n.notes.value=q.notes;d.n=n;
+        var card=el('div',{class:'card taskDraft',id:idp,style:'background:#fafbfc'},[el('h4',{style:'margin:0 0 6px',text:'משימה '+(i+1)+(s?' · '+(MT_ST[s.status]||''):'')}),
+          field(idp+'Title','כותרת (חובה)',n.title),el('div',{class:'row'},[field(idp+'As','אחראי (חובה)',n.as),field(idp+'Due','תאריך יעד (חובה)',n.due)]),el('div',{class:'row'},[field(idp+'Time','שעת יעד (אופציונלי)',n.time),field(idp+'Pr','עדיפות',n.pr)]),field(idp+'Notes','הערות',n.notes)]);
+        if(s&&ro&&!lock)card.appendChild(el('p',{class:'muted',text:'משימה סגורה או שאינה בעריכתך — ניתן לשנות סטטוס במסך המשימה.'}));
+        if(!lock&&(!s||s.can.cancel||s.can.edit)&&!(s&&s.status==='cancelled'))card.appendChild(el('div',{class:'bar'},[el('button',{class:'sec rmTask',id:idp+'Rm',type:'button',text:s?'ביטול משימה':'הסרת משימה',onclick:function(){if(s&&!window.confirm('המשימה תבוטל ותישאר בהיסטוריה. להמשיך?'))return;d.removed=true;if(!s)drafts.splice(drafts.indexOf(d),1);renderDrafts();}})]));
+        tl.appendChild(card);});}
+    if(edit)m.tasks.forEach(function(s){drafts.push({key:'',id:s.id,saved:s,removed:false,n:null});});
+    if(!lock)tc.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'mtAddTask',type:'button',text:'הוספת משימה לסיכום',onclick:function(){addDraft(null);var last=tl.querySelectorAll('.taskDraft');var x=last[last.length-1];if(x){var i=x.querySelector('input');if(i)i.focus();}}})]));
+    renderDrafts();
+    var msg=el('div',{id:'mtMsg',class:'msg',role:'status'}),save=el('button',{id:'mtSave',type:'button',text:'שמירת סיכום הישיבה והמשימות',disabled:lock||null}),cancel=el('button',{id:'mtCancel',type:'button',class:'sec',text:'ביטול',onclick:function(){showTab('meetings');}});
+    box.appendChild(el('div',{class:'bar'},[save,cancel]));box.appendChild(msg);
+    function ferr(id,t){var e=$(id+'Err');if(e)e.textContent=t||'';var i=$(id);if(i){if(t)i.setAttribute('aria-invalid','true');else i.removeAttribute('aria-invalid');}}
+    function validate(){var first=null,bad=function(id,t){ferr(id,t);if(!first)first=id;};
+      ['mtSubject','mtAt'].forEach(function(i){ferr(i,'');});
+      if(!f.subject.value.trim())bad('mtSubject','יש להזין נושא.');if(!f.at.value)bad('mtAt','יש להזין תאריך ושעה.');
+      drafts.forEach(function(d){if(d.removed||!d.n||(d.saved&&!d.saved.can.edit))return;var idp=d.n.title.id.slice(0,-5);['Title','As','Due','Time'].forEach(function(k){ferr(idp+k,'');});
+        if(!d.n.title.value.trim())bad(idp+'Title','יש להזין כותרת למשימה.');if(!d.n.as.value)bad(idp+'As','יש לבחור אחראי.');if(!d.n.due.value)bad(idp+'Due','יש להזין תאריך יעד.');});
+      if(first){var x=$(first);if(x)x.focus();setMsg(msg,'יש להשלים את השדות המסומנים לפני השמירה.',false);return false;}return true;}
+    save.onclick=function(){if(save.disabled)return;setMsg(msg,'',true);if(!validate())return;
+      var tasks=[];drafts.forEach(function(d){if(d.saved){if(d.removed){tasks.push({id:d.id,remove:true});return;}if(!d.saved.can.edit)return;}
+        else if(d.removed)return;var o={title:d.n.title.value.trim(),assignee_email:d.n.as.value,due_date:d.n.due.value,due_time:d.n.time.value||'',priority:d.n.pr.value,notes:d.n.notes.value};if(d.saved)o.id=d.id;else o.client_key=d.key;tasks.push(o);});
+      var data={subject:f.subject.value.trim(),meeting_at:f.at.value,participants:f.part.value,summary:f.sum.value,decisions:f.dec.value,tasks:tasks};if(edit){data.id=m.id;data.expected_version=m.version;}else data.request_id=reqId;
+      save.disabled=true;setMsg(msg,'שומר…',true);
+      call('meetings.save',{courseId:S.courseId,data:data}).then(function(r){
+        if(!r.ok){save.disabled=false;setMsg(msg,(r.message||'השמירה נכשלה.')+(r.code==='SAVE_FAILED'?' לא נשמר דבר.':''),false);return;}
+        M.ind=null;refreshInd();v.innerHTML='';var ok=el('section',{class:'card',id:'mtDone'},[el('h3',{text:'הסיכום נשמר'}),el('p',{id:'mtDoneMsg',class:'msg ok',role:'status',text:(r.data.replayed?'הסיכום כבר נשמר קודם (לא נוצר עותק נוסף). ':'הסיכום והמשימות נשמרו בהצלחה. ')+r.data.meeting.tasks.filter(function(t){return t.status!=='cancelled';}).length+' משימות פעילות בסיכום.'}),(r.data.audit&&r.data.audit.recorded===false)?el('p',{id:'mtAuditWarn',class:'msg err',role:'alert',text:'אזהרה: '+r.data.audit.message}):el('span'),
+          el('div',{class:'bar'},[el('button',{id:'mtDoneList',text:'לרשימת הסיכומים',onclick:function(){showTab('meetings');}}),el('button',{class:'sec',id:'mtDoneTasks',text:'למעקב משימות',onclick:function(){showTab('tasks');}})])]);v.appendChild(ok);var h=ok.querySelector('h3');h.setAttribute('tabindex','-1');h.focus();
+      }).catch(function(e){save.disabled=false;setMsg(msg,'תקלת תקשורת — לא ידוע אם הסיכום נשמר. אפשר ללחוץ שוב על שמירה: אם נשמר, לא ייווצר עותק נוסף.',false);});};
+    var fi=$('mtSubject');if(fi&&!lock&&!edit)fi.focus();
+  }
+}
+
+/* ---------- Screen B: task tracking dashboard ---------- */
+function tasksScreen(v){
+  if(!M.hashDone){M.hashDone=true;var hm=/^#task=([A-Za-z0-9_-]{1,80})$/.exec(location.hash||'');if(hm)M.openTask=hm[1];}
+  if(M.openTask){var id=M.openTask;M.openTask=null;taskDetail(v,id);return;}
+  var c=el('section',{class:'card',id:'tkMain'}),msg=el('div',{class:'msg',role:'status',id:'tkMsg'}),kp=el('div',{class:'kpis',id:'tkKpis'}),out=el('div',{id:'tkOut'}),bar=el('div',{class:'tbar',id:'tkFilters',role:'group','aria-label':'סינון משימות'});
+  c.appendChild(el('h3',{text:'מעקב משימות'}));c.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'tkToMeetings',text:'סיכומי ישיבות',onclick:function(){showTab('meetings');}})]));c.appendChild(kp);c.appendChild(bar);c.appendChild(msg);c.appendChild(out);v.appendChild(c);
+  var F=M.tf,meetings=[];
+  function sel(id,label,items,key,blank){var s=el('select',{id:id,'aria-label':label});s.appendChild(el('option',{value:'',text:blank}));items.forEach(function(i){s.appendChild(el('option',{value:i[0],text:i[1]}));});s.value=F[key];s.onchange=function(){F[key]=s.value;load();};return s;}
+  loadOpts(function(){call('meetings.list',{courseId:S.courseId}).then(function(r){meetings=r.ok?r.data:[];drawBar();load();}).catch(function(){drawBar();load();});},msg);
+  function drawBar(){bar.innerHTML='';
+    bar.appendChild(sel('tkAssignee','אחראי',M.opts.assignees.map(function(a){return [a.email,a.name];}),'assignee','כל האחראים'));
+    if(M.opts.departments.length)bar.appendChild(sel('tkDept','מחלקה',M.opts.departments.map(function(d){return [d.id,d.name];}),'departmentId','כל המחלקות'));
+    bar.appendChild(sel('tkStatus','סטטוס',[['open','פתוחה'],['in_progress','בטיפול'],['waiting','ממתינה'],['completed','הושלמה'],['cancelled','בוטלה'],['overdue','באיחור']],'status','כל הסטטוסים'));
+    bar.appendChild(sel('tkPriority','עדיפות',Object.keys(MT_PR).map(function(k){return [k,MT_PR[k]];}),'priority','כל העדיפויות'));
+    bar.appendChild(sel('tkMeeting','ישיבה',meetings.map(function(m){return [m.id,m.subject+' · '+fmtD(m.meeting_at)];}),'meetingId','כל הישיבות'));
+    var fr=el('input',{id:'tkFrom',type:'date','aria-label':'מתאריך יעד'}),to=el('input',{id:'tkTo',type:'date','aria-label':'עד תאריך יעד'});fr.value=F.from;to.value=F.to;fr.onchange=function(){F.from=fr.value;load();};to.onchange=function(){F.to=to.value;load();};
+    bar.appendChild(el('label',{class:'tkd'},['מתאריך',fr]));bar.appendChild(el('label',{class:'tkd'},['עד תאריך',to]));
+    bar.appendChild(el('button',{class:'sec',id:'tkClear',text:'ניקוי סינון',onclick:function(){Object.keys(F).forEach(function(k){F[k]='';});drawBar();load();}}));}
+  function load(){out.innerHTML='';out.appendChild(el('div',{class:'loading',id:'tkLoading',text:'טוען משימות…'}));setMsg(msg,'',true);
+    var o={};Object.keys(F).forEach(function(k){if(F[k])o[k]=F[k];});
+    call('tasks.list',{courseId:S.courseId,opts:o}).then(function(r){out.innerHTML='';
+      if(!r.ok){kp.innerHTML='';setMsg(msg,r.message,false);out.appendChild(el('button',{class:'sec',id:'tkRetry',text:'נסו שוב',onclick:load}));return;}
+      var d=r.data,k=d.counts;kp.innerHTML='';
+      [['total','סה״כ משימות',k.total,'',''],['open','פתוחות',k.open,'open',''],['in_progress','בטיפול',k.in_progress,'in_progress',''],['waiting','ממתינות',k.waiting,'waiting',''],['completed','הושלמו',k.completed,'completed',''],['overdue','באיחור',k.overdue,'overdue',k.overdue?'red':'']].forEach(function(x){
+        kp.appendChild(kpi('kpi_'+x[0],x[1],x[2],F.status===x[3]&&x[3]?'מסונן':'',x[4],function(){F.status=x[3];var s=$('tkStatus');if(s)s.value=F.status;load();}));});
+      if(!d.tasks.length){var any=Object.keys(F).some(function(q){return F[q];});out.appendChild(el('p',{class:'muted',id:'tkEmpty',text:any?'לא נמצאו משימות לפי הסינון. נסו לנקות את הסינון.':'עדיין אין משימות. משימות נוצרות בתוך סיכום ישיבה.'}));return;}
+      if(d.truncated)out.appendChild(el('div',{class:'notice',id:'tkTrunc',text:'מוצגות '+d.tasks.length+' מתוך '+d.total_matching+' משימות. צמצמו את הסינון להצגת השאר.'}));
+      var t=el('table',{class:'resp',id:'tkTable'},[el('thead',{},[el('tr',{},['משימה','אחראי','יעד','סטטוס','עדיפות','ישיבה','פעולות'].map(function(h){return el('th',{text:h});}))])]),b=el('tbody');
+      d.tasks.forEach(function(x){var open=function(){taskDetail(v,x.id);};
+        b.appendChild(el('tr',{class:'click'+(x.overdue?' bad':''),'data-id':x.id,onclick:function(e){if(e.target.closest&&e.target.closest('button,a,input,select,textarea'))return;open();}},[el('td',{'data-l':'משימה',text:x.title}),el('td',{'data-l':'אחראי',text:x.assignee_name}),el('td',{'data-l':'יעד',text:dueText(x)}),el('td',{'data-l':'סטטוס'},[stBadge(x)]),el('td',{'data-l':'עדיפות',text:x.priority_label}),el('td',{'data-l':'ישיבה',text:x.meeting_subject}),el('td',{'data-l':'פעולות'},[el('button',{class:'sec',text:'פתיחה',onclick:function(e){e.stopPropagation();open();}})])]));});
+      t.appendChild(b);out.appendChild(el('div',{class:'tw'},[t]));
+    }).catch(function(e){out.innerHTML='';fail(e,msg);out.appendChild(el('button',{class:'sec',id:'tkRetry',text:'נסו שוב',onclick:load}));});}
+}
+
+/* ---------- Screen C: task details + full audit history ---------- */
+function taskDetail(v,id,flash){
+  v.innerHTML='';var c=el('section',{class:'card',id:'tdCard'}),msg=el('div',{class:'msg',role:'status',id:'tdMsg'});v.appendChild(c);c.appendChild(el('div',{class:'loading',text:'טוען משימה…'}));
+  call('tasks.get',{id:id}).then(function(r){c.innerHTML='';
+    if(!r.ok){c.appendChild(el('button',{class:'sec',id:'tdBack',text:'חזרה למעקב משימות',onclick:function(){showTab('tasks');}}));c.appendChild(el('div',{class:'msg err',id:'tdErr',text:r.message}));return;}
+    var t=r.data;
+    c.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'tdBack',text:'חזרה למעקב משימות',onclick:function(){showTab('tasks');}})]));
+    c.appendChild(el('h2',{id:'tdTitle',style:'margin:12px 0 4px',text:t.title}));c.appendChild(el('div',{},[stBadge(t)]));
+    var dl=el('dl',{id:'tdDl',style:'margin-top:10px'});[['ישיבה',t.meeting.subject+' · '+fmtDT(t.meeting.meeting_at)],['אחראי',t.assignee_name],['נוצרה ע״י',t.creator_name],['תאריך יעד',dueText(t)],['עדיפות',t.priority_label],['הערות',t.notes||'—']].forEach(function(p){dl.appendChild(el('dt',{text:p[0]}));dl.appendChild(el('dd',{text:p[1]}));});c.appendChild(dl);
+    c.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'tdMeeting',text:'פתיחת סיכום הישיבה',onclick:function(){M.openMeeting=t.meeting.id;showTab('meetings');}})]));
+    var targets=[];var open=['open','in_progress','waiting'].indexOf(t.status)!==-1;
+    if(open){if(t.can.set_status)['open','in_progress','waiting'].forEach(function(s){if(s!==t.status)targets.push(s);});if(t.can.complete)targets.push('completed');if(t.can.cancel)targets.push('cancelled');}
+    else{if(t.can.reopen){targets.push('open');if(t.status==='completed')targets.push('in_progress');}}
+    if(targets.length&&!archived()){var s=el('select',{id:'tdStatus','aria-label':'סטטוס חדש'});targets.forEach(function(x){s.appendChild(el('option',{value:x,text:MT_ST[x]}));});var note=el('input',{id:'tdNote',maxlength:'500',placeholder:'הערה (אופציונלי)','aria-label':'הערה לשינוי'}),go=el('button',{id:'tdGo',text:'עדכון סטטוס'});
+      go.onclick=function(){if(s.value==='cancelled'&&!window.confirm('המשימה תבוטל ותישאר בהיסטוריה. להמשיך?'))return;go.disabled=true;setMsg(msg,'מעדכן…',true);
+        call('tasks.setStatus',{id:id,status:s.value,note:note.value,expected_version:t.version}).then(function(x){go.disabled=false;if(!x.ok){setMsg(msg,x.message,false);return;}M.ind=null;refreshInd();taskDetail(v,id,'הסטטוס עודכן.');}).catch(function(e){go.disabled=false;fail(e,msg);});};
+      c.appendChild(el('div',{class:'bar',id:'tdActions'},[el('label',{style:'margin:0'},['סטטוס חדש ',s]),note,go]));}
+    else if(archived())c.appendChild(el('p',{class:'muted',text:'הקורס בארכיון — צפייה בלבד.'}));
+    c.appendChild(msg);if(flash)setMsg(msg,flash,true);
+    var h=el('section',{id:'tdHist',style:'margin-top:14px'},[el('h3',{text:'היסטוריית שינויים'})]);
+    var val=function(f,x){if(f==='status')return MT_ST[x]||x;if(f==='priority')return MT_PR[x]||x;if(f==='assignee_email')return name(x);if(f==='due_date')return fmtD(x);return x===''?'—':x;};
+    var tb=el('table',{class:'resp',id:'tdHistTable'},[el('thead',{},[el('tr',{},['מתי','מי','פעולה','שדה','לפני','אחרי','הערה'].map(function(x){return el('th',{text:x});}))])]),b=el('tbody');
+    var fillHist=function(){b.innerHTML='';t.history.forEach(function(e){b.appendChild(el('tr',{},[el('td',{'data-l':'מתי',text:fmtTs(e.timestamp)}),el('td',{'data-l':'מי',text:e.actor_name}),el('td',{'data-l':'פעולה',text:MT_ACT[e.action]||'עדכון'}),el('td',{'data-l':'שדה',text:MT_FLD[e.field]||e.field}),el('td',{'data-l':'לפני',text:e.action==='TASK_CREATED'?'—':val(e.field,e.old_value)}),el('td',{'data-l':'אחרי',text:val(e.field,e.new_value)}),el('td',{'data-l':'הערה',text:e.note||''})]));});};
+    tb.appendChild(b);b.id='tdHistBody';fillHist();loadOpts(fillHist,null);h.appendChild(el('div',{class:'tw'},[tb]));
+    c.appendChild(h);var ti=$('tdTitle');if(ti){ti.setAttribute('tabindex','-1');ti.focus();}
+  }).catch(function(e){c.innerHTML='';fail(e,msg);c.appendChild(msg);});
+}
+
+/* ---------- registration (additive: existing screens untouched) ---------- */
+var css=document.createElement('style');css.textContent='.badge.st-open{background:#e6eef7;color:#1d4e89}.badge.st-in_progress{background:#fff4d6;color:#7a5200}.badge.st-waiting{background:#efe9f7;color:#5a3a8a}.badge.st-completed{background:#e3f4e8;color:#1b7f3b}.badge.st-cancelled{background:#eceff2;color:#667482}.mtBtnFix,#tkTable button,#mtTable button{white-space:nowrap}#tkKpis{grid-template-columns:repeat(auto-fit,minmax(125px,1fr))}#tkTable th,#tkTable td{min-width:0}.tkd{display:flex;align-items:center;gap:6px;font-size:13px;margin:0;flex:1 1 150px}.tkd input{min-width:130px}.mtBadge{margin-inline-start:4px}';document.head.appendChild(css);
+SCREENS.push({id:'meetings',label:'סיכומי ישיבות',render:meetingsScreen},{id:'tasks',label:'מעקב משימות',render:tasksScreen});
+GROUPS.splice(2,0,{k:'mtg',l:'ישיבות ומשימות',t:['meetings','tasks']});
+var _tv=tabVisible;tabVisible=function(id){if(id==='meetings'||id==='tasks')return !!S.ctx&&(isAdmin()||!!S.mine.has_assignment);return _tv(id);};
+var _rt=renderTabs;renderTabs=function(){_rt();paintBadge();if(M.indCourse!==S.courseId&&S.ctx)refreshInd();};
+})();
+
+
+/* ===== R5.2.16 — mobile drawer = a REAL modal (≤900px): role=dialog + aria-modal only while open, focus moves in and is trapped, the background is inert + aria-hidden, body scroll is locked,
+   inner close button, Escape / scrim / selection / resize all close it and put the focus somewhere sensible. On desktop the side area is a normal landmark (no modal semantics). ===== */
+(function(){var mb=$('menuBtn'),sc=$('scrim'),side=$('side'),grps=$('grps'),mq=window.matchMedia('(max-width:900px)');
+  var bgs=function(){return [document.querySelector('header.top'),document.querySelector('main')];};
+  side.insertBefore(el('button',{id:'navClose',type:'button',class:'sec','aria-label':'סגירת תפריט ניווט',text:'✕ סגירה'}),side.firstChild);
+  function isOpen(){return document.body.classList.contains('nav-open');}
+  function bg(on){bgs().forEach(function(n){if(!n)return;if(on){n.setAttribute('inert','');n.setAttribute('aria-hidden','true');}else{n.removeAttribute('inert');n.removeAttribute('aria-hidden');}});}
+  function open(){document.body.classList.add('nav-open');mb.setAttribute('aria-expanded','true');bg(true);side.setAttribute('role','dialog');side.setAttribute('aria-modal','true');side.setAttribute('aria-label','תפריט ניווט');
+    var f=grps.querySelector('button.on')||$('navClose');if(f)f.focus();}
+  function close(where){if(!isOpen())return;document.body.classList.remove('nav-open');mb.setAttribute('aria-expanded','false');bg(false);side.removeAttribute('role');side.removeAttribute('aria-modal');side.setAttribute('aria-label','ניווט ראשי');
+    if(where==='menu')mb.focus();else if(where==='heading')focusHeading();}
+  mb.onclick=function(){if(isOpen())close('menu');else open();};sc.onclick=function(){close('menu');};$('navClose').onclick=function(){close('menu');};
+  document.addEventListener('keydown',function(e){if(!isOpen())return;if(e.key==='Escape'){e.preventDefault();close('menu');return;}
+    if(e.key==='Tab'){var f=Array.prototype.filter.call(side.querySelectorAll('button:not([disabled])'),function(b){return b.offsetParent!==null;});if(!f.length)return;var first=f[0],last=f[f.length-1],cur=document.activeElement;
+      if(!side.contains(cur)){e.preventDefault();first.focus();}else if(e.shiftKey&&cur===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&cur===last){e.preventDefault();first.focus();}}});
+  grps.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('button'))close('heading');});
+  var chg=function(m){if(!m.matches&&isOpen())close('none');};if(mq.addEventListener)mq.addEventListener('change',chg);else if(mq.addListener)mq.addListener(chg);})();
+
+/* ===== R5.2.16 — accessibility safety net for every screen (runs after DOM changes, idempotent, attribute-only so it never re-triggers itself) =====
+   · tables: th scope, accessible name (nearest heading), explicit table roles on the responsive (card-like) layout so headers stay associated with cells on a phone
+   · controls: a label that sits right before a control without an id/for gets connected; any control that is still unnamed gets its placeholder/title as aria-label */
+var A11Y={seq:0,raf:0};
+function a11yName(c){return (c.labels&&c.labels.length)||c.getAttribute('aria-label')||c.getAttribute('aria-labelledby')||c.getAttribute('title');}
+function a11yTableName(t){var c=t.closest('.card,section,.tw')||t.parentNode,h=null;for(var n=c;n&&!h&&n!==document.body;n=n.parentNode){h=n.querySelector&&n.querySelector('h2,h3,h4');if(h&&h.contains(t))h=null;}return (h&&h.textContent.trim())||'טבלת נתונים';}
+function a11yEnhance(){
+  Array.prototype.forEach.call(document.querySelectorAll('table'),function(t){
+    Array.prototype.forEach.call(t.querySelectorAll('th'),function(h){if(!h.getAttribute('scope'))h.setAttribute('scope',h.closest('thead')?'col':'row');});
+    if(!t.getAttribute('aria-label')&&!t.querySelector('caption'))t.setAttribute('aria-label',a11yTableName(t));
+    if(t.classList.contains('resp')){t.setAttribute('role','table');Array.prototype.forEach.call(t.querySelectorAll('thead,tbody,tfoot'),function(x){x.setAttribute('role','rowgroup');});Array.prototype.forEach.call(t.querySelectorAll('tr'),function(x){x.setAttribute('role','row');});Array.prototype.forEach.call(t.querySelectorAll('th'),function(x){x.setAttribute('role',x.getAttribute('scope')==='row'?'rowheader':'columnheader');});Array.prototype.forEach.call(t.querySelectorAll('td'),function(x){x.setAttribute('role','cell');});}
+    var w=t.closest('.tw');if(w&&!w.getAttribute('role')&&w.scrollWidth>w.clientWidth+1){w.setAttribute('role','region');w.setAttribute('tabindex','0');w.classList.add('twscroll');w.setAttribute('aria-label',(t.getAttribute('aria-label')||'טבלה')+' — ניתן לגלילה אופקית');}});
+  Array.prototype.forEach.call(document.querySelectorAll('input,select,textarea'),function(c){if(c.type==='hidden'||c.type==='submit'||c.type==='button')return;if(a11yName(c))return;
+    var lab=null;for(var p=c.previousElementSibling;p;p=p.previousElementSibling){if(p.tagName==='LABEL'&&!p.htmlFor&&!p.querySelector('input,select,textarea')){lab=p;break;}if(/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(p.tagName))break;}
+    if(lab){if(!c.id)c.id='a11y_'+(++A11Y.seq);lab.htmlFor=c.id;}else{var t=c.getAttribute('placeholder');if(t)c.setAttribute('aria-label',t);}});
+  Array.prototype.forEach.call(document.querySelectorAll('button'),function(b){if(!b.getAttribute('type'))b.setAttribute('type','button');if(!b.textContent.trim()&&!b.getAttribute('aria-label')&&!b.getAttribute('title'))b.setAttribute('aria-label','פעולה');});}
+(function(){var mo=new MutationObserver(function(){if(A11Y.raf)return;A11Y.raf=requestAnimationFrame(function(){A11Y.raf=0;try{a11yEnhance();}catch(e){}});});mo.observe(document.body,{childList:true,subtree:true});try{a11yEnhance();}catch(e){}})();
+</script>
+</body>
+</html>

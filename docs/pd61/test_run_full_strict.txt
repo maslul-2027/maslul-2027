@@ -1,0 +1,65 @@
+ENVIRONMENT
+node       : v22.23.4
+playwright : 1.63.0
+chromium   : 153.0.8010.12
+ENV: OK (all suites can run)
+FLAGS: ui=true strict=true
+
+PASS  run                pass=45   fail=0
+PASS  pd2_corrections    pass=7    fail=0
+PASS  pd5_f1_fitness_snapshot pass=25   fail=0
+PASS  integration        pass=29   fail=0
+PASS  hardening          pass=53   fail=0
+PASS  soldiers           pass=52   fail=0
+PASS  stage3             pass=43   fail=0
+PASS  v1_tracking        pass=24   fail=0
+PASS  v1_qual            pass=6    fail=0
+PASS  v1_private         pass=6    fail=0
+PASS  v1_alerts          pass=4    fail=0
+PASS  v1_forms           pass=3    fail=0
+PASS  v1_dashboard       pass=4    fail=0
+PASS  v1_docs            pass=4    fail=0
+PASS  v1_reports         pass=3    fail=0
+PASS  v1_import          pass=3    fail=0
+PASS  v1_import_dups     pass=7    fail=0
+PASS  v1_import_infile   pass=9    fail=0
+PASS  v1_ocr             pass=3    fail=0
+PASS  v1_assistant       pass=3    fail=0
+PASS  v1_backup          pass=4    fail=0
+PASS  v1_migration       pass=3    fail=0
+PASS  v1_card            pass=2    fail=0
+PASS  v1_pentest         pass=11   fail=0
+PASS  pd6_meetings_tasks pass=26   fail=0
+PASS  pd61_qa_fixes      pass=16   fail=0
+PASS  v1_system          pass=4    fail=0
+PASS  b7_gaps            pass=24   fail=0
+PASS  stg_setup_guard    pass=3    fail=0
+PASS  stg_f2_dailyjob    pass=7    fail=0
+PASS  stg_clean_machine_script pass=7    fail=0
+PASS  r3_forms_reports   pass=7    fail=0
+PASS  v1_restore_fault   pass=7    fail=0
+PASS  v1_replaceall_text pass=5    fail=0
+PASS  v1_preflight       pass=4    fail=0
+PASS  v103_fitness       pass=11   fail=0
+PASS  v104_audit         pass=7    fail=0
+PASS  v105_missing       pass=23   fail=0
+PASS  v106_pullups       pass=11   fail=0
+PASS  v105_fitness_governance pass=8    fail=0
+PASS  demo_data_audit    pass=3    fail=0
+PASS  src_identity       pass=4    fail=0
+PASS  ui_staging_smoke   pass=17   fail=0
+PASS  ui_smoke           pass=26   fail=0
+PASS  ui_v1              pass=9    fail=0
+PASS  ui_form            pass=5    fail=0
+PASS  ui_fitness         pass=20   fail=0
+PASS  ui_b7b8            pass=26   fail=0
+PASS  ui_r3              pass=10   fail=0
+PASS  ui_pd1             pass=21   fail=0
+PASS  ui_pd2             pass=11   fail=0
+PASS  ui_pd6_meetings    pass=20   fail=0
+
+SUITES: 52 total — 52 PASS, 0 FAIL, 0 SKIP
+TESTS RUN: 695 — passed 695, failed 0 (tests inside SKIPPED suites are NOT counted)
+BREAKDOWN (passed tests): Node 530 (unit 87, integration 269, hardening 167, unclassified 7) | browser 165 | suites run: 52/52
+RESULT: ALL SUITES RAN AND PASSED
+done

@@ -1,0 +1,27 @@
+Only in docs/pd6/screens: A10_integrity_panel_desktop.png
+docs/pd6/screens/A1_meetings_list_empty_desktop.png (שונה)
+docs/pd6/screens/A2_meeting_form_validation_desktop.png (שונה)
+docs/pd6/screens/A3_meeting_form_filled_desktop.png (שונה)
+docs/pd6/screens/A4_save_success_desktop.png (שונה)
+docs/pd6/screens/A5_meetings_list_desktop.png (שונה)
+docs/pd6/screens/A6_save_failure_desktop.png (שונה)
+docs/pd6/screens/A7_meetings_list_mobile.png (שונה)
+docs/pd6/screens/A8_meeting_form_mobile.png (שונה)
+Only in docs/pd6/screens: A9_audit_warning_desktop.png
+docs/pd6/screens/B1_tasks_dashboard_empty_desktop.png (שונה)
+docs/pd6/screens/B2_tasks_dashboard_desktop.png (שונה)
+docs/pd6/screens/B3_tasks_dashboard_mobile.png (שונה)
+docs/pd6/screens/C1_task_detail_desktop.png (שונה)
+docs/pd6/screens/C2_task_detail_mobile.png (שונה)
+src/Code.gs (שונה)
+src/Config.gs (שונה)
+src/Index.html (שונה)
+src/Meetings.gs (שונה)
+src/Policy.gs (שונה)
+Only in tests: pd61_qa_fixes.js
+tests/pd6_meetings_tasks.js (שונה)
+tests/run_all.js (שונה)
+tests/src_identity.js (שונה)
+Only in tests: src_manifest_dev6_1.txt
+tests/ui_pd6_meetings.js (שונה)
+tests/v1_system.js (שונה)

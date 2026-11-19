@@ -1,0 +1,39 @@
+// v1.0.0 documents archive — Node only (Drive is a FAKE; real Drive permissions are NOT tested here).
+const { suite } = require('./tlib'); const { t, done, assert } = suite('v1_docs.js'); const { setup } = require('./fixture');
+const up = (S, ctx, o) => S.X.Documents.upload(ctx, S.c1, Object.assign({ soldier_id: S.S.a.id, document_type: 'אישור', file_name: 'a.pdf', content_base64: S.fakes.PDF }, o || {}));
+t('hardening', 'upload validation: extension whitelist, magic bytes must match, size cap, bad base64, path chars, type confusion, soldier visibility; nothing stored on rejection', () => {
+  const S = setup(); const { X, admin, cT, code, fake } = S; const bad = (o, c) => assert.strictEqual(code(() => up(S, admin, o)), c || 'VALIDATION', JSON.stringify(o).slice(0, 60));
+  bad({ file_name: 'a.exe' }); bad({ file_name: 'a' }); bad({ file_name: '' }); bad({ file_name: ['a.pdf'] }); bad({ file_name: 'a.png' }, 'VALIDATION'); bad({ content_base64: S.fakes.PNG }); bad({ content_base64: '!!!' }); bad({ content_base64: 'abc' }); bad({ content_base64: '' }); bad({ content_base64: 5 }); bad({ mime_type: 'image/png' }); bad({ document_type: '' });
+  bad({ content_base64: Buffer.alloc(8 * 1024 * 1024 + 10, 1).toString('base64') }); bad({ soldier_id: S.S.f.id }); bad({ soldier_id: 'nope' });
+  assert.strictEqual(Object.keys(fake.files).length, 0); assert.strictEqual(X.Db.all('Documents').length, 0);
+  assert.strictEqual(code(() => up(S, cT, { soldier_id: S.S.b.id })), 'VALIDATION', 'outside the assignment'); assert.strictEqual(code(() => up(S, cT, { soldier_id: '' })), 'VALIDATION', 'commander must name a soldier');
+  const r = up(S, admin, { file_name: '../../etc/pa:ss.pdf' }); assert.ok(!/[\\/:]/.test(r.file_name) && !('drive_file_id' in r), 'sanitised name, no drive id'); assert.ok(up(S, admin, { soldier_id: '', file_name: 'x.png', content_base64: S.fakes.PNG }).id, 'admin: course-level document');
+  const jp = up(S, admin, { file_name: 'p.JPG', content_base64: S.fakes.JPG }); assert.strictEqual(jp.mime_type, 'image/jpeg');
+});
+t('hardening', 'download is enforced SERVER-side: admin any, commander only his own upload of a visible soldier, others metadata only, hidden/inactive soldier => NOT_FOUND, foreign course, object id; every read audited; drive id never leaves the server', () => {
+  const S = setup(); const { X, admin, cT, cC, none, code, fake } = S; const d1 = up(S, cT), d2 = up(S, admin);
+  assert.strictEqual(X.Documents.download(cT, d1.id).content_base64, S.fakes.PDF); assert.strictEqual(X.Documents.download(admin, d1.id).file_name.endsWith('a.pdf'), true);
+  assert.strictEqual(code(() => X.Documents.download(cT, d2.id)), 'FORBIDDEN', 'someone else\'s document'); assert.strictEqual(code(() => X.Documents.download(cC, d1.id)), 'FORBIDDEN', 'course commander: not own'); assert.strictEqual(code(() => X.Documents.download(none, d1.id)), 'NOT_FOUND');
+  assert.strictEqual(code(() => X.Documents.download(cT, 'nope')), 'NOT_FOUND'); assert.strictEqual(code(() => X.Documents.download(cT, { id: d1.id })), 'NOT_FOUND');
+  const lc = X.Documents.list(cC, S.c1, S.S.a.id).map(d => [d.id === d1.id, d.can_open, 'file_name' in d]); assert.deepStrictEqual(lc.sort().join('|'), [[false, false, false], [true, false, false]].sort().join('|'), 'metadata only for non-owners');
+  const before = fake.calls.read; try { X.Documents.download(cC, d1.id); } catch (e) {} assert.strictEqual(fake.calls.read, before, 'denied => Drive not even read');
+  assert.ok(!JSON.stringify([X.Documents.list(admin, S.c1, ''), X.Documents.list(cT, S.c1, ''), X.Soldiers.card(admin, S.S.a.id).documents]).includes('file-'), 'no drive ids in any payload');
+  X.Soldiers.setActive(admin, S.S.a.id, false, X.Db.get('Soldiers', S.S.a.id).updated_at, 'x'); assert.strictEqual(code(() => X.Documents.download(cT, d1.id)), 'NOT_FOUND', 'soldier inactive => hidden from commanders'); assert.ok(X.Documents.download(admin, d1.id));
+  assert.strictEqual(X.Db.where('AuditLog', a => a.action === 'DOC_READ').length, 3); assert.strictEqual(code(() => X.Documents.list(cC, S.c2, '')), 'FORBIDDEN');
+  X.Soldiers.setActive(admin, S.S.a.id, true, X.Db.get('Soldiers', S.S.a.id).updated_at, 'x'); X.Courses.archive(admin, S.c1); assert.ok(X.Documents.download(admin, d1.id), 'reads work on archived courses'); assert.strictEqual(code(() => up(S, admin)), 'COURSE_ARCHIVED');
+});
+t('integration', 'link to a record: request (owner/admin) -> admin approval; only same-soldier record of an allowed table; duplicate rejected; reject clears the link', () => {
+  const S = setup(); const { X, admin, cT, cC, code } = S; const nt = X.Navigation.typeCreate(admin, S.c1, 'א').id; const mk = so => X.Records.create(admin, 'NavigationTests', S.c1, { request_id: S.rid(), soldier_id: so.id, test_date: '2026-03-01', navigation_type_id: nt, distance_km: 3, plan_score: 4, debrief_score: 4, points_completed: 2, points_total: 3 }).record;
+  const ra = mk(S.S.a), rb = mk(S.S.a2); const d = up(S, cT); assert.strictEqual(code(() => X.Documents.requestLink(cT, d.id, 'AuditLog', ra.id)), 'VALIDATION'); assert.strictEqual(code(() => X.Documents.requestLink(cT, d.id, 'NavigationTests', ['x'])), 'VALIDATION');
+  const rOther = X.Records.create(admin, 'NavigationTests', S.c1, { request_id: S.rid(), soldier_id: S.S.b.id, test_date: '2026-03-01', navigation_type_id: nt, distance_km: 3, plan_score: 4, debrief_score: 4, points_completed: 2, points_total: 3 }).record; assert.strictEqual(code(() => X.Documents.requestLink(cT, d.id, 'NavigationTests', rOther.id)), 'VALIDATION', 'other soldier');
+  assert.strictEqual(code(() => X.Documents.requestLink(cC, d.id, 'NavigationTests', ra.id)), 'NOT_FOUND', 'not his document'); assert.strictEqual(X.Documents.requestLink(cT, d.id, 'NavigationTests', ra.id).link_status, 'pending'); assert.strictEqual(code(() => X.Documents.requestLink(cT, d.id, 'NavigationTests', ra.id)), 'DUPLICATE');
+  assert.strictEqual(X.Documents.pendingLinks(admin, S.c1).length, 1); assert.strictEqual(code(() => X.Documents.pendingLinks(cT, S.c1)), 'FORBIDDEN'); assert.strictEqual(code(() => X.Documents.reviewLink(cT, d.id, 'approve', '')), 'FORBIDDEN'); assert.strictEqual(code(() => X.Documents.reviewLink(admin, d.id, 'reject', '')), 'VALIDATION');
+  X.Documents.reviewLink(admin, d.id, 'approve', ''); const row = X.Documents.list(admin, S.c1, S.S.a.id).find(x => x.id === d.id); assert.strictEqual(row.linked, true); assert.strictEqual(code(() => X.Documents.reviewLink(admin, d.id, 'approve', '')), 'VALIDATION');
+  const d2 = up(S, admin); X.Documents.requestLink(admin, d2.id, 'NavigationTests', ra.id); X.Documents.reviewLink(admin, d2.id, 'reject', 'לא רלוונטי'); const r2 = X.Documents.list(admin, S.c1, S.S.a.id).find(x => x.id === d2.id); assert.deepStrictEqual([r2.linked, r2.linked_record_id, r2.link_status], [false, '', 'rejected']);
+});
+t('integration', 'qualification evidence: only a document of the same soldier, commander only his own upload, duplicates rejected, other commanders see no file name', () => {
+  const S = setup(); const { X, admin, cT, cC, S: sol, code } = S; X.Qualifications.define(admin, S.c1, { name: 'ק', completion_terms: 'ת' }); const A = so => X.Qualifications.assignments(admin, S.c1, { soldierId: so.id })[0]; const d = up(S, cT), dOther = up(S, admin, { soldier_id: sol.a2.id });
+  X.Documents.attachEvidence(cT, A(sol.a).id, d.id); assert.strictEqual(code(() => X.Documents.attachEvidence(cT, A(sol.a).id, d.id)), 'DUPLICATE'); assert.strictEqual(code(() => X.Documents.attachEvidence(admin, A(sol.a).id, dOther.id)), 'VALIDATION', 'other soldier');
+  assert.strictEqual(code(() => X.Documents.attachEvidence(cC, A(sol.a).id, d.id)), 'NOT_FOUND', 'not his upload'); assert.strictEqual(X.Documents.evidenceFor(cT, A(sol.a).id)[0].file_name.endsWith('a.pdf'), true); assert.strictEqual(X.Documents.evidenceFor(cC, A(sol.a).id)[0].file_name, '');
+});
+done();
