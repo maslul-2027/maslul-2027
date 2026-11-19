@@ -1,6 +1,6 @@
 const CACHE_PREFIX = 'maslul-demo-';
-const CACHE = CACHE_PREFIX + 'v8';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './capabilities.json'];
+const CACHE = CACHE_PREFIX + 'v9';
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './capabilities.json', './design.css', './course-design.css'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => {

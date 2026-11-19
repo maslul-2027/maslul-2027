@@ -79,9 +79,9 @@ assert.equal(run('courses.org', { courseId: course.id }).data.departments[0].nam
 
 const original = fs.readFileSync(path.join(source, 'src/Index.html'), 'utf8');
 assert.ok(original.includes('<body>'));
-const html = original.replace('<body>', `<body>
+const html = original.replace('</head>', '<link rel="stylesheet" href="./design.css"><link rel="stylesheet" href="./course-design.css"></head>').replace('<body>', `<body>
 <script src="./course-engine.js"></script>
-<div data-course-banner dir="rtl" style="padding:12px;background:#fff4cc">
+<div data-course-banner dir="rtl">
   קורס סינתטי · השינויים נשמרים עד לרענון הדף. <a href="./">חזרה לדמו</a>
   <details><summary>בדיקת פעולות מערכת</summary>
     <form id="course-actions">
