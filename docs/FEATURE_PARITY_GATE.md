@@ -3,7 +3,7 @@
 This inventory is extracted from the `API_` whitelist in `src/Code.gs` on `claude/import-r5-2-16-4-4-final`, not from the public Pages demo. See [capability-inventory.json](./capability-inventory.json).
 
 ## Evidence
-- 140 named API methods in 39 prefixes.
+- 174 named API methods in 39 prefixes.
 - The public `preview/` app is a synthetic, client-only UX prototype. It does **not** implement these API methods, server authorization, or persistent storage.
 - A method's presence in the source does not prove that it is deployed, secure, or passing end-to-end tests.
 
@@ -12,7 +12,7 @@ For every API method, record: domain, existing user workflow, required role/cour
 
 ## Hard release gates
 1. Reconcile TEST-only `Setup.gs` helpers with authorized live source before any push.
-2. Validate 140 API contracts against synthetic TEST fixtures, including role denial and cross-course denial.
+2. Validate 174 API contracts against synthetic TEST fixtures, including role denial and cross-course denial.
 3. No real or military personnel data in GitHub Pages, public artifacts, screenshots or logs.
 4. Preserve backend-side authorization and audit. Never use the four-digit PIN as the sole online defense; server hashing, throttling, lockouts, revocation, and session management are mandatory.
 5. Public Pages stays synthetic only. Production-like preview requires a private authenticated backend and hosting access controls.
