@@ -11,9 +11,10 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Check repository hygiene
+      - name: Check repository hygiene (no credentials / local bindings)
         shell: bash
         run: |
           set -euo pipefail
@@ -24,21 +25,27 @@ jobs:
             fi
           done
       - name: Set up Node.js 22
-        if: hashFiles('package.json') != ''
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Install test dependencies
+        shell: bash
+        run: |
+          # package-lock.json is intentionally NOT committed yet (it must come from npm on a networked machine, never hand-written).
+          # With a lock: reproducible `npm ci`. Without it: `npm install` against the exact pin in package.json (playwright 1.63.0) and
+          # the generated lock is uploaded as an artifact for the owner to review and commit.
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Upload generated lock file (only when none is committed)
         if: hashFiles('package-lock.json') != ''
-        run: npm ci
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-package-lock
+          path: package-lock.json
+          if-no-files-found: ignore
       - name: Install browser dependencies
-        if: hashFiles('package-lock.json') != ''
         run: npx playwright install --with-deps chromium
-      - name: Run source tests
-        if: hashFiles('package-lock.json') != ''
+      - name: Source identity + strict test run (Node + UI, 0 skips allowed)
         run: npm run test:ci
 
 # Deployment intentionally disabled until credentials, baseline reconciliation,
-# versioned /exec update and rollback are validated.
+# versioned /exec update and rollback are validated (see docs/DEPLOYMENT_PLAN.md).

@@ -1,0 +1,27 @@
+{
+  "name": "course-tracker",
+  "version": "1.0.6",
+  "private": true,
+  "description": "Course Tracker (Google Apps Script) - local test harness. The app itself has no npm dependencies; only the browser UI suites need Playwright.",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "check-env": "node tests/env_check.js",
+    "test": "node tests/run_all.js",
+    "test:ui": "node tests/run_all.js --ui",
+    "test:strict": "node tests/run_all.js --ui --strict",
+    "test:smoke": "node tests/ui_staging_smoke.js",
+    "test:demo-audit": "node tests/demo_data_audit.js",
+    "test:ci": "node tests/env_check.js && node tests/run_all.js --ui --strict",
+    "check-lock": "node scripts/check_lock.js",
+    "test:src": "node tests/src_identity.js",
+    "test:smoke-mutations": "bash scripts/smoke_mutations.sh",
+    "test:posix": "node tests/stg_clean_machine_script_sh.js",
+    "verify:clean": "node scripts/clean_machine_verify.js",
+    "test:r5-focused": "node scripts/run_r5_focused_gate.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
