@@ -60,6 +60,30 @@ async function t(name, fn) { try { await fn(); pass++; console.log('PASS', name)
       assert.ok(await p.evaluate(() => document.documentElement.scrollWidth - innerWidth <= 1), 'no horizontal overflow');
       await p.setViewportSize({ width: 1280, height: 800 }); assert.ok(!(await p.isVisible('#bnav')), 'hidden on desktop');
     });
+    await t('Organization names persist after reloading the admin screen', async () => {
+      const p = await open({ width: 390, height: 800 });
+      const department = org.departments[0];
+      const team = org.teams[0];
+      const departmentName = 'מחלקת בדיקה';
+      const teamName = 'צוות בדיקה';
+      const chooseUnit = p.locator('#f_org_unit');
+      await goTab(p, 'courses');
+      const departmentOption = await chooseUnit.locator('option').filter({ hasText: 'מחלקה · ' + department.name }).getAttribute('value');
+      await chooseUnit.selectOption(departmentOption);
+      await p.locator('#f_org_name').fill(departmentName);
+      await p.getByRole('button', { name: 'שמירת שם', exact: true }).click();
+      await p.waitForFunction(name => Array.from(document.querySelector('#f_org_unit').options).some(option => option.text === 'מחלקה · ' + name), departmentName);
+      const teamOption = await chooseUnit.locator('option').filter({ hasText: 'צוות · ' + departmentName + ' · ' + team.name }).getAttribute('value');
+      await chooseUnit.selectOption(teamOption);
+      await p.locator('#f_org_name').fill(teamName);
+      await p.getByRole('button', { name: 'שמירת שם', exact: true }).click();
+      await p.waitForFunction(name => Array.from(document.querySelector('#f_org_unit').options).some(option => option.text.endsWith(' · ' + name)), teamName);
+      await p.reload();
+      await p.waitForSelector('#grps button', { state: 'attached' });
+      await goTab(p, 'courses');
+      await p.waitForFunction(label => Array.from(document.querySelector('#f_org_unit').options).some(option => option.text === label), 'צוות · ' + departmentName + ' · ' + teamName);
+      assert.deepStrictEqual(p.errs, []);
+    });
     for (const w of [360, 390]) {
       await t('UX6 ' + w + 'px: no horizontal overflow on the course screens; touch targets >= 44px; focus ring visible', async () => {
         const p = await open({ width: w, height: 800 }); for (const tab of ['dash', 'soldiers', 'nav']) { try { await goTab(p, tab); } catch (e) { continue; } await p.waitForTimeout(500);

@@ -11,6 +11,7 @@ const rows = []; let tp = 0, tf = 0;
 const envRun = spawnSync('node', [path.join(__dirname, 'env_check.js')], { encoding: 'utf8', timeout: 60000 });
 console.log('ENVIRONMENT\n' + (envRun.stdout || envRun.stderr || '(env_check failed)').trim() + '\nFLAGS: ui=' + wantUi + ' strict=' + strict + '\n');
 const run = s => { const r = spawnSync('node', [path.join(__dirname, s + '.js')], { encoding: 'utf8', timeout: 590000 }); const out = (r.stdout || '') + (r.stderr || '');
+  if (r.status !== 0 && out.trim()) console.log('\nFailed suite ' + s + '\n' + out.trim().split('\n').slice(-50).join('\n'));
   const sk = /^SKIP[^\n]*/m.exec(out), m = /TOTAL pass=(\d+) fail=(\d+)/.exec(out);
   if (sk && !m) return UI.includes(s) && wantUi ? { s, state: 'FAIL', pass: 0, fail: 0, why: 'UI was requested (--ui) but the suite could not run: ' + sk[0].replace(/^SKIP\s*/, '') } : { s, state: 'SKIP', pass: 0, fail: 0, why: sk[0].replace(/^SKIP\s*/, '') };
   if (!m) return { s, state: 'FAIL', pass: 0, fail: 1, why: r.error ? String(r.error.message) : 'no result line (crash or timeout), exit ' + r.status };
