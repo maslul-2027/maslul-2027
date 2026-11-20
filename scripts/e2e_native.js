@@ -1,5 +1,5 @@
 // Browser E2E for the native app (Playwright/Chromium) on synthetic data: navigation, create/edit/cancel/restore soldier, follow-up create, double-click guard, a11y basics, overflow at 320/360/390/414.
-const http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');const {chromium}=require('playwright');
+const OUT=process.env.E2E_CALLS_OUT;const http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');const {chromium}=require('playwright');
 const dir=path.resolve(process.argv[2]||'preview');const M={'.html':'text/html;charset=utf-8','.js':'text/javascript','.json':'application/json','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
 const srv=http.createServer((q,r)=>{const u=q.url.split('?')[0],f=path.join(dir,u==='/'?'index.html':u);if(!fs.existsSync(f)){r.statusCode=404;return r.end('')}r.setHeader('content-type',M[path.extname(f)]||'application/octet-stream');r.end(fs.readFileSync(f))});
 (async()=>{await new Promise(r=>srv.listen(0,r));const base='http://127.0.0.1:'+srv.address().port,b=await chromium.launch(),errs=[];let n=0;const ok=m=>console.log('ok',++n,m);
@@ -24,4 +24,4 @@ await p.reload();await p.waitForSelector('dl.kv');await p.click('[data-go=home]'
 await p.click('[data-go=tasks]');await p.click('text=מעקבים אישיים');await p.waitForSelector('#view .card');assert.equal(await p.locator('#view .card').count(),3);await p.click('text=+ מעקב חדש');await p.selectOption('#fuS',{index:1});await p.fill('#fuW','בדיקת מעקב');await p.click('button[type=submit]');await p.waitForSelector('text=בדיקת מעקב');ok('follow-up create');
 await p.click('text=בדיקת מעקב');await p.click('dialog button[type=submit]');await p.waitForSelector('text=הושלם');ok('follow-up complete');
 
-assert.deepEqual(errs,[],'page errors: '+errs.join('|'));ok('no page errors');await b.close();srv.close();console.log('E2E PASS',n,'checks');})().catch(e=>{console.error('E2E FAIL',e.message.split('\n').slice(0,6).join('\n'));process.exit(1)});
+assert.deepEqual(errs,[],'page errors: '+errs.join('|'));ok('no page errors');if(OUT)fs.writeFileSync(OUT,JSON.stringify(await p.evaluate(()=>appClient.calls)));await b.close();srv.close();console.log('E2E PASS',n,'checks');})().catch(e=>{console.error('E2E FAIL',e.message.split('\n').slice(0,6).join('\n'));process.exit(1)});

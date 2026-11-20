@@ -1,5 +1,5 @@
 // Browser E2E: every native domain form saves through the real backend and the record is read back in the list (synthetic data).
-const http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');const {chromium}=require('playwright');
+const OUT=process.env.E2E_CALLS_OUT;const http=require('http'),fs=require('fs'),path=require('path'),assert=require('assert/strict');const {chromium}=require('playwright');
 const dir=path.resolve(process.argv[2]||'preview'),M={'.html':'text/html;charset=utf-8','.js':'text/javascript','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
 const srv=http.createServer((q,r)=>{const u=q.url.split('?')[0],f=path.join(dir,u==='/'?'index.html':u);if(!fs.existsSync(f)){r.statusCode=404;return r.end('')}r.setHeader('content-type',M[path.extname(f)]||'application/octet-stream');r.end(fs.readFileSync(f))});
 const T='2026-11-15';
@@ -29,4 +29,4 @@ for(const c of CASES){const name=c.d+'#'+c.i;try{await p.evaluate(h=>{location.h
  await p.waitForSelector('.section',{timeout:5000});await p.waitForTimeout(400);
  if(c.read){await p.waitForFunction(t=>document.getElementById('view').textContent.includes(t),c.read,{timeout:6000}).catch(async()=>{throw new Error('read-back missing: '+c.read+' | view='+(await p.textContent('#view')).slice(0,300))});}
  pass++;console.log('PASS',name);}catch(e){fail++;console.log('FAIL',name,String(e.message).split('\n')[0]);}}
-assert.deepEqual(errs,[]);console.log('DOMAINS E2E pass='+pass+' fail='+fail);await b.close();srv.close();process.exit(fail?1:0);})();
+assert.deepEqual(errs,[]);console.log('DOMAINS E2E pass='+pass+' fail='+fail);if(OUT)fs.writeFileSync(OUT,JSON.stringify(await p.evaluate(()=>appClient.calls)));await b.close();srv.close();process.exit(fail?1:0);})();

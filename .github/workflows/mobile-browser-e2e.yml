@@ -8,6 +8,8 @@ on:
       - 'scripts/build_native_app.js'
       - 'scripts/e2e_native.js'
       - 'scripts/e2e_native_domains.js'
+      - 'scripts/e2e_native_roles.js'
+      - 'scripts/build_route_ledger.js'
       - 'scripts/native_screenshots.js'
       - '.github/workflows/mobile-browser-e2e.yml'
   workflow_dispatch:
@@ -36,8 +38,12 @@ jobs:
       - run: node scripts/build_native_app.js
       - run: git diff --exit-code -- preview/index.html preview/engine.js
       - run: node scripts/test_unified_mobile_contract.cjs
-      - run: node scripts/e2e_native.js preview
-      - run: node scripts/e2e_native_domains.js preview
+      - run: mkdir -p artifacts
+      - run: E2E_CALLS_OUT=artifacts/calls_native.json node scripts/e2e_native.js preview
+      - run: E2E_CALLS_OUT=artifacts/calls_native_domains.json node scripts/e2e_native_domains.js preview
+      - run: E2E_CALLS_OUT=artifacts/calls_native_roles.json node scripts/e2e_native_roles.js preview
+      - name: 174-route evidence ledger (generated from the browser runs)
+        run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Design parity screenshots (original PR #10 vs native)
         run: |
           test -s golden-source/preview/index.html
@@ -45,6 +51,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: design-parity
-          path: artifacts/design_parity
+          name: design-parity-and-ledger
+          path: |
+            artifacts/design_parity
+            artifacts/ledger
+            artifacts/calls_*.json
           if-no-files-found: ignore
