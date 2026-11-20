@@ -14,6 +14,7 @@ function clientIp(req, trusted) {
   const hops = String(req.headers['x-forwarded-for'] || '').split(',').map(x => x.trim()).filter(Boolean); for (let i = hops.length - 1; i >= 0; i--) if (!trusted.includes(hops[i])) return hops[i]; return peer;
 }
 function gateway(opts) {
+  const net = require('net'); (opts.trustedProxies || []).forEach(a => { if (typeof a !== 'string' || !net.isIP(a) || /^(0\.0\.0\.0|::)$/.test(a)) throw new Error('INVALID_TRUSTED_PROXY: only explicit proxy IP addresses are allowed (no wildcard, CIDR or hostnames)'); });
   const store = opts.store, pepper = String(opts.pepper || ''), origin = opts.origin, trusted = opts.trustedProxies || [], state = store.load();
   if (!origin || !/^https:\/\//.test(origin)) throw new Error('origin (https://...) is required');
   const auth = create(Object.assign({}, opts.authOpts, { pepper, bootstrapToken: opts.bootstrapToken, db: state, audit: state.audit, now: opts.now }));
@@ -83,12 +84,11 @@ function gateway(opts) {
   }
   return { handle, auth, state, COOKIE };
 }
-/** Minimal node:http adapter for the private TEST server (TLS terminates at the trusted proxy in front of it). */
-function toHttp(gw, opts) {
-  opts = opts || {};
+/** Minimal node:http adapter for the private TEST server. FAIL CLOSED: the protocol is taken ONLY from the socket (a real TLS socket = https). There is deliberately NO option to assume/force TLS — options passed here are ignored. HTTPS behind a reverse proxy is accepted solely by the gateway's own check: the TCP peer must be an explicitly configured trustedProxies IP AND send x-forwarded-proto: https. */
+function toHttp(gw) {
   return (rq, rs) => { let raw = ''; rq.on('data', c => { raw += c; if (raw.length > 64e3) rq.destroy(); }); rq.on('end', async () => {
     let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { rs.statusCode = 400; return rs.end('{"ok":false,"code":"INVALID"}'); }
-    const r = await gw.handle({ method: rq.method, path: rq.url, headers: rq.headers, body, remoteAddr: rq.socket.remoteAddress, proto: opts.assumeTls ? 'https' : 'http' });
+    const r = await gw.handle({ method: rq.method, path: rq.url, headers: rq.headers, body, remoteAddr: rq.socket.remoteAddress, proto: rq.socket && rq.socket.encrypted ? 'https' : 'http' });
     rs.statusCode = r.status; rs.setHeader('content-type', 'application/json; charset=utf-8'); rs.setHeader('cache-control', 'no-store'); rs.setHeader('x-content-type-options', 'nosniff'); Object.keys(r.headers || {}).forEach(k => rs.setHeader(k, r.headers[k])); rs.end(JSON.stringify(r.body)); }); };
 }
 module.exports = { gateway, toHttp, COOKIE, csrfOf, clientIp };

@@ -37,3 +37,17 @@ New (synthetic only, **not deployed, not wired to the Apps Script API or to the 
 | 6. Full E2E register→approve→login→scoped **UI** action→refresh/restart→logout against the private TEST server | **NOT done** — no private TEST server exists and the native app is not connected to this gateway. The gateway flow is proven at the request-boundary level only. |
 
 Residual risks unchanged: a 4-digit PIN is weak even with scrypt+pepper+lockout (device binding / second factor / longer secret recommended); no real users, no real data, release remains blocked until written InfoSec + owner authorization.
+
+## Real-use blockers (explicit — this PR is SYNTHETIC TEST ONLY, not approved for real use)
+1. **No verified phone possession.** The phone number is an identifier only; nothing proves the person holds it (no SMS/WhatsApp/OTP channel). PIN alone is insufficient for real use.
+2. **No multi-instance DB / locks.** The encrypted file store is single-process; concurrent instances would corrupt or fork state.
+3. **No secret store / rotation.** Pepper, store key and bootstrap token come from the environment; there is no managed secret store, rotation or revocation process.
+4. **No independent InfoSec review** of the design or code.
+5. **No native app → private TEST server E2E.** The native UI still runs against the in-browser synthetic engine; it has not been exercised end-to-end against this gateway.
+6. **No owner go-live approval.** No operational deployment and no real data without the owner's and InfoSec's approval.
+7. **PIN alone is insufficient** (4-digit PIN, rate limits and lockout only reduce guessing; they are not a second factor).
+
+## HTTPS configuration (fail closed)
+- `toHttp(gw)` derives the protocol **only from the socket** (a real TLS socket ⇒ https). There is no `assumeTls`/force option; any options passed are ignored.
+- Behind a reverse proxy, a plaintext hop is accepted only if the TCP peer is an **explicitly configured `trustedProxies` IP** AND it sends `x-forwarded-proto: https`. `trustedProxies` entries must be literal IP addresses; wildcards, `0.0.0.0`/`::`, CIDR ranges and hostnames throw `INVALID_TRUSTED_PROXY` at startup.
+- Anything else answers `426 TLS_REQUIRED` and never sets a session cookie. Covered by the `[tls]` test in `tests/auth_gateway.js` (spoofed forwarded headers, bogus options, wrong peer, misconfigured proxies). The test harness presents TLS only by wrapping the gateway object inside the test — not a deployable switch.
