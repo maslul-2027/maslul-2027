@@ -6,23 +6,31 @@
 ## מטרת היום
 להביא מוצר שלם ברמת האיכות שהבעלים הגדיר. אם עדיין חסרים אישורי אבטחת מידע/סביבת נתוני אמת, אסור לעקוף זאת או לסמן שימוש אמת כמוכן; לכל הפחות לפרוס פיילוט **סינתטי** מתקדם, שעיצובו אושר ושהתהליכים בו נבדקו.
 
+## milestone מאומת — לאחר PR #53 (20.11.2026)
+- **main:** merge commit `d0b50ef07b1f52c5095bd2880e9b1ddd3519249b` — [PR #53](https://github.com/maslul-2027/maslul-2027/pull/53) מוזג אחרי Gate ירוק בשלושת ה-workflows.
+- **Source checks:** [run 44743623133](https://github.com/maslul-2027/maslul-2027/actions/runs/44743623133) PASS; 65/65 suites ו-1026/1026 tests, ללא FAIL/SKIP. [Native browser/design](https://github.com/maslul-2027/maslul-2027/actions/runs/44743623120) PASS; [mobile static](https://github.com/maslul-2027/maslul-2027/actions/runs/44743623111) PASS.
+- **כיסוי מתוך 174 נתיבי שרת:** 116 = API OK בדפדפן + אזכור native, **לא הוכחת תהליך click-driven**; 5 ממומשים ללא E2E מוצלח; 11 חסומים במתאמים; 42 חסרי native UI. דיווח מהקובץ `docs/route-evidence-ledger.json` על main לאחר המיזוג.
+- **ביצוע הבא:** [Issue #55](https://github.com/maslul-2027/maslul-2027/issues/55) לארבעת כפתורי ניהול סוגים החסרים ולגרסאות ניקוד; [Issue #56](https://github.com/maslul-2027/maslul-2027/issues/56) לייבוא/OCR/מסמכים/דוחות; [Issue #43](https://github.com/maslul-2027/maslul-2027/issues/43) לשרת מאובטח סינתטי; [Issue #44](https://github.com/maslul-2027/maslul-2027/issues/44) לקבלת E2E אמיתי לכל תהליך.
+- **שימוש במידע אמיתי:** NO-GO עד אישורי בעלים וארגון. הדמו הציבורי הוא סינתטי בלבד, ואין הוכחה שה-main החדש נפרס ל-Pages או לשרת פרטי.
+
 ## לוח משימות מחייב
 | ID | שער | אחריות | מדד מסירה | מצב בבדיקת ההקמה |
 |---|---|---|---|---|
-| P0-UX | שחזור העיצוב הראשון בדיוק | Claude ביצוע; ChatGPT קבלה; בעלים אישור הדגמה | השוואת מסך/צילומים ל-PR #10, 4 לשוניות בית/חניכים/מעקבים/עוד; ללא iframe וללא UI ישן | **TODO** — main מכיל כעת UI ישן שקיבל דחייה |
-| P0-SOURCE | מקור נתונים אחיד | Claude | בית/כרטיס/דיווח/משימות מתבססים על אותו backend synthetic; אחרי reload התנהגות מוצהרת | **PARTIAL** — נבדק חלקית בפרויקט; אין בסיס אחיד מאומת לכל 174 |
-| P0-PARITY | מיפוי 174 פעולות לזרימות UX | Claude+ChatGPT | 174/174 שורות עם מסך, תפקיד, חוזה, בדיקה והוכחת deploy; לא רק שמות | **PARTIAL** — inventory קיים, אין הוכחה לכל הזרימות |
-| P1-WORKFLOWS | חניכים/נוכחות/כושר/מבחנים/ניווט/קליעה/מסעות/הסמכות ועוד | Claude | CRUD/approval/undo/history לפי כללי מקור, בדיקת כתיבה וקריאה, הרשאה שלילית | **NOT VERIFIED** |
-| P1-SECURITY | הרשמה, PIN, מנהל, מפקד, read-only viewer, בידוד | Claude | E2E אמיתי: הרשמה→אישור→התחברות→פעולה מורשית→deny→revoke; server enforced | **BLOCKED/NOT VERIFIED** |
-| P1-PERSIST | מסד נתונים פרטי מתמיד, audit, backup/restore | Claude; בעלים/InfoSec אישורים | Save→reload→new session→backup→restore בלי אובדן והרשאות מאושרות | **BLOCKED/NOT VERIFIED** |
-| P1-FORMS | Google Forms לחניכים וזרימת אישור | Claude | טופס פרטי/קישור חוקי, קליטה לסכמה, review, הגנת פרטיות | **NOT VERIFIED** |
-| P2-QA | בדיקות איכות מקצה לקצה | Claude; ChatGPT ביקורת | Browser, mobile, RTL, a11y, performance, security, contract, rollback, no false pass | **PARTIAL** — עברו מבחני Chromium סינתטיים מצומצמים |
-| P2-GOLIVE | בדיקת Go/No-Go לנתוני אמת | ChatGPT מציג ראיות; בעלים+גורם ארגוני מאשרים | כל G0–G4 ו-L2 PASS; אישורי נתוני אמת מפורשים | **NO-GO לעת עתה** |
+| P0-UX | שחזור העיצוב הראשון בדיוק | Claude ביצוע; ChatGPT קבלה; בעלים אישור הדגמה | השוואת מסך/צילומים ל-PR #10, 4 לשוניות בית/חניכים/מעקבים/עוד; ללא iframe וללא UI ישן | **PASS לסינתטי** — PR #40 וממשק native נוסף ב-#45/#47/#51/#53; בדיקות screenshots/design CI עברו. נותר מבחן על מכשירים פיזיים |
+| P0-SOURCE | מקור נתונים אחיד | Claude | בית/כרטיס/דיווח/משימות מתבססים על אותו backend synthetic; אחרי reload התנהגות מוצהרת | **PASS בחלקים שנבדקו בסינתטי; BLOCKED לפרטי** — מקור native אחד מול מנוע סימולציה; שרת פרטי מחובר ומתמיד טרם אומת |
+| P0-PARITY | מיפוי 174 פעולות לזרימות UX | Claude+ChatGPT | 174/174 שורות עם מסך, תפקיד, חוזה, בדיקה והוכחת deploy; לא רק שמות | **IN PROGRESS** — ledger אחרון: 116 API browser+native reference, 5 unproven, 11 adapter-blocked, 42 בלי native. לא 116 בדיקות קליק |
+| P1-WORKFLOWS | חניכים/נוכחות/כושר/מבחנים/ניווט/קליעה/מסעות/הסמכות ועוד | Claude | CRUD/approval/undo/history לפי כללי מקור, בדיקת כתיבה וקריאה, הרשאה שלילית | **PARTIAL PASS SYNTH** — הוטמעו רבות ב-#40/#45/#51/#53; המשך #55/#56 והוכחת click-driven לכל זרימה |
+| P1-SECURITY | הרשמה, PIN, מנהל, מפקד, read-only viewer, בידוד | Claude | E2E אמיתי: הרשמה→אישור→התחברות→פעולה מורשית→deny→revoke; server enforced | **BLOCKED PRIVATE TEST** — helper+10 בדיקות סינתטיות קיימים אך לא חוברו לשרת מאומת. Issue #43 |
+| P1-PERSIST | מסד נתונים פרטי מתמיד, audit, backup/restore | Claude; בעלים/InfoSec אישורים | Save→reload→new session→backup→restore בלי אובדן והרשאות מאושרות | **BLOCKED PRIVATE TEST** — מצב מקומי סינתטי אינו הוכחת מסד פרטי, גיבוי או שחזור מרחוק |
+| P1-FORMS | Google Forms לחניכים וזרימת אישור | Claude | טופס פרטי/קישור חוקי, קליטה לסכמה, review, הגנת פרטיות | **PARTIAL SYNTH** — מסכי בקשות וביקורת קיימים, אין אישור למתאם אמת או מבחן secured TEST מלא |
+| P2-QA | בדיקות איכות מקצה לקצה | Claude; ChatGPT ביקורת | Browser, mobile, RTL, a11y, performance, security, contract, rollback, no false pass | **PASS סינתטי מוגבל** — PR #53 ריצה מחמירה 65/65 חבילות, 1026/1026 בדיקות; 3/3 workflows green. נגישות 390px נכשלה בריצה קודמת ואז עברה; לעקוב אחרי יציבות. 174 click-E2E, private E2E ומכשירים פיזיים לא הושלמו |
+| P2-GOLIVE | בדיקת Go/No-Go לנתוני אמת | ChatGPT מציג ראיות; בעלים+גורם ארגוני מאשרים | כל G0–G4 ו-L2 PASS; אישורי נתוני אמת מפורשים | **NO-GO** — לא התקבלו אישורי נתוני אמת/תשתית פרטית מאובטחת/אישור בעלים |
 
 ## טיפול בענפים ו-PRs — לא למחוק היסטוריה
 | פריט | תפקיד | הוראה |
 |---|---|---|
-| main | ענף שחרור | לא לדחוף אליו קוד שנכשל QA; פרסום Pages סינתטי בלבד |
+| main | ענף שחרור | PR #53 מוזג אחרי 3/3 CI; יש להמשיך עם PR ממוקדים ושער QA, פרסום Pages סינתטי בלבד |
+| PR #53 native batch 5 | **MERGED** — SHA d0b50ef | לא למזג שוב; בסיס לביצוע Issue #55 ואחריו #56 |
 | PR #35 claude/unified-app | אינטגרציה רחבה; פתוח (לפי בדיקה) | **לסקור ולהציל תשתית backend/בדיקות**, לא למזג UI חדש שדוחה בעל המוצר |
 | PR #30 work/native-roster | שינוי נפרד, draft | לבדוק כפילויות מול PR #35, להימנע ממיזוג עיוור |
 | PR #33 test/unified-mobile-contract | שער איכות ישן | לשמר no iframe/source אחיד, לעדכן קריטריון בדיוק ל-4 לשוניות הראשונות |
