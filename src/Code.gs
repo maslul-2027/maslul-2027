@@ -54,7 +54,7 @@ const API_ = {
   'fitness.typeActive': function (ctx, a) { return Fitness.typeSetActive(ctx, a.id, a.active, a.reason); },
   'fitness.typeVariant': function (ctx, a) { return Fitness.typeSetVariant(ctx, a.id, a.component, a.variant, a.reason); },
   'fitness.draftSource': function (ctx, a) { return Fitness.draftSource(ctx); },
-  'fitness.versions': function (ctx, a) { return Fitness.versionsList(ctx, a.courseId); },
+  'fitness.versions': function (ctx, a) { return Fitness.versionsList(ctx, a.courseId, a.rowsFor); },
   'fitness.importDraft': function (ctx, a) { return Fitness.importDraft(ctx, a.courseId, a.data); },
   'fitness.editRow': function (ctx, a) { return Fitness.editRow(ctx, a.versionId, a.rowId, a.patch, a.reason); },
   'fitness.addTable': function (ctx, a) { return Fitness.addTable(ctx, a.versionId, a.data); },

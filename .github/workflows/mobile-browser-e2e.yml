@@ -14,6 +14,7 @@ on:
       - 'scripts/e2e_native_card.js'
       - 'scripts/e2e_native_batch5.js'
       - 'scripts/e2e_native_qa.js'
+      - 'scripts/e2e_native_batch6.js'
       - 'scripts/build_route_ledger.js'
       - 'scripts/check_route_ledger.js'
       - 'scripts/native_screenshots.js'
@@ -53,6 +54,7 @@ jobs:
       - run: E2E_CALLS_OUT=artifacts/calls_native_card.json node scripts/e2e_native_card.js preview
       - run: E2E_CALLS_OUT=artifacts/calls_native_batch5.json node scripts/e2e_native_batch5.js preview
       - run: E2E_CALLS_OUT=artifacts/calls_native_qa.json node scripts/e2e_native_qa.js preview artifacts/qa_screens
+      - run: E2E_CALLS_OUT=artifacts/calls_native_batch6.json node scripts/e2e_native_batch6.js preview artifacts/batch6_screens
       - name: 174-route evidence ledger (generated from the browser runs)
         run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Enforce truthful route ledger counts and native-screen evidence
@@ -72,6 +74,7 @@ jobs:
             artifacts/home_screens
             artifacts/batch3_screens
             artifacts/qa_screens
+            artifacts/batch6_screens
             artifacts/ledger
             artifacts/calls_*.json
           if-no-files-found: ignore
