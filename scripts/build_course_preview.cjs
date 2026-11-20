@@ -50,7 +50,7 @@ Courses.org(admin, courseId).teams.forEach((team, index) => {
 
 window.google = { script: { get run() {
   let success, failure;
-  const run = operation => Promise.resolve().then(operation)
+  const run = operation => new Promise(resolve => setTimeout(resolve, 0)).then(operation)
     .then(result => success?.(structuredClone(result)), error => failure?.(error));
   return {
     withSuccessHandler(handler) { success = handler; return this; },
