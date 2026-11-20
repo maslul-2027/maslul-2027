@@ -15,7 +15,9 @@
   }
   var view = $('#view'), toastT;
   function toast(msg, kind) { var o = $('.toast'); if (o) o.remove(); var t = h('div', { class: 'toast', role: kind === 'err' ? 'alert' : 'status', text: msg }); if (kind === 'err') t.style.background = '#9d202b'; document.body.append(t); clearTimeout(toastT); toastT = setTimeout(function () { t.remove(); }, 3200); }
-  function api(m, a, src) { return C.api(m, a, src).catch(function () { return { ok: false, code: 'NETWORK', message: 'אין תקשורת. נסו שוב.' }; }); }
+  var GW = { pending: ['GET', '/admin/pending', 'pending'], users: ['GET', '/admin/users', 'users'], approve: ['POST', '/admin/approve'], reject: ['POST', '/admin/reject'], revoke: ['POST', '/admin/revoke'], 'set-scope': ['POST', '/admin/set-scope'], 'set-active': ['POST', '/admin/set-active'] };
+  function api(m, a, src) { if (m.indexOf('gw:') === 0) { var g = GW[m.slice(3)]; return C.gw(g[0], g[1], a).then(function (r) { if (r && r.ok && g[2]) return { ok: true, data: r[g[2]] || [] }; return r; }); }
+    return C.api(m, a, src).catch(function () { return { ok: false, code: 'NETWORK', message: 'אין תקשורת. נסו שוב.' }; }); }
   function msgOf(r) { return (r && r.message) || 'הפעולה נכשלה.'; }
   function isAdmin() { return S.who && S.who.role === 'admin'; }
   function skeleton(n) { var w = h('div', { 'aria-busy': 'true', 'aria-label': 'טוען' }); for (var i = 0; i < (n || 3); i++) w.append(h('div', { class: 'skeleton' })); return w; }
@@ -26,7 +28,7 @@
   function errBox(r, retry) { return h('div', {}, [h('div', { class: 'msg err', role: 'alert', text: msgOf(r) }), retry ? h('button', { class: 'secondary', type: 'button', onclick: retry, text: 'נסו שוב' }) : null]); }
   function go(route) { if (location.hash !== '#/' + route) location.hash = '#/' + route; else render(); }
   function setTab(name) { document.querySelectorAll('.tab').forEach(function (b) { if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); }
-  function mount(tab, nodes, title) { view.replaceChildren.apply(view, nodes); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
+  function mount(tab, nodes, title) { view.replaceChildren.apply(view, nodes.filter(Boolean)); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
   function field(label, input, hint) { var id = input.id || (input.id = 'f' + Math.random().toString(36).slice(2, 8)); return h('div', { class: 'field' }, [h('label', { for: id, text: label }), input, hint ? h('div', { class: 'hint', text: hint }) : null]); }
   function fieldErr(f, text) { f.classList.add('err'); var e = f.querySelector('.errmsg'); if (!e) { e = h('div', { class: 'errmsg', role: 'alert' }); f.append(e); } e.textContent = text; }
   function clearErr(form) { form.querySelectorAll('.field.err').forEach(function (f) { f.classList.remove('err'); var e = f.querySelector('.errmsg'); if (e) e.remove(); }); }
@@ -44,10 +46,10 @@
     return Promise.all([api('whoAmI'), api('courses.list', {})]).then(function (r) {
       if (!r[0].ok) throw r[0]; S.who = r[0].data; S.courses = r[1].ok ? r[1].data : [];
       if (!S.course || !S.courses.some(function (c) { return c.id === S.course.id; })) S.course = S.courses[0] || null;
-      if (!S.course) return null; return api('courses.org', { courseId: S.course.id }).then(function (o) { S.org = o.ok ? o.data : { departments: [], teams: [] }; });
+      if (!S.course) return null; return api('courses.org', { courseId: S.course.id }).then(function (o) { S.org = o.ok ? o.data : { departments: [], teams: [] }; return api('assignments.mine', { courseId: S.course.id }).then(function (m) { S.mine = m.ok ? m.data : null; }); });
     });
   }
-  function ctxLine() { return 'פיילוט מסלול 2027 · סביבת תצוגה בלבד'; }
+  function ctxLine() { if (C.mode === 'server') return 'מסלול 2027 · סביבת בדיקה פרטית · נתונים סינתטיים' + (C.me && C.me.role === 'viewer' ? ' · צפייה בלבד' : ''); return 'פיילוט מסלול 2027 · סביבת תצוגה בלבד'; }
   function depName(id) { var d = (S.org.departments || []).filter(function (x) { return x.id === id; })[0]; return d ? d.name.replace(/\s*\(זמני\)/, '') : ''; }
 
   /* ---------- HOME (smart) ---------- */
@@ -72,8 +74,8 @@
       sectionHead('גישה מהירה', 'הכי שימושי'),
       card('חיפוש חניך', 'מוצאים אדם בשניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldiers'); }),
       card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('tasks'); }),
-      card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
-    ], 'בית');
+      (C.mode === 'server' && !isAdmin()) ? null : card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
+    ].filter(Boolean), 'בית');
     if (!S.course) return;
     var cid = S.course.id, st = { soldiers: null, follow: 0, tasks: 0, overdue: 0, alerts: null };
     var pS = api('soldiers.list', { courseId: cid, opts: { active: true } }).then(function (r) { st.soldiers = r.ok ? r.data.length : null; $('#k1').textContent = r.ok ? String(r.data.length) : '—'; });
@@ -128,7 +130,7 @@
     function mk() { return [chip('הכול', 'all')].concat((S.org.departments || []).map(function (d) { return chip(d.name.replace(/\s*\(זמני\)/, ''), d.id); })); }
     chips.replaceChildren.apply(chips, mk());
     var head = h('div', { class: 'section' }, [h('h2', { text: 'חניכים' }), count]);
-    mount('soldiers', [head, h('div', { class: 'btns', style: 'margin:0 0 10px' }, [h('button', { class: 'primary', type: 'button', text: '+ הוספת חניך', onclick: function () { go('soldier-new'); } })]), q, chips, list], 'חניכים');
+    mount('soldiers', [head, (C.mode === 'server' && !isAdmin()) ? null : h('div', { class: 'btns', style: 'margin:0 0 10px' }, [h('button', { class: 'primary', type: 'button', text: '+ הוספת חניך', onclick: function () { go('soldier-new'); } })]), q, chips, list], 'חניכים');
     list.append(skeleton(4));
     function draw() {
       var all = cache.soldiers || [], t = q.value.trim().toLowerCase(); S.q = q.value;
@@ -267,13 +269,16 @@
     nodes.push(q, out);
     function draw() {
       var t = q.value.trim(); out.replaceChildren();
-      DOMAINS.forEach(function (g) { var items = g[1].filter(function (i) { return !t || (i[1] + ' ' + i[2]).includes(t); }); if (!items.length) return; out.append(sectionHead(g[0], null));
+      DOMAINS.forEach(function (g) { var items = g[1].filter(function (i) { return (i[3] !== 'd/access' || (C.mode === 'server' && isAdmin())) && (!t || (i[1] + ' ' + i[2]).includes(t)); }); if (!items.length) return; out.append(sectionHead(g[0], null));
         items.forEach(function (i) { var right = i[4] ? h('span', { class: 'arrow', text: '←' }) : h('span', { class: 'badge', text: 'בהכנה' });
           var d = h('div', { class: 'tile' }, [h('i', { text: i[0], 'aria-hidden': 'true' }), h('div', {}, [h('h3', { text: i[1] }), h('p', { text: i[4] ? i[2] : i[2] + ' · טרם הועבר למסך מובנה' })])]);
           var b = h('button', { class: 'card' + (i[4] ? '' : ' off'), type: 'button', 'aria-disabled': i[4] ? null : 'true', onclick: function () { if (i[4]) go(i[3]); else toast('המסך הזה עדיין בהכנה', 'err'); } }, [d, right]); out.append(b); }); });
       if (!out.children.length) out.append(emptyBox('לא נמצא תחום תואם.'));
     }
     q.addEventListener('input', draw); draw();
+    if (C.mode === 'server') { var me = C.me || {}, RN = { admin: 'מנהל', commander: 'מפקד', viewer: 'צפייה בלבד', user: 'מפקד' };
+      mount('more', nodes.concat([h('div', {}, [sectionHead('חשבון', null), card(me.name || 'משתמש', 'תפקיד: ' + (RN[me.role] || me.role) + (me.role === 'viewer' ? ' · אי אפשר לבצע שינויים' : ''), h('span', { text: '👤' })), card('סביבת בדיקה פרטית', 'נתונים סינתטיים בלבד · אין אימות בעלות על מספר הטלפון · לא לשימוש מבצעי', h('span', { text: '🛡️' })),
+        h('div', { class: 'btns' }, [h('button', { class: 'secondary', id: 'logout', type: 'button', text: 'התנתקות', onclick: function () { C.logout(); } })])])]), 'עוד'); return; }
     var foot = h('div', {}, [sectionHead('מידע', null), card('התקנה במסך הבית', 'Safari ← שיתוף ← הוסף למסך הבית', h('span', { text: '📱' })), card('סביבת הדגמה', 'ללא התחברות, ללא שרת, ללא נתוני אמת — הנתונים נשמרים במכשיר הזה בלבד', h('span', { text: '🛡️' })),
       h('div', { class: 'btns' }, [h('button', { class: 'secondary', type: 'button', text: 'איפוס הדגמה', onclick: function () { dialog('איפוס נתוני הדגמה', [h('p', { text: 'כל הנתונים שהוזנו במכשיר הזה יימחקו ויוחזרו נתוני הדגמה מקוריים.' })], function () { C.reset(); }, 'איפוס', true); } }), h('button', { class: 'secondary', id: 'role-switch', type: 'button', text: 'תפקיד הדגמה: ' + (C.role === 'commander' ? 'מפקד' : 'מנהל') + ' — החלפה', onclick: function () { C.as(C.role === 'commander' ? 'admin' : 'commander'); } }), h('button', { class: 'secondary', id: 'refresh-app', type: 'button', text: 'בדיקת עדכון', onclick: function () { if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(function (registration) { return registration?.update(); }).finally(function () { var url = new URL(location.href); url.searchParams.set('v', String(Date.now())); location.replace(url); }); else location.reload(); } })]),
       h('p', { class: 'muted', text: 'הגרסה המחוברת תדרוש הרשמה ואישור מנהל, הרשאות צד שרת ואבטחת PIN. אלה אינם חלק מהדגמה זו.' })]);

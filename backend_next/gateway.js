@@ -26,14 +26,15 @@ function gateway(opts) {
     if (['export', 'audit'].includes(action)) { if (!ctx) throw new AuthError('UNAUTHENTICATED', 'נדרשת התחברות.'); if (ctx.role !== 'admin') throw new AuthError('FORBIDDEN', 'פעולה למנהל בלבד.'); return res; }
     auth.authorize(ctx, action === 'read' || action === 'evidence_read' ? 'read' : 'write', res); return res;
   };
+  let skipSave = false;   // successful READ-only application calls change nothing (the engine's sessions/audit are untouched), so they are not re-sealed to disk
   async function handle(req) {
     return store.serial(async () => {
-      let out;
+      let out; skipSave = false;
       try { out = await route(req); } catch (e) {
         if (e instanceof AuthError) out = { status: STATUS[e.code] || 400, body: { ok: false, code: e.code, message: e.message } };
         else out = { status: 500, body: { ok: false, code: 'INTERNAL', message: 'שגיאה פנימית.' } };      // never leak stack/paths
       }
-      store.saveNow(state);          // rate-limit counters, lockouts, sessions and audit are persisted even for failed requests
+      if (!(skipSave && out.status === 200)) store.saveNow(state);          // rate-limit counters, lockouts, sessions and audit are persisted even for failed requests
       return out;
     });
   }
@@ -53,14 +54,28 @@ function gateway(opts) {
     }
     if (m === 'POST' && p === '/auth/logout') { auth.logout(token); return ok({}, { headers: { 'set-cookie': COOKIE + '=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0' } }); }
     if (!ctx) throw new AuthError('UNAUTHENTICATED', 'נדרשת התחברות.');
-    if (m === 'GET' && p === '/auth/me') return ok({ userId: ctx.userId, role: ctx.role, courseIds: ctx.courseIds, unitIds: ctx.unitIds });
+    if (m === 'GET' && p === '/auth/me') return ok({ userId: ctx.userId, role: ctx.role, courseIds: ctx.courseIds, unitIds: ctx.unitIds, csrf: csrfOf(token, pepper) });
+    // ----- application API: identity and scope come ONLY from the session; the engine host re-enforces role/course/team scope on every call -----
+    if (m === 'POST' && p === '/api') {
+      if (!opts.api) throw new AuthError('NOT_FOUND', 'לא נמצא.');
+      const method = typeof body.method === 'string' ? body.method : '', args = body.args && typeof body.args === 'object' && !Array.isArray(body.args) ? body.args : {};
+      if (!/^[A-Za-z]+(\.[A-Za-z]+)?$/.test(method)) throw new AuthError('INVALID', 'שיטה לא תקינה.');
+      const write = opts.api.isWrite(method);
+      if (write && ctx.role === 'viewer') auth.authorize(ctx, 'write', { courseId: String(args.courseId || '') });          // logs + FORBIDDEN: viewers never write
+      if (ctx.role !== 'admin' && args.courseId !== undefined && !ctx.courseIds.includes(String(args.courseId))) { auth.authorize(ctx, 'read', { courseId: String(args.courseId) }); }   // fail closed on a foreign course before the engine is reached
+      const u = state.users.find(x => x.id === ctx.userId);
+      const body2 = opts.api.call({ userId: ctx.userId, role: ctx.role === 'user' ? 'commander' : ctx.role, name: u ? u.name : '', courseIds: ctx.courseIds }, method, args);
+      skipSave = !opts.api.dirty && !write;   // persist whenever the engine actually changed state, whatever the method is called
+      return { status: 200, body: body2 };
+    }
     // ----- admin console -----
     if (p.startsWith('/admin/')) {
       if (m === 'GET' && p === '/admin/pending') return ok({ pending: auth.listPending(ctx) });
-      if (m === 'POST' && p === '/admin/approve') return ok(auth.approve(ctx, String(body.requestId), body.grant));
+      if (m === 'GET' && p === '/admin/users') return ok({ users: auth.listUsers(ctx) });
+      if (m === 'POST' && p === '/admin/approve') { const r = auth.approve(ctx, String(body.requestId), body.grant); if (opts.api && opts.api.afterGrant) opts.api.afterGrant({ userId: ctx.userId, role: 'admin', name: '' }, r.id, body.grant || {}); return ok(r); }
       if (m === 'POST' && p === '/admin/reject') return ok(auth.reject(ctx, String(body.requestId)));
       if (m === 'POST' && p === '/admin/revoke') return ok(auth.revokeUser(ctx, String(body.targetUserId)));
-      if (m === 'POST' && p === '/admin/set-scope') return ok(auth.setScope(ctx, String(body.targetUserId), body.grant || {}));
+      if (m === 'POST' && p === '/admin/set-scope') { const r = auth.setScope(ctx, String(body.targetUserId), body.grant || {}); if (opts.api && opts.api.afterGrant) opts.api.afterGrant({ userId: ctx.userId, role: 'admin', name: '' }, String(body.targetUserId), body.grant || {}); return ok(r); }
       if (m === 'POST' && p === '/admin/set-active') return ok(auth.setActive(ctx, String(body.targetUserId), !!body.active));
       throw new AuthError('NOT_FOUND', 'לא נמצא.');
     }
@@ -86,7 +101,7 @@ function gateway(opts) {
 }
 /** Minimal node:http adapter for the private TEST server. FAIL CLOSED: the protocol is taken ONLY from the socket (a real TLS socket = https). There is deliberately NO option to assume/force TLS — options passed here are ignored. HTTPS behind a reverse proxy is accepted solely by the gateway's own check: the TCP peer must be an explicitly configured trustedProxies IP AND send x-forwarded-proto: https. */
 function toHttp(gw) {
-  return (rq, rs) => { let raw = ''; rq.on('data', c => { raw += c; if (raw.length > 64e3) rq.destroy(); }); rq.on('end', async () => {
+  return (rq, rs) => { let raw = ''; rq.on('data', c => { raw += c; if (raw.length > 2e6) rq.destroy(); }); rq.on('end', async () => {
     let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { rs.statusCode = 400; return rs.end('{"ok":false,"code":"INVALID"}'); }
     const r = await gw.handle({ method: rq.method, path: rq.url, headers: rq.headers, body, remoteAddr: rq.socket.remoteAddress, proto: rq.socket && rq.socket.encrypted ? 'https' : 'http' });
     rs.statusCode = r.status; rs.setHeader('content-type', 'application/json; charset=utf-8'); rs.setHeader('cache-control', 'no-store'); rs.setHeader('x-content-type-options', 'nosniff'); Object.keys(r.headers || {}).forEach(k => rs.setHeader(k, r.headers[k])); rs.end(JSON.stringify(r.body)); }); };

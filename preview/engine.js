@@ -17,7 +17,8 @@
   var seeding=true;X.Auth._emailProvider=function(){return seeding?'demo-admin@x.com':EMAIL;};
   (function(){var mx=0;Object.keys(mem).forEach(function(t){(mem[t]||[]).forEach(function(r){var m=r&&typeof r.id==='string'&&/^id-(\d+)$/.exec(r.id);if(m&&+m[1]>mx)mx=+m[1];});});if(mx>(X.Util._counter||0))X.Util._counter=mx;})();   // ids are 'id-N': never reuse one after a reload (persisted store)
   var admin={email:'demo-admin@x.com',role:'admin',courseScope:'*'};
-  if(!(mem.Users&&mem.Users.length)){
+  if(!(mem.Users&&mem.Users.length)){ (function seed(X, mem, SEED, save) {
+  var admin = { email: 'demo-admin@x.com', role: 'admin', courseScope: '*' };
     X.Courses.addUser(admin,{email:'demo-admin@x.com',role:'admin',display_name:'מנהל הדגמה'});
     var c=X.Courses.create(admin,{name:'קורס הדגמה (סינתטי)',start_date:'2099-01-01'}).id;X.Courses.addUser(admin,{email:'demo-cmd@x.com',role:'commander',display_name:'מפקד הדגמה',course_ids:[c]});var o=X.Courses.org(admin,c),N=60,i,used={};
     for(i=0;i<N;i++){var nm,k=i;do{nm=SEED.first[(k*7+i)%SEED.first.length]+' '+SEED.last[(k*3+i*5)%SEED.last.length];k++;}while(used[nm]);used[nm]=1;var t=o.teams[i%o.teams.length];
@@ -34,7 +35,7 @@
       if(i<36)X.api('nav.create',{courseId:c,data:{request_id:'n'+k,soldier_id:sid,test_date:dd,navigation_type_id:nvt.id,distance_km:3,plan_score:3+(i%2),debrief_score:3+((i+b)%2),points_completed:3+(i%3),points_total:5}});});}
     [[prev,5],[cur,2]].forEach(function(pr,j){for(var e=0;e<2;e++){var d=new Date(pr[0].getTime()+e*86400000*2);X.api('attendance.create',{courseId:c,data:{request_id:'seed-a'+j+e,event_date:iso(d),activity_type_id:at.id,scope_type:'course',scope_id:c,absent:sol.slice(e*3,e*3+pr[1]).map(function(x){return {soldier_id:x.id};})}});}});
     save();
-  }
+})(X,mem,SEED,save); }
   seeding=false;
   function wrap(fn,a){var r;lastErr='';try{r=fn.apply(null,a);}catch(e){r={ok:false,code:'INTERNAL',message:String(e&&e.message||e)};}
     if(r&&r.ok===false&&r.code==='INTERNAL'&&/(Utilities|DriveApp|SpreadsheetApp|UrlFetchApp|ScriptApp|HtmlService|MailApp|GmailApp) is not defined|NOT_CONNECTED/.test(lastErr))r={ok:false,code:'NOT_CONNECTED',message:'טרם חובר להדגמה: פעולה זו דורשת שירות חיצוני שאינו זמין בהדגמה הסינתטית.'};save();return clone(r);}
