@@ -90,6 +90,11 @@
   D.admin.lists[0].click = userDialog; D.admin.lists[1].click = courseDialog;
   D.admin.lists[1].row = function (c) { return [c.name, 'התחלה ' + fmtD(c.start_date), status(c.status === 'archived' ? 'בארכיון' : 'פעיל', c.status === 'archived')]; };
   D.admin.lists[0].row = function (u) { return [u.display_name || u.email, (u.role === 'admin' ? 'מ״פ (מנהל)' : 'מפקד') + ' · ' + u.email, status(u.active ? 'פעיל' : 'מושבת', !u.active)]; };
+  D.attendance.lists[0].click = function (e) {
+    api('attendance.roll', { courseId: S.course.id, eventId: e.id }).then(function (r) {
+      var rows = r.ok ? r.data : [], body = r.ok ? (rows.length ? rows.map(function (x) { return h('div', { class: 'row', style: 'display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #eee' }, [h('span', { text: x.soldier_name || x.soldier_id }), h('span', { text: (x.present ? 'נוכח' : 'חסר') + (x.early_exit ? ' · יציאה מוקדמת' : '') + (x.absence_approved ? ' · היעדרות מאושרת' : '') })]); }) : [h('p', { class: 'muted', text: 'אין רשומות בהיקף שלך.' })]) : [h('p', { class: 'msg err', role: 'alert', text: msgOf(r) })];
+      var d = dialog((e.type_name || 'אירוע') + ' · ' + fmtD(e.event_date), body, function () { return true; }, 'סגירה'); });
+  };
   D.attendance.lists.push({ h: 'סוגי פעילות (לחיצה לשינוי שם/סטטוס)', m: 'acttypes.list', a: CID, row: function (t) { return [t.name, '', status(t.active ? 'פעיל' : 'מושבת', !t.active)]; }, click: function (t, reload) { typeDialog('acttypes', t, reload, 'סוג פעילות'); } });
   D.nav.lists.push({ h: 'סוגי ניווט (לחיצה לשינוי שם/סטטוס)', m: 'navtypes.list', a: CID, row: function (t) { return [t.name, '', status(t.active ? 'פעיל' : 'מושבת', !t.active)]; }, click: function (t, reload) { typeDialog('navtypes', t, reload, 'סוג ניווט'); } });
   function Domain(id) {

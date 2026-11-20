@@ -1,5 +1,5 @@
 {
- "when": "2026-11-20T12:14:16.972Z",
+ "when": "2026-11-20T12:49:26.619Z",
  "node": "v22.23.4",
  "flags": {
   "ui": true,
@@ -686,10 +686,10 @@
   {
    "s": "ui_synthetic_app",
    "types": null,
-   "state": "FAIL",
-   "pass": 0,
-   "fail": 1,
-   "why": "failed tests"
+   "state": "PASS",
+   "pass": 116,
+   "fail": 0,
+   "why": ""
   }
  ],
  "totals": {
@@ -697,17 +697,17 @@
    "node_unit": 95,
    "node_integration": 294,
    "node_hardening": 234,
-   "browser": 234,
+   "browser": 350,
    "unclassified": 52
   },
   "node_total": 675,
   "suites": 65,
-  "PASS": 64,
-  "FAIL": 1,
+  "PASS": 65,
+  "FAIL": 0,
   "SKIP": 0,
-  "tests_run": 910,
-  "passed": 909,
-  "failed": 1
+  "tests_run": 1025,
+  "passed": 1025,
+  "failed": 0
  },
- "result": "FAILED"
+ "result": "COMPLETE_PASS"
 }
