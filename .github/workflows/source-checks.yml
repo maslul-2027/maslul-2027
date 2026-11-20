@@ -46,12 +46,6 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Source identity + strict test run (Node + UI, 0 skips allowed)
         run: npm run test:ci
-      - name: Upload synthetic app (downloadable artifact only; nothing is deployed)
-        uses: actions/upload-artifact@v4
-        with:
-          name: synthetic-app
-          path: synthetic_app/index.html
-          if-no-files-found: error
 
 # Deployment intentionally disabled until credentials, baseline reconciliation,
 # versioned /exec update and rollback are validated (see docs/DEPLOYMENT_PLAN.md).
