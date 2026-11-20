@@ -64,6 +64,7 @@ jobs:
       - run: E2E_CALLS_OUT=artifacts/calls_native_batch7.json node scripts/e2e_native_batch7.js preview artifacts/batch7_screens
       - name: Private TEST server — secure API tests over real TLS (Issue #43)
         run: |
+          node scripts/build_native_app.js --server
           node tests/route_table.js
           node tests/secure_test_server.js
       - name: Private TEST server — browser E2E over real TLS, admin/commander/viewer at 320/360/390/414 (Issue #43)
