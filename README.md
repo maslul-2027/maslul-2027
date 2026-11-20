@@ -1,16 +1,19 @@
-## Hi there 👋
+# MASLUL 2027
 
-<!--
-**maslul-2027/maslul-2027** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+מערכת ניהול מסלול — ממשק עברי RTL, חניכים, מפקדים, מעקבים, מדדים ודוחות.
 
-Here are some ideas to get you started:
+**בעל המוצר:** המשתמש · **מנהל הפיתוח והקבלה:** ChatGPT · **מפתח ראשי:** Claude Code.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+## נקודת הכניסה לצוות
+
+- [חוזה ניהול וביצוע — מהדורת 20.11.2026](docs/PROJECT_MANAGEMENT_CONTRACT.md)
+- [לוח המשימות וסדר השחרור להיום](docs/TODAY_EXECUTION_BOARD_2026-11-20.md)
+- [עיצוב הזהב המקורי — PR #10](https://github.com/maslul-2027/maslul-2027/pull/10)
+- [הנחיות UX וחסמי שימוש אמת](docs/RESTORE_ORIGINAL_UX_AND_TODAY_RELEASE_GATES.md)
+- [החלטות הבעלים העדכניות](docs/OWNER_CURRENT_CHARTER_2026-11-20.md)
+- [מיפוי 174 פעולות API](docs/capability-inventory.json)
+- [שערי שלמות/Parity](docs/FEATURE_PARITY_GATE.md)
+- [לוח התיאום החי — Issue #28](https://github.com/maslul-2027/maslul-2027/issues/28)
+- [סביבת הדגמה ציבורית סינתטית](https://maslul-2027.github.io/maslul-2027/)
+
+> **אזהרה:** GitHub Pages היא סביבת הדגמה עם נתונים מומצאים. אין להזין נתוני אמת/חיילים או מידע פרטי; אין לטעון שמערכת מבצעית מוכנה בלי בדיקות ואישורי אבטחה/ארגון.
