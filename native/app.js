@@ -26,15 +26,27 @@
   function status(text, warn) { return h('span', { class: 'status' + (warn ? ' warn' : ''), text: text }); }
   function emptyBox(t) { return h('div', { class: 'empty', text: t }); }
   function errBox(r, retry) { return h('div', {}, [h('div', { class: 'msg err', role: 'alert', text: msgOf(r) }), retry ? h('button', { class: 'secondary', type: 'button', onclick: retry, text: 'נסו שוב' }) : null]); }
-  function go(route) { if (location.hash !== '#/' + route) location.hash = '#/' + route; else render(); }
+  function go(route) { if (location.hash !== '#/' + route) location.hash = '#/' + route; else { forceTop = true; render(); } }
   function setTab(name) { document.querySelectorAll('.tab').forEach(function (b) { if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); }
   /* gentle scroll reveal for content BELOW the fold only (never hides what is already visible; fail-safe un-hides everything after 1.5 s; none under reduced motion) */
   var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, rvIO = null, rvT = null;
   function reveal() { if (REDUCED || !('IntersectionObserver' in window)) return; if (!rvIO) rvIO = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('rv-in'); rvIO.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
     [].slice.call(view.querySelectorAll('.card,.stat,.section,dl.kv')).forEach(function (el) { if (el.dataset.rv || el.getBoundingClientRect().top < innerHeight) return; el.dataset.rv = '1'; el.classList.add('rv-init'); rvIO.observe(el); });
     clearTimeout(rvT); rvT = setTimeout(function () { [].slice.call(view.querySelectorAll('.rv-init')).forEach(function (el) { el.classList.add('rv-in'); }); }, 1500); }
-  new MutationObserver(function () { clearTimeout(reveal.t); reveal.t = setTimeout(reveal, 60); }).observe(view, { childList: true, subtree: true });
-  function mount(tab, nodes, title) { view.replaceChildren.apply(view, nodes.filter(Boolean)); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
+  /* Navigation feel: per-route scroll memory (back / tab return restore, a new screen starts at the top), route-enter only for deeper screens, reveal wired once per mount (no observers on every DOM change). */
+  var scrollMem = Object.create(null), curKey = null, navPop = false, forceTop = false, userScrolled = false, ROOTS = /^#\/(home|soldiers|tasks|more)?$/;
+  var navSeq = 0;   // a fragment navigation also fires popstate, so traversal (Back/Forward) is detected from history.state: entries we have already rendered carry {mv}, a freshly pushed one has none
+  ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { userScrolled = true; }, { passive: true }); });
+  function restoreScroll(y) { userScrolled = false; var n = 0; (function step() { if (userScrolled) return; window.scrollTo(0, y); if (++n < 5 && Math.abs(window.scrollY - y) > 2) setTimeout(step, n * 120); })(); }
+  function mount(tab, nodes, title) {
+    var key = location.hash || '#/home', changed = key !== curKey, deeper = /^#\/(soldier|d)\//.test(key), pop = navPop, top = forceTop, keep = window.scrollY; navPop = false; forceTop = false;
+    view.replaceChildren.apply(view, nodes.filter(Boolean)); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); }
+    if (changed || top) { var y = !top && (pop || ROOTS.test(key)) ? scrollMem[key] || 0 : 0; window.scrollTo(0, 0); if (y > 0) restoreScroll(y); }
+    else if (keep > 0) restoreScroll(keep);   // same route re-rendered in place (reload after a save / a filter): keep the position while the async content grows back
+    curKey = key;
+    view.classList.remove('route-in'); if (changed && deeper && !pop && !REDUCED) { void view.offsetWidth; view.classList.add('route-in'); setTimeout(function () { view.classList.remove('route-in'); }, 260); }
+    if (!REDUCED) requestAnimationFrame(reveal);
+  }
   function field(label, input, hint) { var id = input.id || (input.id = 'f' + Math.random().toString(36).slice(2, 8)); return h('div', { class: 'field' }, [h('label', { for: id, text: label }), input, hint ? h('div', { class: 'hint', text: hint }) : null]); }
   function fieldErr(f, text) { f.classList.add('err'); var e = f.querySelector('.errmsg'); if (!e) { e = h('div', { class: 'errmsg', role: 'alert' }); f.append(e); } e.textContent = text; }
   function clearErr(form) { form.querySelectorAll('.field.err').forEach(function (f) { f.classList.remove('err'); var e = f.querySelector('.errmsg'); if (e) e.remove(); }); }
@@ -43,6 +55,7 @@
     var opener = document.activeElement, d = h('dialog', { 'aria-labelledby': 'dlgT' }), f = h('form', { method: 'dialog' }), msg = h('div', { role: 'alert' });
     var ok = h('button', { class: danger ? 'danger' : 'primary', type: 'submit', text: okLabel || 'אישור' }), cancel = h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { d.close(); } });
     f.append(h('h2', { id: 'dlgT', text: title }), h('div', {}, bodyNodes), msg, h('div', { class: 'btns' }, [ok, cancel])); d.append(f); document.body.append(d);
+    var rawClose = d.close.bind(d); d.close = function () { if (REDUCED || !d.open || d.classList.contains('closing')) return rawClose(); d.classList.add('closing'); setTimeout(rawClose, 110); }; d.addEventListener('cancel', function (e) { e.preventDefault(); d.close(); });
     f.addEventListener('submit', function (e) { e.preventDefault(); msg.textContent = ''; msg.className = ''; busy(ok, true); Promise.resolve(onOk(msg)).then(function (done) { if (done === false) busy(ok, false); else d.close(); }); });
     d.addEventListener('close', function () { d.remove(); if (opener && opener.isConnected && typeof opener.focus === 'function') { try { opener.focus({ preventScroll: true }); } catch (e) {} } }); d.showModal(); return d;
   }
@@ -317,6 +330,8 @@
   /* ---------- router ---------- */
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
   function render() {
+    if (curKey) scrollMem[curKey] = window.scrollY;
+    navPop = !!(history.state && history.state.mv); try { history.replaceState({ mv: ++navSeq }, ''); } catch (e) {}
     var r = (location.hash || '#/home').replace(/^#\//, ''), top = $('#ctx'); if (top) top.textContent = ctxLine();
     if (!S.course) { mount('home', [h('div', { class: 'empty', text: 'אין קורס. יש ליצור קורס במסך הניהול.' })]); return; }
     var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();

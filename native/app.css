@@ -29,17 +29,27 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 /* ---- Accessible micro-interactions (targets, not measured Meniv timings): press 150ms, dialog 200ms, view 160ms, reveal 240ms; no parallax/scroll-jacking; all off under prefers-reduced-motion ---- */
 :root{--t-press:150ms;--t-dialog:200ms;--t-view:160ms;--t-reveal:240ms;--ease:cubic-bezier(.2,.7,.2,1)}
 button,.card,.tab,.chip{transition:transform var(--t-press) var(--ease),background-color var(--t-press) var(--ease),box-shadow var(--t-press) var(--ease),border-color var(--t-press) var(--ease)}
-button:active:not(:disabled),.card:active,.tab:active,.chip:active{transform:scale(.98)}
+button,.card,.tab,.chip{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:active:not(:disabled),.card:active,.tab:active,.chip:active{transform:scale(.97);transition-duration:50ms}   /* feedback starts on touch-down, release eases back */
 dialog[open]{animation:dlgIn var(--t-dialog) var(--ease)}
 dialog[open]::backdrop{animation:bdIn var(--t-dialog) ease-out}
 @keyframes dlgIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes bdIn{from{opacity:0}to{opacity:1}}
-#view>*{animation:viewIn var(--t-view) ease-out both}
-@keyframes viewIn{from{opacity:.001}to{opacity:1}}
 .toast{animation:toastIn 180ms var(--ease)}
 @keyframes toastIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.rv-init{opacity:0;transform:translateY(8px)}
-.rv-init.rv-in{opacity:1;transform:none;transition:opacity var(--t-reveal) var(--ease),transform var(--t-reveal) var(--ease)}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv-init{opacity:1!important;transform:none!important}}
+/* Route enter: ONLY when pushing into a deeper screen (never on tab switches or back), transform-only on the top-level blocks (never a blank / low-opacity frame; fixed elements are excluded so they do not jump). */
+#view.route-in>*:not(.fab){animation:viewIn var(--t-view) var(--ease)}
+@keyframes viewIn{from{transform:translateY(8px)}to{transform:none}}
+/* Loading skeleton is held back 140ms: fast answers never flash a placeholder; the space is reserved, so nothing shifts. */
+.skeleton{animation:sk 1.2s infinite,skHold 0s linear 140ms backwards}@keyframes skHold{from{opacity:0}to{opacity:0}}
+/* Scroll reveal below the fold: transform-only (content is never made translucent). */
+.rv-init{transform:translateY(10px)}.rv-init.rv-in{transform:none;transition:transform var(--t-reveal) var(--ease)}
+dialog.closing{animation:dlgOut 110ms ease-in forwards}dialog.closing::backdrop{animation:bdOut 110ms ease-in forwards}
+@keyframes dlgOut{to{opacity:0;transform:translateY(8px) scale(.98)}}@keyframes bdOut{to{opacity:0}}
+dialog{overscroll-behavior:contain}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv-init{transform:none!important}}
 /* 200% zoom / very narrow viewports (≈160 css px): wrap instead of overflowing; no effect at ≥240px */
 @media(max-width:240px){.top{flex-wrap:wrap;gap:6px}.stats{grid-template-columns:repeat(auto-fit,minmax(56px,1fr))}.stat{min-width:0;overflow-wrap:anywhere}.nav{padding-inline:2px}.nav .tab{min-width:0;flex:1 1 0;font-size:10px;overflow-wrap:anywhere}.card,.tile{min-width:0;gap:6px}.card>*{min-width:0;overflow-wrap:anywhere}.btns>button,.btns>a{flex:1 1 100%;min-width:0}.hero{padding:16px 12px}.seg{min-width:0}.seg button{min-width:0;overflow-wrap:anywhere;padding-inline:4px;font-size:12px}}
+#view{display:flow-root}
+
+#heroWhy{min-height:3.2em}   /* reserve the two-line hero explanation so the contextual text arriving later never shifts the page */
