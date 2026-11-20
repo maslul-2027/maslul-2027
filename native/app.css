@@ -15,3 +15,21 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 .app>.scr{animation:none}.mode{font-size:11px;color:#68747a}.toast{max-width:90%}
 @media(min-width:821px){.nav{border-radius:16px 16px 0 0}}
 [tabindex="-1"]:focus{outline:none}
+
+/* Opt-in smart home enhancement: original PR #10 shell, cards and palette stay intact. */
+.home-insights{display:grid;gap:10px}
+.home-insight-card,.home-brief,.home-answer{background:#fff;border:1px solid var(--line);border-radius:17px;padding:15px}
+.home-insight-card h3{font-size:15px;margin:0 0 7px;color:#161b20}
+.home-insight-card p{font-size:13px;line-height:1.65;margin:0 0 10px;color:#435158}
+.home-insight-card details{font-size:12px;color:#58666c;margin:10px 0}
+.home-insight-card summary,.home-insights-more>summary{cursor:pointer;padding:8px 0;min-height:44px;font-weight:700;color:#006c70}
+.home-insight-card .home-insight-evidence{font-size:12px;line-height:1.7;margin:8px 0 0;overflow-wrap:anywhere}
+.home-insight-card .secondary{min-height:44px;font-size:13px}
+.home-brief,.home-answer{font-size:14px;line-height:1.7;color:#435158}
+.home-brief{border-inline-start:3px solid var(--teal)}
+.home-answer p{margin:0 0 8px}
+.home-questions{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 10px}
+.home-questions .secondary{min-height:44px;flex:1 1 180px}
+.home-insights-more{margin-top:4px}
+.home-insights-more>div{display:grid;gap:10px}
+@media(max-width:370px){.home-insight-card,.home-brief,.home-answer{padding:12px}.home-questions .secondary{flex-basis:100%}}
