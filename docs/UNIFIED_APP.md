@@ -9,7 +9,7 @@
 
 ## Connected (evidence)
 - All screens/data-entry of the legacy app run on the real server logic (validation, permissions, scoring, privacy gates D2, meetings/tasks, idempotency). Browser tests: `ui_synthetic_app` (add soldier through the real form, duplicate refusal, persistence, reset, all data-entry areas open, no external request), `ui_ux_sprint1` (4-area navigation, 360/390 layouts), 60 legacy UI/Node suites.
-- 174 API actions: 128 have a literal UI call site (`docs/ui-source-comparison.json`); 46 have none (same set as PR #17).
+- 174 API actions: 128 have a literal UI call site (`docs/ui-source-comparison.json`); 46 have none. The owner's tool from PR #34 (`node scripts/audit_api_ui_trace.cjs .`) gives the same 128 / 46 on this branch's `src/`; its report is the per-method migration checklist (static references only: runtime/authorization/deployed stay NOT_TESTED/NOT_VERIFIED there).
 
 ## NOT connected / not verified (do not count as done)
 - **Google-service routes** answer `NOT_CONNECTED` ("טרם חובר להדגמה") instead of failing: confirmed by runtime probe with empty arguments for `backup.create`, `migration.run` (`docs/unified-app-route-status.json`). By static analysis the same applies to anything that reaches `Adapters` (Drive files, PDF/XLSX export, preflight, OCR provider): `backup.*`, `docs.upload/download/...`, `reports.generate/download/fullExport`, `preflight.run`, `ocr.start`. The empty-argument probe returns validation errors first for many routes, so "server logic runs" for 172/174 means **the route answers**, not that every workflow was exercised with real arguments.
