@@ -2,9 +2,9 @@
 
 Source: `scripts/build_route_ledger.js` from `src/Code.gs` API_ map, `tests/route_classes.json`, native sources and the calls recorded by the browser E2E (`E2E_CALLS_OUT`). Synthetic data only. **secured TEST E2E = NOT_RUN and deployed = NO for every row** (no secured backend exists yet).
 
-**Summary:** {"total":174,"PASS_SYNTH_E2E":120,"IMPLEMENTED_NOT_E2E":5,"BLOCKED_NOT_CONNECTED":11,"NOT_IMPLEMENTED":38,"native_screen":124}
+**Summary:** {"total":174,"PASS_SYNTH_E2E":116,"IMPLEMENTED_NOT_E2E":5,"BLOCKED_NOT_CONNECTED":11,"NOT_IMPLEMENTED":42,"native_screen":124}
 
-Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser test · IMPLEMENTED_NOT_E2E = native screen exists, no browser evidence yet · BLOCKED_NOT_CONNECTED = needs an adapter that is not connected in synthetic mode (visible to the user, never faked) · NOT_IMPLEMENTED = no native workflow.
+Markers: PASS_SYNTH_E2E = API called successfully during a browser test AND referenced by native code; this alone does NOT prove a click-driven UI journey (some tests call window.__app.api directly) · IMPLEMENTED_NOT_E2E = native code references the API but no successful browser call observed · BLOCKED_NOT_CONNECTED = missing external adapter, shown honestly · NOT_IMPLEMENTED = no native workflow (even if a test calls the backend API directly).
 
 | # | Route | Group | Authz class | Native | Status | OK calls | Negative authz seen | Note |
 |---|---|---|---|---|---|---|---|---|
@@ -34,8 +34,8 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 24 | `nav.groups` | nav | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 25 | `navtypes.list` | navtypes | N | yes | PASS_SYNTH_E2E | 6 | no |  |
 | 26 | `navtypes.create` | navtypes | N | yes | PASS_SYNTH_E2E | 2 | no |  |
-| 27 | `navtypes.rename` | navtypes | N | no | PASS_SYNTH_E2E | 1 | yes |  |
-| 28 | `navtypes.setActive` | navtypes | N | no | PASS_SYNTH_E2E | 1 | no |  |
+| 27 | `navtypes.rename` | navtypes | N | no | NOT_IMPLEMENTED | 1 | yes | API succeeds in a browser test but no native workflow is wired |
+| 28 | `navtypes.setActive` | navtypes | N | no | NOT_IMPLEMENTED | 1 | no | API succeeds in a browser test but no native workflow is wired |
 | 29 | `assignments.list` | assignments | A | yes | PASS_SYNTH_E2E | 22 | yes |  |
 | 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 3 | yes |  |
 | 31 | `assignments.create` | assignments | A | yes | PASS_SYNTH_E2E | 1 | yes |  |
@@ -80,8 +80,8 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 70 | `exams.summary` | exams | O | yes | PASS_SYNTH_E2E | 3 | no |  |
 | 71 | `acttypes.list` | acttypes | N | yes | PASS_SYNTH_E2E | 11 | no |  |
 | 72 | `acttypes.create` | acttypes | A | yes | PASS_SYNTH_E2E | 3 | no |  |
-| 73 | `acttypes.rename` | acttypes | A | no | PASS_SYNTH_E2E | 1 | no |  |
-| 74 | `acttypes.setActive` | acttypes | A | no | PASS_SYNTH_E2E | 1 | yes |  |
+| 73 | `acttypes.rename` | acttypes | A | no | NOT_IMPLEMENTED | 1 | no | API succeeds in a browser test but no native workflow is wired |
+| 74 | `acttypes.setActive` | acttypes | A | no | NOT_IMPLEMENTED | 1 | yes | API succeeds in a browser test but no native workflow is wired |
 | 75 | `attendance.create` | attendance | O | yes | PASS_SYNTH_E2E | 4 | no |  |
 | 76 | `attendance.events` | attendance | G | yes | PASS_SYNTH_E2E | 8 | yes |  |
 | 77 | `attendance.roll` | attendance | O | yes | PASS_SYNTH_E2E | 2 | no |  |
