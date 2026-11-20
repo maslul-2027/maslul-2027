@@ -66,22 +66,21 @@ Result (corrected after QA review of PR #59): PASS_SYNTH_E2E **142** (= routes w
 
 **Not in this batch:** the 20 NOT_IMPLEMENTED routes (reports.build, import.*, docs.*, ocr.*, ai.*, backup.plan, migration.run) = Batch 7 (#56); the 11 adapter-blocked routes stay BLOCKED_NOT_CONNECTED.
 
-## Batch 7 (Issue #56) — reports, import, documents, OCR review, rule-based drafts, backup plan, migration
-Synthetic data only. Everything below is inside the original PR #10 four-tab shell (More → tiles), RTL, 320–414 px, 44 px targets, original palette. **No real data, no external provider, no deployment.**
+## Batch 7 (Issue #56) — import, documents, OCR review, backup plan (after manager QA gate of PR #60)
+Synthetic data only; original PR #10 shell, RTL, 320–414 px, 44 px. No `src/` change. **Manager P0 findings applied:**
+- **P0-1 reports:** the per-soldier report builder was removed. `reports.build` is **POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN** (owner charter 2026-11-20: group-level only, N≥5). The course report is the group-safe `reports.preview`; the E2E proves no soldier names/personal numbers in the DOM, an N=3 course shows suppressed KPIs only, and the UI never calls `reports.build`.
+- **P0-2 AI drafts:** `ai.draft/drafts/reviewDraft` generate and approve an individual per-soldier assessment → **POLICY_BLOCKED** (tile, form and dialogs removed). Group-only insights remain in `analytics.insights`.
+- **P0-3 migration:** `migration.run` is no longer callable from the UI (info dialog only, zero API calls, store unchanged — asserted). It stays BLOCKED; it needs an approved private server and a separately reviewed migration plan.
 
-**Result (regenerated 174-route ledger):** PASS_SYNTH_E2E **160** (UI-origin API success; includes automatic render calls — not click proof) · **interaction_verified 159** (successful UI-origin call ≤1.5 s after a trusted browser input event; machine-correlated, not semantic) · POLICY_BLOCKED 1 (`dash.trends`) · BLOCKED_NOT_CONNECTED **13** (the previous 11 + `backup.plan` + `migration.run`) · NOT_IMPLEMENTED **0** · API_ONLY 0 · IMPLEMENTED_NOT_E2E 0 (sum 174). `ocr.start` stays BLOCKED even though the synthetic call returns `no_provider` successfully (forced in the ledger: a result with no extraction is not completion).
+**Ledger (regenerated, gate green):** PASS_SYNTH_E2E **156** (UI-origin API success, includes render calls) · interaction_verified **155** (trusted-input gesture correlation; machine proof, not semantic) · POLICY_BLOCKED **5** (`dash.trends`, `reports.build`, `ai.draft`, `ai.drafts`, `ai.reviewDraft`) · BLOCKED_NOT_CONNECTED **13** (11 earlier + `backup.plan`, `migration.run`; `ocr.start` forced blocked) · NOT_IMPLEMENTED 0 (sum 174).
 
-| Workflow (tile) | Routes | Behaviour |
+| Workflow | Routes | Behaviour |
 |---|---|---|
-| Reports (דוחות וייצוא) | `reports.build` | pick sections/dates (+ inactive soldiers for admin); report is rendered on screen only (accessible tables); no private (מ״פ) content; export stays BLOCKED (reports.generate) |
-| Import (ייבוא ומסמכים, admin) | `import.start/preview/decide/commit/cancel` | CSV paste/file read **in the browser** → column mapping → server dry-run (nothing written) → counts + per-row issues, 100-row pager → per-row decision for conflicts → explicit confirm checkbox → commit; cancel needs a reason; re-import = duplicates (idempotent); xlsx not supported (honest note) |
-| Documents (מסמכים וקישורים) | `docs.requestLink/reviewLink/pendingLinks` (+ blocked `docs.upload/download`) | commander/admin request a link to a record of the same soldier; admin approves, or rejects with a note; Drive ids never rendered |
-| Qualification evidence (inside הסמכות assignment dialog) | `docs.attachEvidence/docs.evidence` | attach an own/admin document of the same soldier; duplicate refused server-side |
-| OCR (OCR לבדיקה, admin) | `ocr.rows/editRow/approveRow/rejectRow` (+ blocked `ocr.start`) | start shows BLOCKED with the exact action; extracted rows are drafts: unknown identity needs a chosen soldier, uncertain fields need explicit confirm (only fields the reviewer changed are sent, so untouched uncertain fields stay uncertain), approve creates a record once, reject needs a reason |
-| Drafts (עוזר וטיוטות סיכום) | `ai.draft/drafts/reviewDraft` | rule-based template over system facts only (no external model; the E2E asserts zero external network requests); a draft is **not official** until an authorized explicit admin approval; commander sees only own drafts, cannot approve |
-| Backup / migration (גיבוי ובדיקות מערכת, admin) | `backup.plan`, `migration.run` | plan is read-only and BLOCKED without the private backup file; migration is confirm-gated and refuses to start without private backup storage; both show the exact remedial action |
+| Import (admin) | `import.start/preview/decide/commit/cancel` | CSV parsed in the browser → mapping → server dry-run (nothing written) → counts/issues, 100-row pager → per-row decisions → explicit confirm → commit; cancel needs a reason; re-import is duplicate-safe; xlsx honestly unsupported |
+| Documents | `docs.requestLink/reviewLink/pendingLinks` (+ blocked upload/download) | request a link to a record of the same soldier; admin review (reject needs a note); Drive ids never rendered |
+| Qualification evidence | `docs.attachEvidence/evidence` | inside the assignment dialog |
+| OCR review (admin) | `ocr.rows/editRow/approveRow/rejectRow` (+ blocked `ocr.start`) | drafts only; identity must be chosen; uncertain fields need explicit confirm (only changed fields sent); `ocr.start` shows BLOCKED + action |
+| Backup plan (admin) | `backup.plan` | read-only; BLOCKED without the private backup file |
 
-**Synthetic fixtures (honest disclosure):** file upload and OCR providers are not connected, so the E2E injects `Documents`, `OCRJobs/OCRExtractedRows`, `AuditLog(OCR_START)` and `BackupJobs` rows into the browser store (the same technique as Batch 6). This proves the review/link/approval logic and role/scope behaviour, **not** a real file, OCR or Drive pipeline.
-**Bugs found while building:** reconstructed OCR edit would have cleared "uncertain" flags for untouched fields (fixed: send only changed fields); raw enums (`committed`, `soldiers`, field keys) leaked into lists (localized).
-**Open items:** `migration.run` has no dry-run route in the server contract (it refuses to run without a successful pre-migration backup); a true dry-run/plan route needs an owner/security-approved server change. No backend changes were made in this batch (`src/` manifest unchanged).
-Tests: `scripts/e2e_native_batch7.js` (23 click-driven checks: roles, cross-role denial, double-submit, cancel/retry, reload persistence, keyboard, 320/360/390/414 RTL, privacy storage/network).
+**Fixtures (honest):** upload/OCR/backup providers are not connected → Documents, OCR rows, AuditLog(OCR_START), BackupJobs are injected in the synthetic browser store. This proves link/approval logic and role/scope behaviour, **not** a real file/OCR/Drive pipeline. Secured private TEST E2E: **NOT_RUN** (no deployed secure backend).
+Tests: `scripts/e2e_native_batch7.js` 22 click-driven checks (roles, cross-role denial, double-submit, cancel/retry, reload, keyboard, 320/360/390/414 RTL, privacy storage/network).

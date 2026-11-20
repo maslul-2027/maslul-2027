@@ -286,7 +286,6 @@
   });
 
   /* ============ Batch 7 (#56): reports builder, CSV import wizard, documents/links/evidence, OCR review, rule-based drafts, backup plan, migration ============ */
-  var RSEC = [['soldiers', 'חיילים'], ['fitness', 'כש״ג'], ['marksmanship', 'קליעה'], ['navigation', 'ניווטים'], ['exams', 'מבחנים עיוניים'], ['attendance', 'נוכחות'], ['marches', 'מסעות'], ['qualifications', 'הכשרות והסמכות'], ['readiness', 'כשירות'], ['events', 'אירועים והישגים']];
   function b7table(label, header, rows, cap) {
     var t = h('table', { class: 'b7t', 'aria-label': label }), hr = h('tr'); header.forEach(function (x) { hr.append(h('th', { scope: 'col', text: x })); }); t.append(h('thead', {}, [hr]));
     var tb = h('tbody'); rows.slice(0, cap || 200).forEach(function (r) { var tr = h('tr'); r.forEach(function (c) { tr.append(h('td', { text: c === null || c === undefined || c === '' ? '—' : (c === true ? 'כן' : c === false ? 'לא' : String(c)) })); }); tb.append(tr); }); t.append(tb);
@@ -302,25 +301,7 @@
     dialog(title, [field(label || 'סיבה (חובה)', rs)], function (msg) { if (!rs.value.trim()) { msg.textContent = 'סיבה חובה.'; msg.className = 'msg err'; return false; } return run(rs.value.trim()).then(function (z) { if (!z.ok) { msg.textContent = msgOf(z); msg.className = 'msg err'; return false; } }); });
   }
 
-  /* ---- reports.build (course scope is enforced on the server; nothing is stored in the browser) ---- */
-  D.reports.lists.unshift({ h: 'בניית דוח (על המסך בלבד)', m: 'whoAmI', a: function () { return {}; }, view: function (_d, box) {
-    var checks = RSEC.map(function (s) { var c = h('input', { type: 'checkbox', id: 'rb_' + s[0], value: s[0], style: 'width:22px;min-height:22px' }); return h('div', { style: 'display:flex;gap:10px;align-items:center;min-height:44px' }, [c, h('label', { for: 'rb_' + s[0], text: s[1], style: 'margin:0;font-weight:400' })]); });
-    var from = h('input', { id: 'rbFrom', type: 'date' }), to = h('input', { id: 'rbTo', type: 'date' }), inact = h('input', { id: 'rbInact', type: 'checkbox', style: 'width:auto;min-height:24px' }), out = h('div', { id: 'rbOut', 'aria-live': 'polite' }), go = bAct('בניית תצוגה', 'primary', 'rbGo', build), clr = bAct('ניקוי מהמסך', 'secondary', 'rbClear', function () { out.replaceChildren(); });
-    box.append(h('p', { class: 'muted', text: 'הדוח כולל רק נתונים שמותר לך לראות. מידע פרטי (מ״פ) אינו נכלל כאן. ייצוא לקובץ דורש אחסון מחובר (חסום בהדגמה).' }), h('fieldset', { style: 'border:0;padding:0;margin:0' }, [h('legend', { text: 'פרקים בדוח' })].concat(checks)), field('מתאריך', from), field('עד תאריך', to));
-    if (isAdmin()) box.append(h('div', { style: 'display:flex;gap:10px;align-items:center;min-height:44px' }, [inact, h('label', { for: 'rbInact', text: 'כולל חיילים לא פעילים (מנהל)', style: 'margin:0;font-weight:400' })]));
-    box.append(h('div', { class: 'btns' }, [go, clr]), out);
-    function build() {
-      var secs = RSEC.map(function (s) { return s[0]; }).filter(function (k) { return document.getElementById('rb_' + k).checked; });
-      if (!secs.length) { out.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'בחרו לפחות פרק אחד לדוח.' })); return; }
-      var spec = { sections: secs }; if (from.value) spec.from = from.value; if (to.value) spec.to = to.value; if (isAdmin() && inact.checked) spec.include_inactive = true;
-      busy(go, true, 'בניית תצוגה'); out.replaceChildren(skeleton(2));
-      api('reports.build', { courseId: S.course.id, spec: spec }).then(function (r) {
-        busy(go, false, 'בניית תצוגה'); out.replaceChildren(); if (!r.ok) { out.append(errBox(r)); return; }
-        out.append(h('p', { class: 'muted', text: r.data.title + ' · נוצר ' + fmtD(r.data.generated_at) + ' · מכיל נתוני חיילים — לא לשיתוף ולא לשמירה בציבור' }));
-        (r.data.tables || []).forEach(function (t) { out.append(h('h3', { text: t.name + ' (' + t.rows.length + ')', style: 'margin:14px 0 4px;font-size:15px' }), t.rows.length ? b7table(t.name, t.header, t.rows, 200) : emptyBox('אין שורות בפרק זה.')); if (t.rows.length > 200) out.append(h('p', { class: 'muted', text: 'מוצגות 200 השורות הראשונות. הדוח המלא דורש ייצוא (חסום בהדגמה).' })); });
-      });
-    }
-  } });
+  /* reports.build is intentionally NOT exposed: it returns per-soldier rows (names, personal numbers, individual scores). Owner charter 2026-11-20: analytics and tabular reporting are group-level only (N>=5 + complementary suppression). The group-safe course report stays reports.preview (above); operational per-soldier records live on the soldier card. */
 
   /* ---- CSV import wizard: parse in the browser -> map columns -> server dry-run -> per-row decisions -> explicit confirm -> commit / cancel ---- */
   var IMT = { soldiers: ['חיילים', [['personal_number', 'מספר אישי', 1], ['full_name', 'שם מלא', 1], ['gender', 'מגדר', 1], ['department', 'מחלקה', 1], ['team', 'צוות', 1], ['pakal', 'פק״ל'], ['enlistment_date', 'תאריך גיוס']]],
@@ -458,22 +439,13 @@
       { h: 'משימות OCR', m: 'audit.list', a: function () { return { courseId: S.course.id, action: 'OCR_START' }; }, role: 'admin', empty: 'לא הופעלה משימת OCR.', row: function (a) { return ['משימה ' + String(a.record_id || '').slice(-6), fmtD(a.timestamp) + ' · ' + (a.actor_email || '')]; }, click: function (a) { ocrJobDialog(a.record_id); } },
       { h: 'OCR', m: 'whoAmI', a: function () { return {}; }, role: 'cmd', view: function (_d, box) { box.append(emptyBox('בדיקת OCR — למנהל בלבד.')); } }] };
 
-  /* ---- rule-based drafts: never official until an authorized explicit approval; no external generative model ---- */
-  var AIST = { draft: 'טיוטה — לא רשמית', approved: 'אושרה (רשמית)', rejected: 'נדחתה' };
-  D.ai = { title: 'עוזר וטיוטות סיכום', actions: [],
-    forms: [{ t: 'טיוטת סיכום לחייל', m: 'ai.draft', fields: function () { return [{ n: 'soldierId', l: 'חייל', t: 'soldier', req: 1 }]; }, build: function (x) { return { courseId: S.course.id, soldierId: x.soldierId }; }, raw: 1 }],
-    lists: [{ h: 'טיוטות (מבוססות כללים על נתוני המערכת בלבד — אין מודל חיצוני)', m: 'ai.drafts', a: CID, empty: 'אין טיוטות. אפשר ליצור טיוטת סיכום לחייל.', row: function (d) { return [(sname(d.soldier_id) || 'חייל') + ' · ' + fmtD(d.created_at), AIST[d.status] || d.status, d.status === 'draft' ? status('לא רשמי', true) : null]; },
-      click: function (d, reload) { var nodes = [h('p', { class: 'muted', text: AIST[d.status] || d.status }), h('pre', { id: 'aiText', style: 'white-space:pre-wrap;font:inherit;background:#f4f7f8;border-radius:12px;padding:10px' , text: d.content })];
-        if (d.status === 'draft' && isAdmin()) { var dec = h('select', { id: 'aiDec' }, [h('option', { value: 'approve', text: 'אישור (הופך לרשמית)' }), h('option', { value: 'reject', text: 'דחייה (נדרשת הערה)' })]), nt = h('textarea', { id: 'aiNote' }); nodes.push(field('החלטה', dec), field('הערה', nt));
-          dialog('טיוטת סיכום — ' + (sname(d.soldier_id) || ''), nodes, function (msg) { if (dec.value === 'reject' && !nt.value.trim()) { msg.textContent = 'דחייה דורשת הערה.'; msg.className = 'msg err'; return false; } return api('ai.reviewDraft', { id: d.id, decision: dec.value, note: nt.value.trim() }).then(function (r) { if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return false; } toast(dec.value === 'approve' ? 'הטיוטה אושרה' : 'הטיוטה נדחתה'); if (reload) reload(); }); }, 'שמירת החלטה'); }
-        else { if (d.status === 'draft') nodes.push(h('p', { class: 'muted', text: 'אישור טיוטה — למנהל בלבד. עד אז הטיוטה אינה רשמית.' })); dialog('טיוטת סיכום — ' + (sname(d.soldier_id) || ''), nodes, function () { }, 'סגירה'); } } }] };
+  /* ai.draft / ai.drafts / ai.reviewDraft are intentionally NOT exposed: they generate and approve an individual per-soldier assessment, which the owner charter (2026-11-20) excludes from analytics. Group-only, N>=5 explainable insight stays in analytics.insights (תמונת מצב קבוצתית). */
 
   /* ---- backup restore plan (read-only) + migration (needs a private backup first) ---- */
   (function () { var bl = D.backup.lists[0]; bl.role = 'admin'; bl.click = function (b) { var out = h('div', { id: 'bkOut', 'aria-live': 'polite' }, [skeleton(1)]);
     api('backup.plan', { id: b.id }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(blockedBox(r, 'חיבור אחסון הגיבויים הפרטי (קריאת תמונת הגיבוי) — טרם אושר.', true)); return; } out.append(h('p', { class: 'muted', text: 'תכנית שחזור — קריאה בלבד, לא משנה כלום. טבלאות שלא ישוחזרו: ' + (r.data.excluded || []).join(', ') + (r.data.newer_than_app ? ' · הגיבוי חדש מגרסת הקוד!' : '') })); out.append(b7table('תכנית שחזור', ['טבלה', 'כעת', 'בגיבוי', 'שינוי'], r.data.tables.map(function (t) { return [t.table, t.now, t.backup, t.change]; }), 80)); });
     dialog('תכנית שחזור — ' + fmtD(b.created_at), [out], function () { }, 'סגירה'); };
-    D.backup.actions.push({ t: 'מיגרציית סכמה (דורשת גיבוי פרטי)', admin: 1, ok: '', run: function () { return new Promise(function (res) { var cf = h('input', { type: 'checkbox', id: 'mgOk', style: 'width:22px;min-height:22px' }), out = h('div', { id: 'mgOut', 'aria-live': 'polite' });
-      dialog('מיגרציית סכמה', [h('p', { text: 'המיגרציה אידמפוטנטית, אינה מוחקת ואינה משנה ערכים. לפני כל שינוי נוצר גיבוי אוטומטי; אם הגיבוי נכשל — המיגרציה נעצרת.' }), h('div', { style: 'display:flex;gap:10px;align-items:center;min-height:44px' }, [cf, h('label', { for: 'mgOk', text: 'אני מאשר/ת להריץ מיגרציה', style: 'margin:0;font-weight:400' })]), out], function (msg) { if (!cf.checked) { msg.textContent = 'יש לאשר במפורש.'; msg.className = 'msg err'; return false; }
-        return api('migration.run', {}).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(blockedBox(r, 'חיבור אחסון גיבויים פרטי (הגיבוי האוטומטי לפני מיגרציה) — טרם אושר.', true)); return false; } kv(out, [['סכמה', r.data.from_schema + ' ← ' + r.data.to_schema], ['גיבוי', r.data.backup_id], ['טבלאות חדשות', (r.data.added_tables || []).length], ['שורות נשארו ללא שינוי', YES(r.data.rows_per_table_unchanged)]]); toast('המיגרציה הושלמה'); return false; }); }, 'הרצת מיגרציה', true);
+    D.backup.actions.push({ t: 'מיגרציית סכמה — מידע', admin: 1, run: function () { return new Promise(function (res) {
+      dialog('מיגרציית סכמה — לא זמינה בגרסה זו', [h('p', { id: 'mgInfo', text: 'הרצת מיגרציה משנה טבלאות ועמודות ולכן אינה מופעלת מהממשק בגרסה זו. היא תתאפשר רק בשרת פרטי מאושר, לפי תכנית מיגרציה שנבדקה בנפרד (אבטחת מידע + בעלים). כאן לא מתבצעת שום קריאה לשרת.' }), h('p', { class: 'muted', text: 'לבדיקה לקריאה בלבד: תכנית שחזור מגיבוי (לחיצה על גיבוי ברשימה) ובדיקת מוכנות (Preflight).' })], function () { }, 'סגירה');
       res({ ok: true, silent: true, data: {} }); }); } });
   })();
