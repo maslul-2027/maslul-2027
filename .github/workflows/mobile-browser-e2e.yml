@@ -19,6 +19,7 @@ on:
       - 'scripts/e2e_native_card.js'
       - 'scripts/e2e_native_batch5.js'
       - 'scripts/e2e_native_ux.js'
+      - 'scripts/e2e_native_motion.js'
       - 'scripts/e2e_native_qa.js'
       - 'scripts/e2e_native_batch6.js'
       - 'scripts/e2e_native_batch7.js'
@@ -73,6 +74,7 @@ jobs:
           node scripts/build_native_app.js --server
           SHOTS_DIR=artifacts/secure_screens node scripts/e2e_secure_browser.js
       - run: node scripts/e2e_native_ux.js preview artifacts/ux_screens
+      - run: node scripts/e2e_native_motion.js preview
       - name: 174-route evidence ledger (generated from the browser runs)
         run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Enforce truthful route ledger counts and native-screen evidence
