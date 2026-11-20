@@ -14,7 +14,7 @@ const run = s => { const r = spawnSync('node', [path.join(__dirname, s + '.js')]
   const sk = /^SKIP[^\n]*/m.exec(out), m = /TOTAL pass=(\d+) fail=(\d+)/.exec(out);
   if (sk && !m) return UI.includes(s) && wantUi ? { s, state: 'FAIL', pass: 0, fail: 0, why: 'UI was requested (--ui) but the suite could not run: ' + sk[0].replace(/^SKIP\s*/, '') } : { s, state: 'SKIP', pass: 0, fail: 0, why: sk[0].replace(/^SKIP\s*/, '') };
   if (!m) return { s, state: 'FAIL', pass: 0, fail: 1, why: r.error ? String(r.error.message) : 'no result line (crash or timeout), exit ' + r.status };
-  const p = +m[1], f = +m[2]; const bt = /BY TYPE: (\{[^\n]*\})/.exec(out); let types = null; try { types = bt ? JSON.parse(bt[1]) : null; } catch (e) {}
+  const p = +m[1], f = +m[2]; if (f || r.status) console.log('--- ' + s + ': failing lines ---\n' + out.split('\n').filter(l => /^(FAIL|not ok|\s*✗|AssertionError|Error)/.test(l.trim())).slice(0, 12).map(l => l.slice(0, 300)).join('\n') + '\n---'); const bt = /BY TYPE: (\{[^\n]*\})/.exec(out); let types = null; try { types = bt ? JSON.parse(bt[1]) : null; } catch (e) {}
   if (!f && !r.status && p === 0) return { s, state: 'FAIL', pass: 0, fail: 0, why: 'suite ran but produced 0 tests (a suite that proves nothing is a failure)' };
   return { s, types, state: f || r.status ? 'FAIL' : 'PASS', pass: p, fail: f, why: f ? 'failed tests' : (r.status ? 'non-zero exit with no failed test' : '') }; };
 NODE.filter(exists).forEach(s => rows.push(run(s)));
