@@ -1,0 +1,47 @@
+name: Deploy synthetic PWA preview to GitHub Pages
+on:
+  push:
+    branches: [main]
+    paths: ['preview/**', 'scripts/build_course_preview.cjs', '.github/workflows/preview-pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages-preview
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: c9bc782df72fe1ab91016c003b65f2e3d82a58e8
+          path: legacy-source
+          sparse-checkout: |
+            /src/
+            /tests/harness.js
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - run: node scripts/build_course_preview.cjs legacy-source
+      - name: Assert synthetic-only preview and no backend secrets
+        run: |
+          test -f preview/index.html
+          test -f preview/manifest.webmanifest
+          ! grep -E -i '(AKfycb[A-Za-z0-9_-]+|script.google.com/macros|BEGIN PRIVATE KEY|client_secret)' preview/index.html preview/course.html preview/course-engine.js
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: preview
+          name: github-pages-${{ github.run_attempt }}
+      - name: Allow artifact metadata to propagate
+        run: sleep 8
+      - id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}

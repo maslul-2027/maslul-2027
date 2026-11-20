@@ -1,0 +1,11 @@
+:root {
+  --maslul-bg: #f6f8f9;
+  --maslul-surface: #fff;
+  --maslul-ink: #161b20;
+  --maslul-muted: #56646c;
+  --maslul-line: #e2e7e9;
+  --maslul-accent: #006c70;
+  --maslul-soft: #e5f4f3;
+  --maslul-radius: 17px;
+  --maslul-font: system-ui, -apple-system, Arial, sans-serif;
+}

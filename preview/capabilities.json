@@ -1,0 +1,258 @@
+{
+  "schema": 1,
+  "disclaimer": "מיפוי יכולות בקוד המקורי בלבד. אינן מחוברות לאפליקציית ההדגמה.",
+  "groups": {
+    "courses": [
+      "courses.list",
+      "courses.org",
+      "courses.create",
+      "courses.archive",
+      "courses.reopen",
+      "courses.rename"
+    ],
+    "users": [
+      "users.list",
+      "users.add",
+      "users.set"
+    ],
+    "soldiers": [
+      "soldiers.list",
+      "soldiers.card",
+      "soldiers.private",
+      "soldiers.create",
+      "soldiers.update",
+      "soldiers.reassign",
+      "soldiers.setActive",
+      "soldiers.cancel",
+      "soldiers.restore"
+    ],
+    "emergency": [
+      "emergency.get",
+      "emergency.set",
+      "emergency.orphans"
+    ],
+    "nav": [
+      "nav.create",
+      "nav.list",
+      "nav.groups",
+      "nav.summary"
+    ],
+    "navtypes": [
+      "navtypes.list",
+      "navtypes.create",
+      "navtypes.rename",
+      "navtypes.setActive"
+    ],
+    "assignments": [
+      "assignments.list",
+      "assignments.mine",
+      "assignments.create",
+      "assignments.update",
+      "assignments.setActive"
+    ],
+    "record": [
+      "record.edit",
+      "record.cancel",
+      "record.restore",
+      "record.history"
+    ],
+    "correction": [
+      "correction.request",
+      "correction.list",
+      "correction.review"
+    ],
+    "settings": [
+      "settings.list",
+      "settings.set"
+    ],
+    "fitness": [
+      "fitness.types",
+      "fitness.typeCreate",
+      "fitness.typeWeights",
+      "fitness.typeActive",
+      "fitness.typeVariant",
+      "fitness.draftSource",
+      "fitness.versions",
+      "fitness.importDraft",
+      "fitness.editRow",
+      "fitness.addTable",
+      "fitness.approve",
+      "fitness.create",
+      "fitness.list",
+      "fitness.summary",
+      "fitness.completion",
+      "fitness.quality",
+      "fitness.recompute"
+    ],
+    "mk": [
+      "mk.create",
+      "mk.list",
+      "mk.summary"
+    ],
+    "exams": [
+      "exams.defs",
+      "exams.defCreate",
+      "exams.defPass",
+      "exams.attempt",
+      "exams.attempts",
+      "exams.meetings",
+      "exams.summary"
+    ],
+    "acttypes": [
+      "acttypes.list",
+      "acttypes.create",
+      "acttypes.rename",
+      "acttypes.setActive"
+    ],
+    "attendance": [
+      "attendance.create",
+      "attendance.events",
+      "attendance.roll",
+      "attendance.summary"
+    ],
+    "marches": [
+      "marches.create",
+      "marches.list",
+      "marches.summary"
+    ],
+    "readiness": [
+      "readiness.assess",
+      "readiness.list",
+      "readiness.summary",
+      "readiness.notEntered"
+    ],
+    "events": [
+      "events.create",
+      "events.list"
+    ],
+    "qual": [
+      "qual.define",
+      "qual.list",
+      "qual.setActive",
+      "qual.postpone",
+      "qual.dueHistory",
+      "qual.assignments",
+      "qual.update",
+      "qual.requestExclusion",
+      "qual.reviewExclusion",
+      "qual.summary"
+    ],
+    "assess": [
+      "assess.add",
+      "assess.list"
+    ],
+    "notes": [
+      "notes.save",
+      "notes.list"
+    ],
+    "followups": [
+      "followups.create",
+      "followups.update",
+      "followups.list"
+    ],
+    "favorites": [
+      "favorites.toggle",
+      "favorites.list"
+    ],
+    "snote": [
+      "snote.add",
+      "snote.list",
+      "snote.cancel"
+    ],
+    "alerts": [
+      "alerts.refresh",
+      "alerts.list",
+      "alerts.handle",
+      "alerts.counts"
+    ],
+    "forms": [
+      "forms.generalLink",
+      "forms.createLink",
+      "forms.list",
+      "forms.review"
+    ],
+    "dash": [
+      "dash.home",
+      "dash.overview",
+      "dash.groups",
+      "dash.compareCourses",
+      "dash.trends",
+      "dash.strengthsGaps"
+    ],
+    "analytics": [
+      "analytics.insights"
+    ],
+    "reports": [
+      "reports.build",
+      "reports.preview",
+      "reports.generate",
+      "reports.fullExport",
+      "reports.download",
+      "reports.jobs"
+    ],
+    "import": [
+      "import.start",
+      "import.preview",
+      "import.decide",
+      "import.commit",
+      "import.cancel",
+      "import.jobs"
+    ],
+    "docs": [
+      "docs.upload",
+      "docs.list",
+      "docs.download",
+      "docs.requestLink",
+      "docs.reviewLink",
+      "docs.pendingLinks",
+      "docs.attachEvidence",
+      "docs.evidence"
+    ],
+    "ocr": [
+      "ocr.start",
+      "ocr.rows",
+      "ocr.editRow",
+      "ocr.approveRow",
+      "ocr.rejectRow"
+    ],
+    "ai": [
+      "ai.ask",
+      "ai.draft",
+      "ai.drafts",
+      "ai.reviewDraft"
+    ],
+    "backup": [
+      "backup.create",
+      "backup.list",
+      "backup.verify",
+      "backup.plan",
+      "backup.restore",
+      "backup.recover",
+      "backup.prune"
+    ],
+    "preflight": [
+      "preflight.run",
+      "preflight.last"
+    ],
+    "migration": [
+      "migration.run"
+    ],
+    "meetings": [
+      "meetings.list",
+      "meetings.get",
+      "meetings.options",
+      "meetings.save",
+      "meetings.integrity",
+      "meetings.auditRepair"
+    ],
+    "tasks": [
+      "tasks.list",
+      "tasks.get",
+      "tasks.setStatus",
+      "tasks.indicators"
+    ],
+    "audit": [
+      "audit.list"
+    ]
+  }
+}
