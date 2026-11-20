@@ -4,7 +4,7 @@ Everything below is unverified because it can only be checked on the real Apps S
 
 ## A. `Setup.gs` — the two live-only synthetic seed helpers
 - The repository's `src/Setup.gs` (from `c9bc782`) defines only `setupDatabase`, `createFirstCourse`, `installDailyTrigger`, `migrateToV1`.
-- The two live-only synthetic helpers (the pilot-course and soldier-seeding helpers named in issue #3) are **not in the repo and were never provided**. Their names, signatures, what they write and whether they are idempotent are **unknown**; nothing was reconstructed.
+- The two live-only synthetic helpers are named in the owner charter (`docs/OWNER_CURRENT_CHARTER_2026-11-20.md`): `createSyntheticPilotCourseOnce()` and `seedSyntheticSoldiersBatch()`. They are **not in the repo and their code was never provided**; signatures, what they write and idempotency are **unknown**; nothing was reconstructed. They must not be overwritten by `clasp push`.
 - Needed: an authorised export of the live TEST project's `Setup.gs`; then diff against `src/Setup.gs`, check they write only synthetic rows, check they do not touch permissions/OAuth scopes, and add them (with a Node test against the fake store) before any `clasp push` that would overwrite them.
 
 ## B. Behaviour that Node/Chromium cannot prove

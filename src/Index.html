@@ -78,7 +78,7 @@ label.inl{display:inline-flex;align-items:center;margin:0;min-height:44px;gap:4p
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}#side{transition:none!important}}
 /* UX sprint 1: persistent context line, global network progress bar, small-phone (360px) hardening */
-@media(max-width:900px){#bnav:not([hidden]){display:flex;position:fixed;inset-inline:0;bottom:0;z-index:50;background:var(--surface,#fff);border-top:1px solid var(--border,#ddd);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));gap:4px}#bnav button{flex:1;min-width:0;min-height:48px;padding:4px 2px;font-size:12px;line-height:1.15;background:transparent;color:var(--text,#111);border:0;border-radius:10px;overflow-wrap:anywhere}#bnav button[aria-current=true]{background:var(--accent,#C62828);color:#fff;font-weight:700}body.has-bnav{padding-bottom:64px}body.nav-open #bnav{display:none!important}}
+@media(max-width:900px){#bnav:not([hidden]){display:flex;position:fixed;inset-inline:0;bottom:0;z-index:50;background:var(--surface,#fff);border-top:1px solid var(--border,#ddd);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));gap:4px}#bnav button.tab{flex:1;min-width:0;min-height:48px;padding:4px 2px;font-size:12px;line-height:1.15;background:transparent;color:var(--text,#111);border:0;border-radius:10px;overflow-wrap:anywhere}#bnav button.tab[aria-current=true]{background:var(--accent,#C62828);color:#fff;font-weight:700}body.has-bnav{padding-bottom:64px}body.nav-open #bnav{display:none!important}}
 @media(min-width:901px){#bnav{display:none!important}}
 header.top p.ctx{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}header.top p.ctx:empty{display:none}
 #netbar{position:fixed;top:0;inset-inline:0;height:3px;z-index:60;background:linear-gradient(90deg,var(--accent),#14b8a6);transform-origin:right;transform:scaleX(0);opacity:0;pointer-events:none;transition:transform .4s ease,opacity .2s ease}
@@ -121,7 +121,7 @@ body.nav-open{overflow:hidden}
 </head>
 <body>
 <header class="top"><button id="menuBtn" type="button" aria-label="פתיחת תפריט ניווט" aria-expanded="false" aria-controls="side">☰</button><div class="brand"><h1>מערכת מעקב קורס</h1><p id="who">טוען…</p><p id="ctx" class="ctx" aria-live="polite"></p></div></header>
-<div id="netbar" aria-hidden="true"></div><div id="offline" class="notice hide" role="status">אין חיבור לאינטרנט — פעולות לא יישלחו עד לחזרת החיבור.</div><nav id="bnav" aria-label="ניווט מהיר" hidden></nav>
+<div id="netbar" aria-hidden="true"></div><div id="offline" class="notice hide" role="status">אין חיבור לאינטרנט — פעולות לא יישלחו עד לחזרת החיבור.</div><nav id="bnav" aria-label="ניווט ראשי" hidden><button type="button" class="tab" data-area="home">בית</button><button type="button" class="tab" data-area="sol">חיילים</button><button type="button" class="tab" data-area="do">הזנה ומעקב</button><button type="button" class="tab" data-area="adm">ניהול</button></nav>
 <div class="shell">
 <aside id="side" aria-label="ניווט ראשי"><h2>תחומי המערכת</h2><nav id="grps" class="bar grps" aria-label="תחומי המערכת"></nav></aside>
 <div id="scrim" aria-hidden="true"></div>
@@ -167,12 +167,16 @@ function teamsOf(dep){return S.org.teams.filter(function(t){return (!dep||t.depa
 
 /* UX sprint 1: persistent context (selected course + current screen) in the sticky header, and an offline notice. Read-only DOM observers; no data is touched. */
 (function(){var bn=$('bnav'),g=$('grps');if(!bn||!g)return;
-function build(){var bs=[].slice.call(g.querySelectorAll('button[id^=grp_]'));if(!bs.length){bn.hidden=true;document.body.classList.remove('has-bnav');return;}
- var cur=bs.filter(function(b){return b.getAttribute('aria-current')==='true'||b.classList.contains('on');})[0],pick=bs.slice(0,4);if(cur&&pick.indexOf(cur)<0)pick[3]=cur;
- bn.textContent='';pick.forEach(function(b){var x=document.createElement('button');x.type='button';x.textContent=b.textContent;if(b===cur)x.setAttribute('aria-current','true');x.addEventListener('click',function(){b.click();window.scrollTo(0,0);});bn.appendChild(x);});
- if(bs.length>pick.length){var m=document.createElement('button');m.type='button';m.textContent='עוד ☰';m.addEventListener('click',function(){var mb=$('menuBtn');if(mb)mb.click();});bn.appendChild(m);}
- bn.hidden=false;document.body.classList.add('has-bnav');}
-new MutationObserver(build).observe(g,{subtree:true,childList:true,attributes:true,attributeFilter:['class','aria-current']});build();})();
+ /* Four primary areas (owner charter 2026-11-20). Every group/screen stays reachable: the area opens its screens, the existing area drawer (#menuBtn) lists everything. */
+ var AREAS={home:['dash','rep'],sol:['sol'],'do':['fit','att','mtg'],adm:['adm']},LAST={};
+ function areaOfGroup(k){for(var a in AREAS)if(AREAS[a].indexOf(k)!==-1)return a;return 'home';}
+ function curArea(){try{return areaOfGroup(groupOf(S.tab).k);}catch(e){return 'home';}}
+ function firstVisible(area){var ids=[];GROUPS.forEach(function(gr){if(AREAS[area].indexOf(gr.k)!==-1)gr.t.forEach(function(t){if(tabVisible(t))ids.push(t);});});return ids;}
+ function paint(){var ready=!!g.querySelector('button[id^=grp_]');bn.hidden=!ready;document.body.classList.toggle('has-bnav',ready);if(!ready)return;var c=curArea();
+  [].forEach.call(bn.querySelectorAll('button.tab'),function(b){var a=b.getAttribute('data-area');b.setAttribute('aria-current',a===c?'true':'false');});
+  if(S&&S.tab)LAST[c]=S.tab;}
+ [].forEach.call(bn.querySelectorAll('button.tab'),function(b){b.addEventListener('click',function(){var a=b.getAttribute('data-area'),ids=firstVisible(a);if(!ids.length){var mb=$('menuBtn');if(mb)mb.click();return;}var t=LAST[a]&&ids.indexOf(LAST[a])!==-1?LAST[a]:ids[0];if(a===curArea()&&S.tab===t){window.scrollTo(0,0);return;}showTab(t);window.scrollTo(0,0);});});
+ new MutationObserver(paint).observe(g,{subtree:true,childList:true,attributes:true,attributeFilter:['class','aria-current']});paint();})();
 function updateCtx(){var c=$('course'),o=c&&c.options&&c.options[c.selectedIndex],on=document.querySelector('#tabs .tab.on'),g=document.querySelector('#grps button[aria-current],#grps button.on'),x=$('ctx');if(!x)return;
   var parts=[];if(o&&o.value)parts.push('קורס: '+o.text);if(g&&g.textContent)parts.push(g.textContent.trim());if(on&&on.textContent&&(!g||on.textContent.trim()!==g.textContent.trim()))parts.push(on.textContent.trim());x.textContent=parts.join(' · ');}
 (function(){var ob=new MutationObserver(updateCtx);['tabs','grps','course'].forEach(function(id){var n=$(id);if(n)ob.observe(n,{subtree:true,childList:true,attributes:true});});$('course').addEventListener('change',updateCtx);

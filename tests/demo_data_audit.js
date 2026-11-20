@@ -4,7 +4,7 @@
 // OAuth scopes: ONLY the exact scope URLs declared in src/appsscript.json (e.g. https://www.googleapis.com/auth/spreadsheets, .../auth/userinfo.email) are exempt, as whole URLs. A scope URL with any suffix/prefix/query/path, another googleapis.com URL, an http:// variant or a look-alike host is still a finding.
 // Paths are normalised to '/' before any file-scoped allowance is matched (Windows reports '\' separators). It is a static scan: it proves the test CODE contains no real data / Google access; it does not prove anything about a real deployment.
 const fs = require('fs'), path = require('path'); const root = path.join(__dirname, '..');
-const OK_MAIL = /@(x\.com|example\.(com|org|net)|test|invalid|localhost)$/i, OK_HOST = /^(127\.0\.0\.1|localhost|www\.w3\.org|schemas\.openxmlformats\.org|schemas\.microsoft\.com|purl\.org|www\.google\.com\/?$)/i;
+const OK_MAIL = /@(x\.com|example\.(com|org|net|test|invalid)|test|invalid|localhost)$/i, OK_HOST = /^(127\.0\.0\.1|localhost|www\.w3\.org|schemas\.openxmlformats\.org|schemas\.microsoft\.com|purl\.org|www\.google\.com\/?$)/i;
 const URL_RE = /https?:\/\/[^\s'"`)<>\\]+/gi, GOOGLE_HOST = /docs\.google\.com|drive\.google\.com|script\.google\.com|googleapis\.com|\/spreadsheets\/d\//i;
 const trimU = u => u.replace(/[.,;:]+$/, '');
 // the legitimate scopes = exactly the oauthScopes of the product manifest (read from src/appsscript.json)
