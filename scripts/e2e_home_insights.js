@@ -34,6 +34,7 @@ const srv=http.createServer((req,res)=>{
    assert.ok((await page.locator('#home-answer').innerText()).includes('לא מודל AI גנרטיבי'),'Do not misrepresent rule assistant');
    assert.deepEqual(errors,[],'No JS errors');
    if(width===390){
+    if(process.env.E2E_CALLS_OUT)fs.writeFileSync(process.env.E2E_CALLS_OUT,JSON.stringify(await page.evaluate(()=>window.appClient.calls||[])));
     await page.evaluate(()=>{
      const orig=window.appClient.api.bind(window.appClient);
      window.appClient.api=function(method,args){
