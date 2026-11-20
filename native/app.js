@@ -28,17 +28,23 @@
   function errBox(r, retry) { return h('div', {}, [h('div', { class: 'msg err', role: 'alert', text: msgOf(r) }), retry ? h('button', { class: 'secondary', type: 'button', onclick: retry, text: 'נסו שוב' }) : null]); }
   function go(route) { if (location.hash !== '#/' + route) location.hash = '#/' + route; else render(); }
   function setTab(name) { document.querySelectorAll('.tab').forEach(function (b) { if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); }
+  /* gentle scroll reveal for content BELOW the fold only (never hides what is already visible; fail-safe un-hides everything after 1.5 s; none under reduced motion) */
+  var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, rvIO = null, rvT = null;
+  function reveal() { if (REDUCED || !('IntersectionObserver' in window)) return; if (!rvIO) rvIO = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('rv-in'); rvIO.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+    [].slice.call(view.querySelectorAll('.card,.stat,.section,dl.kv')).forEach(function (el) { if (el.dataset.rv || el.getBoundingClientRect().top < innerHeight) return; el.dataset.rv = '1'; el.classList.add('rv-init'); rvIO.observe(el); });
+    clearTimeout(rvT); rvT = setTimeout(function () { [].slice.call(view.querySelectorAll('.rv-init')).forEach(function (el) { el.classList.add('rv-in'); }); }, 1500); }
+  new MutationObserver(function () { clearTimeout(reveal.t); reveal.t = setTimeout(reveal, 60); }).observe(view, { childList: true, subtree: true });
   function mount(tab, nodes, title) { view.replaceChildren.apply(view, nodes.filter(Boolean)); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); } window.scrollTo(0, 0); }
   function field(label, input, hint) { var id = input.id || (input.id = 'f' + Math.random().toString(36).slice(2, 8)); return h('div', { class: 'field' }, [h('label', { for: id, text: label }), input, hint ? h('div', { class: 'hint', text: hint }) : null]); }
   function fieldErr(f, text) { f.classList.add('err'); var e = f.querySelector('.errmsg'); if (!e) { e = h('div', { class: 'errmsg', role: 'alert' }); f.append(e); } e.textContent = text; }
   function clearErr(form) { form.querySelectorAll('.field.err').forEach(function (f) { f.classList.remove('err'); var e = f.querySelector('.errmsg'); if (e) e.remove(); }); }
   function busy(btn, on, label) { btn.disabled = on; if (label) btn.textContent = on ? 'שומר…' : label; btn.setAttribute('aria-busy', on ? 'true' : 'false'); }
   function dialog(title, bodyNodes, onOk, okLabel, danger) {
-    var d = h('dialog', { 'aria-labelledby': 'dlgT' }), f = h('form', { method: 'dialog' }), msg = h('div', { role: 'alert' });
+    var opener = document.activeElement, d = h('dialog', { 'aria-labelledby': 'dlgT' }), f = h('form', { method: 'dialog' }), msg = h('div', { role: 'alert' });
     var ok = h('button', { class: danger ? 'danger' : 'primary', type: 'submit', text: okLabel || 'אישור' }), cancel = h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { d.close(); } });
     f.append(h('h2', { id: 'dlgT', text: title }), h('div', {}, bodyNodes), msg, h('div', { class: 'btns' }, [ok, cancel])); d.append(f); document.body.append(d);
     f.addEventListener('submit', function (e) { e.preventDefault(); msg.textContent = ''; msg.className = ''; busy(ok, true); Promise.resolve(onOk(msg)).then(function (done) { if (done === false) busy(ok, false); else d.close(); }); });
-    d.addEventListener('close', function () { d.remove(); }); d.showModal(); return d;
+    d.addEventListener('close', function () { d.remove(); if (opener && opener.isConnected && typeof opener.focus === 'function') { try { opener.focus({ preventScroll: true }); } catch (e) {} } }); d.showModal(); return d;
   }
 
   /* ---------- context ---------- */
@@ -67,7 +73,7 @@
     var kp = [h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k1' }), h('small', { text: 'חניכים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k2' }), h('small', { text: 'מעקבים פתוחים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k3' }), h('small', { text: 'התראות פתוחות' })])];
     var today = h('div', { id: 'today', 'aria-busy': 'true' }, skeleton(2)), brief = h('div', { id: 'brief', 'aria-busy': 'true' }, skeleton(1)), more = h('div', { id: 'deep' }), ask = h('div', { id: 'askbox' }), upd = h('span', { class: 'count', id: 'upd', text: 'נתוני הדגמה' });
     mount('home', [
-      h('div', { class: 'hero' }, [h('small', { text: 'בוקר טוב 👋' }), h('h1', { text: 'הכול ברור. אפשר להתקדם.' }), h('p', { text: 'מסך בית שמציג את הפעולה החשובה הבאה, בלי לחפש בין עשרות תפריטים.' }), h('button', { class: 'primary', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
+      h('div', { class: 'hero' }, [h('small', { text: 'בוקר טוב 👋' }), h('h1', { text: 'הכול ברור. אפשר להתקדם.' }), h('p', { id: 'heroWhy', text: 'מסך בית שמציג את הפעולה החשובה הבאה, בלי לחפש בין עשרות תפריטים.' }), h('button', { class: 'primary', id: 'heroCta', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
       sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp),
       h('div', { class: 'section' }, [h('h2', { text: 'מה חשוב לדעת היום' }), upd]), today,
       sectionHead('תמונת מצב פיקודית', null), brief, more, ask,
@@ -86,6 +92,12 @@
       var ins = all[3], items = [], reason = '', gen = '';
       if (ins.ok) { items = ins.data.items || []; gen = ins.data.generated_at; if (ins.data.small_group) reason = 'אין עדיין מספיק נתונים לניתוח (קבוצה קטנה מ-5 — מוסתר מטעמי פרטיות).'; } else reason = ins.code === 'FORBIDDEN' ? 'אין הרשאה לתובנות.' : 'התובנות אינן זמינות כרגע. ' + msgOf(ins);
       if (gen) upd.textContent = 'עודכן ' + hhmm(gen);
+      /* ONE contextual next action (counts are the same group/role-scoped numbers shown in the tiles above; no names, no per-person data) */
+      (function () { var b = $('#heroCta'), w = $('#heroWhy'); if (!b) return; var t = null;
+        if (st.overdue > 0) t = { why: st.overdue + ' משימות באיחור דורשות טיפול.', text: 'לטיפול במשימות באיחור ←', go: 'tasks' };
+        else if (st.follow + st.tasks > 0) t = { why: 'יש ' + (st.follow + st.tasks) + ' מעקבים/משימות פתוחים.', text: 'לטיפול במעקבים הפתוחים ←', go: 'tasks' };
+        else if (st.alerts > 0) t = { why: st.alerts + ' התראות פתוחות.', text: 'לצפייה בהתראות ←', go: 'd/alerts' };
+        if (!t) return; b.textContent = t.text; b.onclick = function () { go(t.go); }; if (w) w.textContent = t.why; })();
       var by = function (k) { return items.filter(function (i) { return i.kind === k; }); };
       var cards = [];
       if (st.follow + st.tasks + st.overdue > 0) cards.push({ title: 'יש מעקבים פתוחים', text: st.follow + ' מעקבים אישיים' + (st.tasks ? ' ו-' + st.tasks + ' משימות פתוחות' : '') + (st.overdue ? ' (' + st.overdue + ' באיחור)' : '') + ' ממתינים לטיפול.', meta: 'מקור: מעקבים ומשימות · עודכן עכשיו', cta: 'למעקבים', go: 'tasks' });
