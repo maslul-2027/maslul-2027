@@ -19,6 +19,15 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout pinned original PR 10 visual reference
+        uses: actions/checkout@v4
+        with:
+          ref: a2f70692d0b6fe112cdc38a3f03d2ca799e46e36
+          path: golden-source
+          sparse-checkout: |
+            preview/index.html
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -31,8 +40,8 @@ jobs:
       - run: node scripts/e2e_native_domains.js preview
       - name: Design parity screenshots (original PR #10 vs native)
         run: |
-          git show a2f70692:preview/index.html > /tmp/pr10.html || true
-          test -s /tmp/pr10.html && node scripts/native_screenshots.js /tmp/pr10.html preview artifacts/design_parity
+          test -s golden-source/preview/index.html
+          node scripts/native_screenshots.js golden-source/preview/index.html preview artifacts/design_parity
       - uses: actions/upload-artifact@v4
         if: always()
         with:
