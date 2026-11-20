@@ -17,3 +17,10 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 [tabindex="-1"]:focus{outline:none}
 #askbox .chip{min-height:44px;padding:10px 14px}
 .back{min-height:44px}
+
+/* Batch 7: report/import tables inside the PR #10 shell (RTL, scrollable on 320–414px) */
+.b7wrap{overflow-x:auto;max-width:100%;border:1px solid #dce3e6;border-radius:13px;margin:6px 0 10px}
+.b7wrap:focus-visible{outline:3px solid #006c70;outline-offset:2px}
+.b7t{border-collapse:collapse;width:100%;font-size:13px}
+.b7t th,.b7t td{padding:8px 10px;text-align:right;border-bottom:1px solid #eef2f3;white-space:nowrap}
+.b7t th{background:#f4f7f8;font-weight:700;position:sticky;top:0}

@@ -65,3 +65,22 @@ Result (corrected after QA review of PR #59): PASS_SYNTH_E2E **142** (= routes w
 **Engine bug found and fixed:** the persisted-store id counter regex lost its backslash in the generated engine, so after a reload new records could reuse an existing `id-N` (a new course collided with the demo course and a commander gained access to it). Fixed in `scripts/build_native_app.js`; regression covered by the foreign-course test.
 
 **Not in this batch:** the 20 NOT_IMPLEMENTED routes (reports.build, import.*, docs.*, ocr.*, ai.*, backup.plan, migration.run) = Batch 7 (#56); the 11 adapter-blocked routes stay BLOCKED_NOT_CONNECTED.
+
+## Batch 7 (Issue #56) — import, documents, OCR review, backup plan (after manager QA gate of PR #60)
+Synthetic data only; original PR #10 shell, RTL, 320–414 px, 44 px. No `src/` change. **Manager P0 findings applied:**
+- **P0-1 reports:** the per-soldier report builder was removed. `reports.build` is **POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN** (owner charter 2026-11-20: group-level only, N≥5). The course report is the group-safe `reports.preview`; the E2E proves no soldier names/personal numbers in the DOM, an N=3 course shows suppressed KPIs only, and the UI never calls `reports.build`.
+- **P0-2 AI drafts:** `ai.draft/drafts/reviewDraft` generate and approve an individual per-soldier assessment → **POLICY_BLOCKED** (tile, form and dialogs removed). Group-only insights remain in `analytics.insights`.
+- **P0-3 migration:** `migration.run` is no longer callable from the UI (info dialog only, zero API calls, store unchanged — asserted). It stays BLOCKED; it needs an approved private server and a separately reviewed migration plan.
+
+**Ledger (regenerated, gate green):** PASS_SYNTH_E2E **156** (UI-origin API success, includes render calls) · interaction_verified **155** (trusted-input gesture correlation; machine proof, not semantic) · POLICY_BLOCKED **5** (`dash.trends`, `reports.build`, `ai.draft`, `ai.drafts`, `ai.reviewDraft`) · BLOCKED_NOT_CONNECTED **13** (11 earlier + `backup.plan`, `migration.run`; `ocr.start` forced blocked) · NOT_IMPLEMENTED 0 (sum 174).
+
+| Workflow | Routes | Behaviour |
+|---|---|---|
+| Import (admin) | `import.start/preview/decide/commit/cancel` | CSV parsed in the browser → mapping → server dry-run (nothing written) → counts/issues, 100-row pager → per-row decisions → explicit confirm → commit; cancel needs a reason; re-import is duplicate-safe; xlsx honestly unsupported |
+| Documents | `docs.requestLink/reviewLink/pendingLinks` (+ blocked upload/download) | request a link to a record of the same soldier; admin review (reject needs a note); Drive ids never rendered |
+| Qualification evidence | `docs.attachEvidence/evidence` | inside the assignment dialog |
+| OCR review (admin) | `ocr.rows/editRow/approveRow/rejectRow` (+ blocked `ocr.start`) | drafts only; identity must be chosen; uncertain fields need explicit confirm (only changed fields sent); `ocr.start` shows BLOCKED + action |
+| Backup plan (admin) | `backup.plan` | read-only; BLOCKED without the private backup file |
+
+**Fixtures (honest):** upload/OCR/backup providers are not connected → Documents, OCR rows, AuditLog(OCR_START), BackupJobs are injected in the synthetic browser store. This proves link/approval logic and role/scope behaviour, **not** a real file/OCR/Drive pipeline. Secured private TEST E2E: **NOT_RUN** (no deployed secure backend).
+Tests: `scripts/e2e_native_batch7.js` 22 click-driven checks (roles, cross-role denial, double-submit, cancel/retry, reload, keyboard, 320/360/390/414 RTL, privacy storage/network).

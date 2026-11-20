@@ -21,6 +21,13 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 #askbox .chip{min-height:44px;padding:10px 14px}
 .back{min-height:44px}
 
+/* Batch 7: report/import tables inside the PR #10 shell (RTL, scrollable on 320–414px) */
+.b7wrap{overflow-x:auto;max-width:100%;border:1px solid #dce3e6;border-radius:13px;margin:6px 0 10px}
+.b7wrap:focus-visible{outline:3px solid #006c70;outline-offset:2px}
+.b7t{border-collapse:collapse;width:100%;font-size:13px}
+.b7t th,.b7t td{padding:8px 10px;text-align:right;border-bottom:1px solid #eef2f3;white-space:nowrap}
+.b7t th{background:#f4f7f8;font-weight:700;position:sticky;top:0}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="tasks"><i>☑</i>מעקבים</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
@@ -286,7 +293,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
   /* ---------- MORE ---------- */
   var DOMAINS = [
     ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבים ומשימות', 'מעקבים אישיים, משימות מישיבות', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'd/alerts', true], ['🗓', 'ישיבות ומשימות', 'סיכומי ישיבה ויצירת משימות', 'd/meetings', true], ['📊', 'לוח קורס', 'סקירה קבוצתית, מחלקות/צוותים והשוואת קורסים', 'd/dash', true], ['🧠', 'תמונת מצב קבוצתית', 'מדדים ותובנות ברמת קבוצה בלבד', 'd/insights', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
-    ['דוחות ונתונים', [['📄', 'דוחות וייצוא', 'תצוגה מקדימה וייצוא למנהל', 'd/reports', true], ['📎', 'ייבוא ומסמכים', 'עבודות ייבוא, מסמכים ו-OCR', 'd/imports', true], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', 'd/forms', true], ['✔', 'תיקונים', 'בקשות תיקון ואישורן', 'd/corrections', true]]],
+    ['דוחות ונתונים', [['📄', 'דוחות וייצוא', 'תצוגה קבוצתית בלבד (N≥5); ייצוא חסום', 'd/reports', true], ['📎', 'ייבוא ומסמכים', 'ייבוא CSV עם תצוגה מקדימה, אישור וביטול', 'd/imports', true], ['📑', 'מסמכים וקישורים', 'בקשות קישור, אישורן וראיות להסמכות', 'd/docs', true], ['🔎', 'OCR לבדיקה', 'טיוטות חילוץ ואישור שורה-שורה (מנהל)', 'd/ocr', true], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', 'd/forms', true], ['✔', 'תיקונים', 'בקשות תיקון ואישורן', 'd/corrections', true]]],
     ['ניהול', [['🏫', 'קורסים', 'יצירה, ארכוב, פתיחה מחדש', null, false], ['🔐', 'משתמשים וקורסים', 'משתמשים, תפקידים וקורס חדש', 'd/admin', true], ['🧩', 'שיוך מפקדים', 'שיוך מפקד לקורס, מחלקה או צוות', 'd/assign', true], ['🏷', 'שמות מחלקות וצוותים', 'שינוי שמות יחידות', 'd/org', true], ['⚙', 'הגדרות', 'פרמטרים מקצועיים והיסטוריה', 'd/settings', true], ['💾', 'גיבוי ובדיקות מערכת', 'גיבוי, Preflight', 'd/backup', true], ['📜', 'יומן פעולות', 'Audit', 'd/audit', true], ['📈', 'סיכומי תחומים', 'סיכומים קבוצתיים לכל תחום', 'd/summaries', true], ['🧮', 'גרסאות ניקוד כש״ג', 'טיוטה, אימות ואישור טבלאות', 'd/fitadmin', true], ['📥', 'ייבוא ו-OCR', 'ייבוא קבצים וטיוטות OCR', null, false]]]
   ];
   function More() {
@@ -377,7 +384,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
   D.audit = { title: 'יומן פעולות (Audit)', forms: [], lists: [{ h: 'פעולות אחרונות', m: 'audit.list', a: function () { return {}; }, row: function (a) { return [a.action + ' · ' + (a.table_name || ''), fmtD(a.timestamp) + ' · ' + (a.actor_email || '') + (a.reason ? ' · ' + a.reason : '')]; } }] };
   D.corrections = { title: 'תיקונים ואישורם', forms: [], lists: [{ h: 'בקשות תיקון', m: 'correction.list', a: function () { return { courseId: S.course.id, status: 'pending' }; }, empty: 'אין בקשות תיקון ממתינות.', row: function (c) { return [(c.table_name || '') + ' · ' + (c.reason || ''), (c.requested_by || '') + ' · ' + (c.status || '')]; }, click: function (c, reload) { if (!isAdmin()) return; var note = h('input', { id: 'cnote' }), dec = h('select', { id: 'cdec' }, [h('option', { value: 'approve', text: 'אישור' }), h('option', { value: 'reject', text: 'דחייה' })]); dialog('בדיקת בקשת תיקון', [field('החלטה', dec), field('הערה', note)], function (msg) { return api('correction.review', { requestId: c.id, decision: dec.value, note: note.value }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('נשמר'); reload(); }); }, 'שמירה'); } }] };
   D.insights = { title: 'תמונת מצב קבוצתית', forms: [], lists: [{ h: 'תובנות (מצרפיות בלבד, N≥5)', m: 'analytics.insights', a: function () { return { courseId: S.course.id, f: {} }; }, view: function (d, box) { (d.items || []).forEach(function (i) { box.append(card(i.title, i.text, null)); }); if (!(d.items || []).length) box.append(emptyBox('אין תובנות.')); } }] };
-  D.imports = { title: 'ייבוא ומסמכים', forms: [], lists: [{ h: 'עבודות ייבוא', m: 'import.jobs', a: CID, row: function (j) { return [j.target || 'ייבוא', fmtD(j.created_at) + ' · ' + (j.status || '')]; } }, { h: 'מסמכים', m: 'docs.list', a: CID, row: function (d) { return [d.file_name || d.document_type, fmtD(d.created_at)]; }, empty: 'אין מסמכים. העלאה ו-OCR דורשים אחסון קבצים (טרם מחובר בהדגמה).' }] };
+  D.imports = { title: 'ייבוא ומסמכים', forms: [], lists: [{ h: 'עבודות ייבוא', m: 'import.jobs', a: CID, row: function (j) { return [((IMT[j.target] || [j.target])[0] || 'ייבוא') + (j.file_name ? ' · ' + j.file_name : ''), fmtD(j.created_at) + ' · ' + (IMST[j.status] || j.status || '')]; } }, { h: 'מסמכים', m: 'docs.list', a: CID, row: function (d) { return [d.file_name || d.document_type, fmtD(d.created_at)]; }, empty: 'אין מסמכים. העלאה ו-OCR דורשים אחסון קבצים (טרם מחובר בהדגמה).' }] };
 
   /* ---------- batch 3: course admin, org rename, users, commander assignments, type rename/active ---------- */
   function errMsg(msg, x) { msg.textContent = msgOf(x) + (x.code === 'CONFLICT' ? ' — רעננו את המסך וטפלו שוב.' : ''); msg.className = 'msg err'; }
@@ -428,7 +435,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
     var d = D[id]; if (!d) return More();
     var body = h('div', { 'aria-live': 'polite' }), top = [h('button', { class: 'back', type: 'button', onclick: function () { go('more'); }, text: '→ חזרה ל"עוד"' }), sectionHead(d.title, null), body];
     mount('more', top, d.title);
-    var bar = h('div', { class: 'btns', style: 'margin-top:0' }); (d.actions || []).forEach(function (ac) { if (ac.admin && !isAdmin()) return; bar.append(h('button', { class: 'secondary', type: 'button', text: ac.t, onclick: function (ev) { var btn = ev.currentTarget; busy(btn, true); ac.run().then(function (r) { busy(btn, false); if (!r.ok) { toast(msgOf(r) + (r.code === 'NOT_CONNECTED' ? '' : ''), 'err'); } else { toast(ac.ok || 'בוצע'); Domain(id); } }); } })); }); d.forms.forEach(function (f, i) { if (f.admin && !isAdmin()) return; bar.append(h('button', { class: i ? 'secondary' : 'primary', type: 'button', text: '+ ' + f.t, onclick: function () { go('d/' + id + '/' + i); } })); }); if (bar.children.length) body.append(bar);
+    var bar = h('div', { class: 'btns', style: 'margin-top:0' }); (d.actions || []).forEach(function (ac) { if (ac.admin && !isAdmin()) return; bar.append(h('button', { class: 'secondary', type: 'button', text: ac.t, onclick: function (ev) { var btn = ev.currentTarget; busy(btn, true); ac.run().then(function (r) { busy(btn, false); if (!r.ok) { toast(msgOf(r) + (r.code === 'NOT_CONNECTED' ? '' : ''), 'err'); } else if (!r.silent) { toast(ac.ok || 'בוצע'); Domain(id); } }); } })); }); d.forms.forEach(function (f, i) { if (f.admin && !isAdmin()) return; bar.append(h('button', { class: i ? 'secondary' : 'primary', type: 'button', text: '+ ' + f.t, onclick: function () { go('d/' + id + '/' + i); } })); }); if (bar.children.length) body.append(bar);
     ensureSoldiers().then(function () { d.lists.forEach(function (l) { if (l.role && (l.role === 'admin') !== isAdmin()) return; var box = h('div', {}, [h('h3', { text: l.h, style: 'margin:16px 0 4px;font-size:15px' }), skeleton(2)]); body.append(box);
       function load() { api(l.m, l.a()).then(function (r) { box.replaceChildren(h('h3', { text: l.h, style: 'margin:16px 0 4px;font-size:15px' })); if (!r.ok) { box.append(errBox(r, load)); return; } var rows = Array.isArray(r.data) ? r.data : (r.data && (r.data.rows || r.data.items)) || []; if (!l.view && !rows.length) { box.append(emptyBox(l.empty || 'אין רשומות עדיין.')); return; } if (l.view) { l.view(r.data, box, load); return; } rows.slice(0, 100).forEach(function (x) { var t = l.row(x); box.append(card(t[0], t[1], t[2] || null, l.click ? function () { l.click(x, load); } : null)); }); if (rows.length > 100) box.append(h('p', { class: 'muted', text: 'מוצגות 100 ראשונות.' })); }); }
       load(); });
@@ -610,6 +617,171 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
     l.a = function () { var x = base(); if (!(isAdmin() && SHOWC)) return x; return k === 'nav' ? Object.assign({}, x, { includeCancelled: true }) : Object.assign({}, x, { opts: Object.assign({}, x.opts || {}, { includeCancelled: true }) }); };
     l.row = function (r) { var o = row0(r); if (r && r.record_status === 'cancelled') { o = o.slice(); o[1] = (o[1] || '') + ' · בוטלה'; o[2] = status('בוטלה', true); } return o; };
   });
+
+  /* ============ Batch 7 (#56): reports builder, CSV import wizard, documents/links/evidence, OCR review, rule-based drafts, backup plan, migration ============ */
+  function b7table(label, header, rows, cap) {
+    var t = h('table', { class: 'b7t', 'aria-label': label }), hr = h('tr'); header.forEach(function (x) { hr.append(h('th', { scope: 'col', text: x })); }); t.append(h('thead', {}, [hr]));
+    var tb = h('tbody'); rows.slice(0, cap || 200).forEach(function (r) { var tr = h('tr'); r.forEach(function (c) { tr.append(h('td', { text: c === null || c === undefined || c === '' ? '—' : (c === true ? 'כן' : c === false ? 'לא' : String(c)) })); }); tb.append(tr); }); t.append(tb);
+    return h('div', { class: 'b7wrap', tabindex: '0', role: 'region', 'aria-label': label }, [t]);
+  }
+  /* an adapter that is not connected is shown as a BLOCKED state with the exact action required — never as success or a fake result */
+  function blockedBox(r, action, always) {
+    var nc = always || (r && (r.code === 'NOT_CONNECTED' || r.code === 'NOT_CONFIGURED'));
+    return h('div', { class: 'msg err', role: 'alert' }, [h('strong', { text: nc ? 'חסום — אין חיבור: ' : 'שגיאה: ' }), h('span', { text: msgOf(r) }), nc ? h('p', { class: 'muted', text: 'פעולה נדרשת: ' + action }) : null]);
+  }
+  function reasonDlg(title, run, label) {
+    var rs = h('input', { id: 'b7R' });
+    dialog(title, [field(label || 'סיבה (חובה)', rs)], function (msg) { if (!rs.value.trim()) { msg.textContent = 'סיבה חובה.'; msg.className = 'msg err'; return false; } return run(rs.value.trim()).then(function (z) { if (!z.ok) { msg.textContent = msgOf(z); msg.className = 'msg err'; return false; } }); });
+  }
+
+  /* reports.build is intentionally NOT exposed: it returns per-soldier rows (names, personal numbers, individual scores). Owner charter 2026-11-20: analytics and tabular reporting are group-level only (N>=5 + complementary suppression). The group-safe course report stays reports.preview (above); operational per-soldier records live on the soldier card. */
+
+  /* ---- CSV import wizard: parse in the browser -> map columns -> server dry-run -> per-row decisions -> explicit confirm -> commit / cancel ---- */
+  var IMT = { soldiers: ['חיילים', [['personal_number', 'מספר אישי', 1], ['full_name', 'שם מלא', 1], ['gender', 'מגדר', 1], ['department', 'מחלקה', 1], ['team', 'צוות', 1], ['pakal', 'פק״ל'], ['enlistment_date', 'תאריך גיוס']]],
+    navigation: ['ניווטים', [['personal_number', 'מספר אישי', 1], ['test_date', 'תאריך', 1], ['navigation_type', 'סוג ניווט', 1], ['distance_km', 'מרחק (ק״מ)', 1], ['plan_score', 'ציון תכנון', 1], ['debrief_score', 'ציון תחקיר', 1], ['points_completed', 'נקודות שבוצעו', 1], ['points_total', 'סה״כ נקודות', 1]]],
+    marksmanship: ['קליעה', [['personal_number', 'מספר אישי', 1], ['test_date', 'תאריך', 1], ['weapon_type', 'נשק', 1], ['distance_m', 'מרחק (מ׳)', 1], ['examiner_score', 'ציון בוחן'], ['ylm_score', 'ציון יל״מ'], ['weapon_zeroed', 'נשק מאופס (כן/לא)', 1]]],
+    fitness: ['כש״ג', [['personal_number', 'מספר אישי', 1], ['test_date', 'תאריך', 1], ['test_type', 'סוג מבחן', 1], ['pullups', 'מתח'], ['parallel_bars', 'מקבילים'], ['trap_bar', 'Trap Bar'], ['run150x2', 'ריצת 300 מ׳'], ['run3km', 'ריצת 3 ק״מ']]],
+    exams: ['מבחנים עיוניים', [['personal_number', 'מספר אישי', 1], ['exam', 'מבחן', 1], ['attempt', 'מועד', 1], ['attempt_date', 'תאריך מועד', 1], ['score', 'ציון', 1]]] };
+  var IMST = { preview: 'ממתין לאישור', committed: 'בוצע', partial: 'בוצע חלקית', cancelled: 'בוטל' }, IMRS = { ok: 'תקין', error: 'שגיאה', conflict: 'סתירה — נדרשת החלטה', duplicate: 'כפילות — לא ייווצר', committed: 'נשמר', skipped: 'דולג' };
+  function parseCsv(text) {
+    text = String(text || '').replace(/^﻿/, ''); var first = text.split(/\r?\n/)[0] || '', delim = [',', ';', '\t'].map(function (d) { return [d, first.split(d).length]; }).sort(function (a, b) { return b[1] - a[1]; })[0][0];
+    var rows = [], row = [], cell = '', q = false, i, c;
+    for (i = 0; i < text.length; i++) { c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+      else if (c === '"') q = true; else if (c === delim) { row.push(cell); cell = ''; } else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); cell = ''; if (row.some(function (x) { return x.trim() !== ''; })) rows.push(row); row = []; } else cell += c; }
+    row.push(cell); if (row.some(function (x) { return x.trim() !== ''; })) rows.push(row); return rows;
+  }
+  function importJobDialog(jobId, reload) {
+    var holder = h('div', { 'aria-live': 'polite' }), page = 0, dlg, state = { status: '' };
+    function draw() {
+      holder.replaceChildren(skeleton(2));
+      api('import.preview', { id: jobId, page: page }).then(function (r) {
+        holder.replaceChildren(); if (!r.ok) { holder.append(errBox(r, draw)); return; } var d = r.data; state.status = d.status; state.counts = d.counts;
+        var tl = (IMT[d.target] || [d.target])[0];
+        holder.append(h('p', { class: 'muted', id: 'imInfo', text: tl + ' · ' + (IMST[d.status] || d.status) + ' · ' + d.total + ' שורות' }));
+        kv(holder, Object.keys(d.counts).filter(function (k) { return d.counts[k]; }).map(function (k) { return [IMRS[k] || k, d.counts[k]]; }));
+        var fields = (IMT[d.target] || [0, []])[1].map(function (f) { return f[0]; });
+        var body = d.rows.map(function (x) { var dc = x.decision || ''; return [x.row_no, IMRS[x.status] || x.status, (x.issues || []).join(' · '), fields.slice(0, 4).map(function (f) { var v = (x.data || {})[f]; return v === undefined ? '' : v; }).filter(function (v) { return v !== ''; }).join(' | '), dc === 'update' ? 'עדכון' : dc === 'skip' ? 'דילוג' : '']; });
+        holder.append(b7table('שורות הייבוא', ['שורה', 'מצב', 'הערות', 'נתונים', 'החלטה'], body, 100));
+        d.rows.filter(function (x) { return x.status === 'conflict'; }).forEach(function (x) {
+          var sel = h('select', { id: 'imDec_' + x.row_no }, [h('option', { value: '', text: 'בחרו…' }), h('option', { value: 'update', text: 'עדכון הנתונים הקיימים' }), h('option', { value: 'skip', text: 'דילוג' })]); sel.value = x.decision || '';
+          var st = h('span', { class: 'muted', role: 'status', id: 'imDecS_' + x.row_no });
+          sel.addEventListener('change', function () { if (!sel.value) return; api('import.decide', { id: jobId, rowNo: x.row_no, decision: sel.value }).then(function (z) { st.textContent = z.ok ? 'נשמרה החלטה' : msgOf(z); }); });
+          holder.append(h('div', { class: 'card', style: 'display:block' }, [h('h3', { text: 'שורה ' + x.row_no + ' — סתירה מול חייל קיים' }), h('p', { text: x.diff ? JSON.stringify(x.diff.changes || x.diff) : (x.issues || []).join(' · ') }), field('החלטה', sel), st]));
+        });
+        if (d.total > 100) holder.append(h('div', { class: 'btns' }, [bAct('הקודם', 'secondary', 'imPrev', function () { if (page > 0) { page--; draw(); } }), bAct('הבא', 'secondary', 'imNext', function () { if ((page + 1) * 100 < d.total) { page++; draw(); } })]));
+        var open = d.status === 'preview' || d.status === 'partial';
+        if (open) { holder.append(h('div', { style: 'display:flex;gap:10px;align-items:center;min-height:44px' }, [h('input', { type: 'checkbox', id: 'imConfirm', style: 'width:22px;min-height:22px' }), h('label', { for: 'imConfirm', text: 'אני מאשר/ת לבצע את הייבוא של השורות התקינות (לא יוחלף דבר ללא החלטה)', style: 'margin:0;font-weight:400' })]), h('div', { class: 'btns' }, [bAct('ביטול הייבוא', 'danger', 'imCx', function () { reasonDlg('ביטול ייבוא', function (rs) { return api('import.cancel', { id: jobId, reason: rs }).then(function (z) { if (z.ok) { toast('הייבוא בוטל'); draw(); if (reload) reload(); } return z; }); }); })])); }
+        var ok = dlg && dlg.querySelector('button[type=submit]'); if (ok) { ok.hidden = !open; }
+      });
+    }
+    dlg = dialog('בדיקת ייבוא', [holder], function (msg) {
+      if (state.status !== 'preview' && state.status !== 'partial') return true;
+      var cf = document.getElementById('imConfirm'); if (!cf || !cf.checked) { msg.textContent = 'יש לאשר במפורש לפני ביצוע.'; msg.className = 'msg err'; return false; }
+      return api('import.commit', { id: jobId, confirm: true }).then(function (z) { if (!z.ok) { msg.textContent = msgOf(z); msg.className = 'msg err'; return false; } toast('בוצע: נוצרו ' + z.data.created + ', עודכנו ' + z.data.updated + ', נכשלו ' + z.data.failed + ', דולגו ' + z.data.skipped); if (reload) reload(); });
+    }, 'אישור וביצוע');
+    draw();
+  }
+  D.imports.lists[0].role = 'admin'; D.imports.lists[0].click = function (j) { importJobDialog(j.id, function () { Domain('imports'); }); };
+  D.imports.lists[0].empty = 'אין עבודות ייבוא. אפשר להתחיל ייבוא חדש למעלה.';
+  D.imports.lists.unshift({ h: 'ייבוא חדש מקובץ CSV (מנהל)', m: 'whoAmI', a: function () { return {}; }, role: 'admin', view: function (_d, box, reload) {
+    var tsel = h('select', { id: 'imT' }, Object.keys(IMT).map(function (k) { return h('option', { value: k, text: IMT[k][0] }); })), file = h('input', { id: 'imFile', type: 'file', accept: '.csv,.tsv,.txt,text/csv' }), paste = h('textarea', { id: 'imPaste', rows: '4', placeholder: 'או הדביקו כאן טבלה (שורה ראשונה = כותרות)' }), out = h('div', { id: 'imMapBox', 'aria-live': 'polite' }), parsed = null;
+    box.append(h('p', { class: 'muted', text: 'הקובץ נקרא בדפדפן בלבד; שום דבר לא נכתב עד אישור מפורש. לייצוא מ-Excel: שמירה כ-CSV (UTF-8). קובצי xlsx ישירים אינם נתמכים כאן.' }), field('סוג הנתונים', tsel), field('קובץ CSV', file), field('או הדבקה', paste), h('div', { class: 'btns' }, [bAct('קריאת הקובץ', 'primary', 'imParse', function () {
+      var go = function (text) { var rows = parseCsv(text); out.replaceChildren(); if (rows.length < 2) { out.append(h('div', { class: 'msg err', role: 'alert', text: 'לא נמצאו כותרות ושורות נתונים.' })); return; } var hd = rows[0].map(function (x) { return x.trim(); }); if (hd.some(function (x) { return !x; }) || new Set(hd).size !== hd.length) { out.append(h('div', { class: 'msg err', role: 'alert', text: 'כותרות העמודות חייבות להיות ייחודיות ולא ריקות.' })); return; } if (rows.length - 1 > 1000) { out.append(h('div', { class: 'msg err', role: 'alert', text: 'עד 1000 שורות בכל ייבוא.' })); return; }
+        parsed = { header: hd, rows: rows.slice(1) }; mapping(); };
+      if (file.files && file.files[0]) { file.files[0].text().then(go); } else go(paste.value);
+    })]), out);
+    function mapping() {
+      var t = tsel.value, fields = IMT[t][1], sels = {}, nm = h('input', { id: 'imName', value: (file.files && file.files[0] && file.files[0].name) || 'הדבקה' }), msg = h('div', { role: 'alert' });
+      out.replaceChildren(h('p', { class: 'muted', role: 'status', text: 'נקראו ' + parsed.rows.length + ' שורות ו-' + parsed.header.length + ' עמודות. מפו כל שדה לעמודה (שדות עם * הם חובה).' }));
+      fields.forEach(function (f) { var s = h('select', { id: 'imMap_' + f[0] }, [h('option', { value: '', text: 'ללא' })].concat(parsed.header.map(function (c) { return h('option', { value: c, text: c }); }))); var guess = parsed.header.filter(function (c) { return c === f[0] || c === f[1]; })[0]; if (guess) s.value = guess; sels[f[0]] = s; out.append(field(f[1] + (f[2] ? ' *' : ''), s)); });
+      var start = bAct('בדיקה מקדימה (לא נכתב כלום)', 'primary', 'imStart', function () {
+        var map = {}, miss = []; fields.forEach(function (f) { if (sels[f[0]].value) map[f[0]] = sels[f[0]].value; else if (f[2]) miss.push(f[1]); });
+        if (miss.length) { msg.textContent = 'שדות חובה ללא מיפוי: ' + miss.join(', '); msg.className = 'msg err'; return; }
+        var rows = parsed.rows.map(function (r) { var o = {}; parsed.header.forEach(function (c, i) { o[c] = r[i] === undefined ? '' : r[i].trim(); }); return o; }); busy(start, true, 'בדיקה מקדימה (לא נכתב כלום)');
+        api('import.start', { courseId: S.course.id, data: { target: t, file_name: nm.value, mapping: map, rows: rows } }).then(function (r) { busy(start, false, 'בדיקה מקדימה (לא נכתב כלום)'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } parsed = null; out.replaceChildren(); paste.value = ''; file.value = ''; toast('הבדיקה המקדימה הושלמה'); importJobDialog(r.data.id, function () { Domain('imports'); }); });
+      });
+      out.append(field('שם קובץ לתיעוד', nm), msg, h('div', { class: 'btns' }, [start]));
+    }
+  } });
+
+  /* ---- documents: list, link request (commander/admin) + admin review, upload/download (adapter-blocked), qualification evidence ---- */
+  var LNK = { NavigationTests: ['ניווט', 'nav.list', function () { return { courseId: S.course.id }; }], FitnessTests: ['כש״ג', 'fitness.list', function () { return { courseId: S.course.id, opts: {} }; }], MarksmanshipTests: ['קליעה', 'mk.list', function () { return { courseId: S.course.id, opts: {} }; }], TheoreticalExamAttempts: ['מבחן עיוני', 'exams.attempts', function () { return { courseId: S.course.id }; }], ReadinessRecords: ['כשירות', 'readiness.list', function () { return { courseId: S.course.id, opts: {} }; }], SoldierEvents: ['אירוע/הישג', 'events.list', function () { return { courseId: S.course.id, opts: {} }; }], QualificationAssignments: ['הסמכה', 'qual.assignments', function () { return { courseId: S.course.id }; }] };
+  var DLS = { pending: 'ממתין לאישור קישור', approved: 'מקושר', rejected: 'הקישור נדחה' };
+  function recLabel(t, r) { return fmtD(r.test_date || r.attempt_date || r.event_date || r.start_date || r.completion_date || r.created_at) + ' · ' + (r.navigation_type_name || r.test_type_name || r.exam_name || r.qualification_name || r.status || r.event_type || r.id); }
+  function docDialog(d, reload) {
+    var nodes = [], out = h('div', { 'aria-live': 'polite' });
+    var info = h('div'); kv(info, [['קובץ', d.can_open ? d.file_name : 'מטא-נתונים בלבד'], ['סוג מסמך', d.document_type], ['חייל', d.soldier_name || '—'], ['הועלה', fmtD(d.uploaded_at) + ' · ' + (d.uploaded_by || '')], ['מצב קישור', DLS[d.link_status] || 'לא מקושר'], ['מקושר ל', d.linked_table ? (LNK[d.linked_table] || [d.linked_table])[0] : '—']]); nodes.push(info);
+    if (d.can_open) nodes.push(h('div', { class: 'btns', style: 'margin-top:0' }, [bAct('פתיחת הקובץ', 'secondary', 'dlOpen', function () { api('docs.download', { id: d.id }).then(function (r) { out.replaceChildren(r.ok ? h('p', { text: 'הקובץ נפתח' }) : blockedBox(r, 'חיבור אחסון קבצים פרטי (Drive פרטי של המנהל) — טרם אושר.')); }); })]));
+    if (d.can_open && d.soldier_id && (!d.link_status || d.link_status === 'rejected')) {
+      var ts = h('select', { id: 'dlT' }, [h('option', { value: '', text: 'בחרו סוג רשומה…' })].concat(Object.keys(LNK).map(function (k) { return h('option', { value: k, text: LNK[k][0] }); }))), rs = h('select', { id: 'dlR' }, [h('option', { value: '', text: 'בחרו קודם סוג…' })]), msg = h('div', { role: 'alert' });
+      ts.addEventListener('change', function () { rs.replaceChildren(h('option', { value: '', text: 'טוען…' })); if (!ts.value) { rs.replaceChildren(h('option', { value: '', text: 'בחרו קודם סוג…' })); return; } var spec = LNK[ts.value]; api(spec[1], spec[2]()).then(function (r) { var rows = r.ok ? (Array.isArray(r.data) ? r.data : (r.data.rows || r.data.items || [])).filter(function (x) { return x.soldier_id === d.soldier_id; }) : []; rs.replaceChildren(h('option', { value: '', text: rows.length ? 'בחרו רשומה…' : 'אין רשומות של החייל' })); rows.forEach(function (x) { rs.append(h('option', { value: x.id, text: recLabel(ts.value, x) })); }); }); });
+      nodes.push(h('h3', { text: 'בקשת קישור לרשומה', style: 'font-size:15px;margin:12px 0 4px' }), field('סוג רשומה', ts), field('רשומה של אותו חייל', rs), msg, h('div', { class: 'btns' }, [bAct('שליחת בקשת קישור', 'primary', 'dlReq', function (ev) { if (!ts.value || !rs.value) { msg.textContent = 'בחרו סוג ורשומה.'; msg.className = 'msg err'; return; } var b = ev.currentTarget; busy(b, true, 'שליחת בקשת קישור'); api('docs.requestLink', { id: d.id, table: ts.value, recordId: rs.value }).then(function (r) { busy(b, false, 'שליחת בקשת קישור'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast('בקשת הקישור נשלחה לאישור המנהל'); dlg.close(); if (reload) reload(); }); })]));
+    } else if (d.can_open && !d.soldier_id) nodes.push(h('p', { class: 'muted', text: 'מסמך כללי (ללא חייל) — אי אפשר לבקש קישור לרשומה.' }));
+    nodes.push(out); var dlg = dialog(d.can_open ? d.file_name : 'מסמך', nodes, function () { }, 'סגירה');
+  }
+  function linkReviewDialog(d, reload) {
+    var note = h('textarea', { id: 'dlNote' }), dec = h('select', { id: 'dlDec' }, [h('option', { value: 'approve', text: 'אישור הקישור' }), h('option', { value: 'reject', text: 'דחייה (נדרשת הערה)' })]), info = h('div'); kv(info, [['מסמך', d.file_name || d.document_type], ['חייל', d.soldier_name || '—'], ['מבקש', d.uploaded_by], ['יעד', (LNK[d.linked_table] || [d.linked_table])[0]]]);
+    dialog('בדיקת בקשת קישור', [info, field('החלטה', dec), field('הערה', note)], function (msg) { if (dec.value === 'reject' && !note.value.trim()) { msg.textContent = 'דחייה דורשת הערה.'; msg.className = 'msg err'; return false; } return api('docs.reviewLink', { id: d.id, decision: dec.value, note: note.value.trim() }).then(function (r) { if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return false; } toast(dec.value === 'approve' ? 'הקישור אושר' : 'הקישור נדחה'); if (reload) reload(); }); });
+  }
+  D.docs = { title: 'מסמכים וקישורים', forms: [], actions: [{ t: 'העלאת מסמך', ok: 'המסמך הועלה', run: function () { return new Promise(function (res) {
+      var file = h('input', { id: 'duFile', type: 'file', accept: '.pdf,.png,.jpg,.jpeg,.docx,.xlsx' }), sol = h('select', { id: 'duS' }, [h('option', { value: '', text: 'ללא (מסמך כללי)' })].concat(soldiersOpts().map(function (o) { return h('option', { value: o[0], text: o[1] }); }))), ty = h('input', { id: 'duT', placeholder: 'למשל: אישור רפואי' });
+      dialog('העלאת מסמך', [field('קובץ', file), field('חייל', sol), field('סוג מסמך *', ty)], function (msg) { if (!file.files[0] || !ty.value.trim()) { msg.textContent = 'קובץ וסוג מסמך חובה.'; msg.className = 'msg err'; return false; }
+        return new Promise(function (ok) { var fr = new FileReader(); fr.onload = function () { var b64 = String(fr.result).split(',')[1] || ''; api('docs.upload', { courseId: S.course.id, data: { soldier_id: sol.value, document_type: ty.value.trim(), file_name: file.files[0].name, mime_type: file.files[0].type, content_base64: b64 } }).then(function (r) { if (!r.ok) { msg.replaceChildren(blockedBox(r, 'חיבור אחסון קבצים פרטי (Drive פרטי של המנהל) — טרם אושר.')); msg.className = ''; ok(false); } else { ok(true); } }); }; fr.readAsDataURL(file.files[0]); }); });
+      res({ ok: true, silent: true, data: {} }); }); } }],
+    lists: [{ h: 'בקשות קישור ממתינות', m: 'docs.pendingLinks', a: CID, role: 'admin', empty: 'אין בקשות קישור ממתינות.', row: function (d) { return [(d.file_name || d.document_type) + ' · ' + (d.soldier_name || ''), 'יעד: ' + (LNK[d.linked_table] || [d.linked_table])[0] + ' · ' + (d.uploaded_by || ''), status('ממתין', true)]; }, click: function (d) { linkReviewDialog(d, function () { Domain('docs'); }); } },
+      { h: 'מסמכים', m: 'docs.list', a: CID, empty: 'אין מסמכים. העלאה דורשת אחסון קבצים פרטי (טרם מחובר בהדגמה).', row: function (d) { return [(d.can_open ? d.file_name : 'מסמך') + ' · ' + (d.document_type || ''), (d.soldier_name || 'כללי') + ' · ' + fmtD(d.uploaded_at) + ' · ' + (DLS[d.link_status] || 'לא מקושר'), d.link_status === 'pending' ? status('ממתין', true) : null]; }, click: function (d) { docDialog(d, function () { Domain('docs'); }); } }] };
+  D.imports.lists[2].click = function (d) { docDialog(d, function () { Domain('imports'); }); };
+  /* qualification evidence: appended into the assignment dialog (docs.evidence / docs.attachEvidence) */
+  (function () { var ql = D.qual.lists.filter(function (l) { return l.h === 'שיוכי הסמכות (אישי-תפעולי)'; })[0]; if (!ql || !ql.click) return; var orig = ql.click;
+    ql.click = function (a, reload) { orig(a, reload); var dlg = document.querySelector('dialog[open]:last-of-type'), body = dlg && dlg.querySelector('form > div:nth-of-type(1)'); if (!body) return;
+      var list = h('div', { id: 'qeList', 'aria-live': 'polite' }, [skeleton(1)]), sel = h('select', { id: 'qeDoc' }, [h('option', { value: '', text: 'טוען מסמכים…' })]), msg = h('div', { role: 'alert', id: 'qeMsg' });
+      function loadEv() { api('docs.evidence', { assignmentId: a.id }).then(function (r) { list.replaceChildren(); if (!r.ok) { list.append(errBox(r)); return; } if (!r.data.length) list.append(h('p', { class: 'muted', text: 'אין ראיות מצורפות.' })); r.data.forEach(function (e) { list.append(card(e.file_name || 'מסמך', fmtD(e.uploaded_at) + ' · ' + (e.uploaded_by || ''), null)); }); }); }
+      api('docs.list', { courseId: S.course.id, soldierId: a.soldier_id }).then(function (r) { var ds = r.ok ? r.data.filter(function (d) { return d.can_open; }) : []; sel.replaceChildren(h('option', { value: '', text: ds.length ? 'בחרו מסמך…' : 'אין מסמכים של החייל' })); ds.forEach(function (d) { sel.append(h('option', { value: d.id, text: d.file_name })); }); });
+      body.append(h('h3', { text: 'ראיות (מסמכים מצורפים)', style: 'font-size:15px;margin:12px 0 4px' }), list, field('צירוף מסמך של החייל', sel), msg, h('div', { class: 'btns' }, [bAct('צירוף כראיה', 'secondary', 'qeAdd', function (ev) { if (!sel.value) { msg.textContent = 'בחרו מסמך.'; msg.className = 'msg err'; return; } var b = ev.currentTarget; busy(b, true, 'צירוף כראיה'); api('docs.attachEvidence', { assignmentId: a.id, documentId: sel.value }).then(function (r) { busy(b, false, 'צירוף כראיה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } msg.textContent = 'הראיה צורפה'; msg.className = 'msg ok'; loadEv(); }); })])); loadEv(); }; })();
+
+  /* ---- OCR review: provider is NOT connected -> start shows a blocked state; synthetic/real extracted rows are drafts reviewed one by one ---- */
+  var FLB = {}; Object.keys(IMT).forEach(function (k) { IMT[k][1].forEach(function (f) { FLB[f[0]] = f[1].replace(' (כן/לא)', ''); }); });
+  function fl(k) { return FLB[k] || k; }
+  function ocrRowDialog(row, job, reload) {
+    var fields = row.fields || {}, ins = {}, nodes = [], msg = h('div', { role: 'alert', id: 'ocMsg' });
+    var sol = h('select', { id: 'ocS' }, [h('option', { value: '', text: 'בחרו חייל…' })].concat(soldiersOpts().map(function (o) { return h('option', { value: o[0], text: o[1] }); }))); sol.value = row.soldier_id || '';
+    nodes.push(h('p', { class: 'muted', text: row.identity_certain ? 'זהות החייל זוהתה לפי מספר אישי מדויק.' : 'זהות החייל אינה וודאית — יש לבחור חייל' + ((row.candidates || []).length ? ' (מועמדים: ' + row.candidates.map(function (c) { return c.name; }).join(', ') + ')' : '') + '.' }), field('חייל', sol));
+    Object.keys(fields).forEach(function (k) { var unc = (row.uncertain_fields || []).indexOf(k) !== -1, i = h('input', { id: 'ocF_' + k, value: typeof fields[k] === 'boolean' ? YES(fields[k]) : (fields[k] === null || fields[k] === undefined ? '' : fields[k]) }); ins[k] = i; nodes.push(field(fl(k) + (unc ? ' (לא ברור)' : ''), i)); });
+    var cu = h('input', { type: 'checkbox', id: 'ocCU', style: 'width:22px;min-height:22px' });
+    if ((row.uncertain_fields || []).length) nodes.push(h('div', { style: 'display:flex;gap:10px;align-items:center;min-height:44px' }, [cu, h('label', { for: 'ocCU', text: 'אני מאשר/ת במפורש את השדות הלא ברורים (' + row.uncertain_fields.map(fl).join(', ') + ')', style: 'margin:0;font-weight:400' })]));
+    nodes.push(msg);
+    var dlg;
+    /* only fields the reviewer actually changed are sent: editing a field clears its 'uncertain' flag on the server, so untouched uncertain fields must stay uncertain until explicitly confirmed */
+    function collect() { var f = {}; Object.keys(ins).forEach(function (k) { var b = typeof fields[k] === 'boolean', o = b ? YES(fields[k]) : (fields[k] === null || fields[k] === undefined ? '' : String(fields[k])); if (ins[k].value !== o) f[k] = b ? (ins[k].value === 'כן' ? true : ins[k].value === 'לא' ? false : ins[k].value) : ins[k].value; }); return f; }
+    function patch() { var d = {}, f = collect(); if (Object.keys(f).length) d.fields = f; if (sol.value && sol.value !== (row.soldier_id || '')) d.soldier_id = sol.value; return d; }
+    function done(r, t) { if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast(t); dlg.close(); if (reload) reload(); }
+    nodes.push(h('div', { class: 'btns' }, [bAct('שמירת תיקון', 'secondary', 'ocSave', function () { var d = patch(); if (!Object.keys(d).length) { msg.textContent = 'לא בוצע שינוי.'; msg.className = 'msg err'; return; } api('ocr.editRow', { id: row.id, data: d }).then(function (r) { done(r, 'התיקון נשמר'); }); }),
+      bAct('אישור השורה', 'primary', 'ocApprove', function () { var d = patch(), save = function () { return Object.keys(d).length ? api('ocr.editRow', { id: row.id, data: d }) : Promise.resolve({ ok: true }); }; save().then(function (e) { if (!e.ok) { done(e); return; } api('ocr.approveRow', { id: row.id, confirm_uncertain: cu.checked }).then(function (r) { done(r, 'השורה אושרה ונוצרה רשומה'); }); }); }),
+      bAct('דחיית השורה', 'danger', 'ocRej', function () { reasonDlg('דחיית שורת OCR', function (rs) { return api('ocr.rejectRow', { id: row.id, note: rs }).then(function (z) { if (z.ok) { toast('השורה נדחתה'); dlg.close(); if (reload) reload(); } return z; }); }); })]));
+    dlg = dialog('שורת OCR — טיוטה בלבד', nodes, function () { }, 'סגירה');
+  }
+  function ocrJobDialog(jobId) {
+    var holder = h('div', { 'aria-live': 'polite' }); function draw() { holder.replaceChildren(skeleton(2)); api('ocr.rows', { id: jobId }).then(function (r) { holder.replaceChildren(); if (!r.ok) { holder.append(errBox(r, draw)); return; } holder.append(h('p', { class: 'muted', id: 'ocInfo', text: 'יעד: ' + ({ navigation: 'ניווט', marksmanship: 'קליעה', fitness: 'כש״ג', exams: 'מבחנים עיוניים' }[r.data.job.target] || '') + ' · מצב: ' + ({ review: 'לבדיקה', no_provider: 'ללא ספק OCR', done: 'הושלם' }[r.data.job.status] || '') + ' · שורות: ' + r.data.rows.length + ' — כל שורה היא טיוטה שאינה נספרת עד אישור.' })); if (!r.data.rows.length) holder.append(emptyBox('אין שורות לבדיקה (ספק OCR לא מחובר — אין חילוץ אוטומטי).')); r.data.rows.forEach(function (x) { holder.append(card((x.soldier_name || 'זהות לא וודאית') + ' · ' + ({ draft: 'טיוטה', approved: 'אושרה', rejected: 'נדחתה' }[x.status] || x.status), Object.keys(x.fields || {}).map(function (k) { return fl(k) + ': ' + (typeof x.fields[k] === 'boolean' ? YES(x.fields[k]) : x.fields[k]); }).join(' · ') + ((x.uncertain_fields || []).length ? ' · לא ברור: ' + x.uncertain_fields.map(fl).join(', ') : ''), x.status === 'draft' ? status('לבדיקה', true) : null, x.status === 'draft' ? function () { ocrRowDialog(x, r.data.job, draw); } : null)); }); }); }
+    dialog('משימת OCR', [holder], function () { }, 'סגירה'); draw();
+  }
+  D.ocr = { title: 'OCR לבדיקה (מנהל)', forms: [], actions: [],
+    lists: [{ h: 'התחלת חילוץ ממסמך', m: 'docs.list', a: CID, role: 'admin', view: function (docs, box, reload) {
+        var ok = (docs || []).filter(function (d) { return d.can_open && ['application/pdf', 'image/png', 'image/jpeg'].indexOf(d.mime_type) !== -1; }), ds = h('select', { id: 'ocD' }, [h('option', { value: '', text: ok.length ? 'בחרו מסמך…' : 'אין מסמכי PDF/תמונה' })].concat(ok.map(function (d) { return h('option', { value: d.id, text: d.file_name }); }))), ts = h('select', { id: 'ocT' }, [['navigation', 'ניווט'], ['marksmanship', 'קליעה'], ['fitness', 'כש״ג'], ['exams', 'מבחנים עיוניים']].map(function (o) { return h('option', { value: o[0], text: o[1] }); })), out = h('div', { id: 'ocOut', 'aria-live': 'polite' });
+        box.append(h('p', { class: 'muted', text: 'ספק OCR טרם נבחר/אושר, ולכן אין חילוץ אוטומטי. שורות שמחולצות בעתיד הן טיוטות שמאושרות אחת-אחת.' }), field('מסמך', ds), field('יעד', ts), h('div', { class: 'btns' }, [bAct('התחלת חילוץ', 'primary', 'ocGo', function (ev) { if (!ds.value) { out.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'בחרו מסמך.' })); return; } var b = ev.currentTarget; busy(b, true, 'התחלת חילוץ'); api('ocr.start', { courseId: S.course.id, data: { document_id: ds.value, target: ts.value } }).then(function (r) { busy(b, false, 'התחלת חילוץ'); out.replaceChildren(); if (!r.ok) { out.append(blockedBox(r, 'בחירה ואישור של ספק OCR וחיבור אחסון קבצים פרטי.')); return; } if (r.data.status === 'no_provider') { out.append(blockedBox({ code: 'NOT_CONFIGURED', message: r.data.message || 'ספק OCR לא הוגדר.' }, 'בחירה ואישור של ספק OCR (החלטת בעלים) וחיבורו.')); } else ocrJobDialog(r.data.id); }); })]), out); } },
+      { h: 'משימות OCR', m: 'audit.list', a: function () { return { courseId: S.course.id, action: 'OCR_START' }; }, role: 'admin', empty: 'לא הופעלה משימת OCR.', row: function (a) { return ['משימה ' + String(a.record_id || '').slice(-6), fmtD(a.timestamp) + ' · ' + (a.actor_email || '')]; }, click: function (a) { ocrJobDialog(a.record_id); } },
+      { h: 'OCR', m: 'whoAmI', a: function () { return {}; }, role: 'cmd', view: function (_d, box) { box.append(emptyBox('בדיקת OCR — למנהל בלבד.')); } }] };
+
+  /* ai.draft / ai.drafts / ai.reviewDraft are intentionally NOT exposed: they generate and approve an individual per-soldier assessment, which the owner charter (2026-11-20) excludes from analytics. Group-only, N>=5 explainable insight stays in analytics.insights (תמונת מצב קבוצתית). */
+
+  /* ---- backup restore plan (read-only) + migration (needs a private backup first) ---- */
+  (function () { var bl = D.backup.lists[0]; bl.role = 'admin'; bl.click = function (b) { var out = h('div', { id: 'bkOut', 'aria-live': 'polite' }, [skeleton(1)]);
+    api('backup.plan', { id: b.id }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(blockedBox(r, 'חיבור אחסון הגיבויים הפרטי (קריאת תמונת הגיבוי) — טרם אושר.', true)); return; } out.append(h('p', { class: 'muted', text: 'תכנית שחזור — קריאה בלבד, לא משנה כלום. טבלאות שלא ישוחזרו: ' + (r.data.excluded || []).join(', ') + (r.data.newer_than_app ? ' · הגיבוי חדש מגרסת הקוד!' : '') })); out.append(b7table('תכנית שחזור', ['טבלה', 'כעת', 'בגיבוי', 'שינוי'], r.data.tables.map(function (t) { return [t.table, t.now, t.backup, t.change]; }), 80)); });
+    dialog('תכנית שחזור — ' + fmtD(b.created_at), [out], function () { }, 'סגירה'); };
+    D.backup.actions.push({ t: 'מיגרציית סכמה — מידע', admin: 1, run: function () { return new Promise(function (res) {
+      dialog('מיגרציית סכמה — לא זמינה בגרסה זו', [h('p', { id: 'mgInfo', text: 'הרצת מיגרציה משנה טבלאות ועמודות ולכן אינה מופעלת מהממשק בגרסה זו. היא תתאפשר רק בשרת פרטי מאושר, לפי תכנית מיגרציה שנבדקה בנפרד (אבטחת מידע + בעלים). כאן לא מתבצעת שום קריאה לשרת.' }), h('p', { class: 'muted', text: 'לבדיקה לקריאה בלבד: תכנית שחזור מגיבוי (לחיצה על גיבוי ברשימה) ובדיקת מוכנות (Preflight).' })], function () { }, 'סגירה');
+      res({ ok: true, silent: true, data: {} }); }); } });
+  })();
 
   /* ---------- router ---------- */
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
