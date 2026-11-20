@@ -18,7 +18,16 @@ for (const r of rows) {
   if (r.secured_test_e2e === 'PASS' || r.deployed === 'YES')
     violations.push(r.route + ': unsupported secure/deployment assertion in public synthetic QA');
 }
-for (const key of ['PASS_SYNTH_E2E','API_ONLY_NOT_UI','IMPLEMENTED_NOT_E2E','BLOCKED_NOT_CONNECTED','NOT_IMPLEMENTED']) {
+for (const r of rows) {
+  if (r.interaction_verified === 'yes' && !(r.gesture_correlated_ok > 0 && r.gesture_correlated_ok <= r.ui_origin_api_ok))
+    violations.push(r.route + ': interaction_verified without gesture-correlated UI-origin success');
+  if (r.status === 'POLICY_BLOCKED' && (r.interaction_verified === 'yes' || r.ui_origin_api_ok > 0))
+    violations.push(r.route + ': policy-blocked route must not be called by the native UI');
+}
+const iv = rows.filter(r => r.interaction_verified === 'yes').length;
+if ((x.summary.interaction_verified || 0) !== iv) violations.push('interaction_verified: summary does not match rows');
+if (iv > (counts.PASS_SYNTH_E2E || 0)) violations.push('interaction_verified exceeds PASS count (inflation)');
+for (const key of ['PASS_SYNTH_E2E','API_ONLY_NOT_UI','POLICY_BLOCKED','IMPLEMENTED_NOT_E2E','BLOCKED_NOT_CONNECTED','NOT_IMPLEMENTED']) {
   if ((x.summary[key] || 0) !== (counts[key] || 0))
     violations.push(key + ': summary does not match rows');
 }
