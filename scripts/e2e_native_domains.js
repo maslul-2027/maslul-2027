@@ -6,7 +6,7 @@ const T='2026-11-15';
 const CASES=[
  {d:'attendance',i:1,fill:{x_name:'פעילות בדיקה'}},
  {d:'attendance',i:0,fill:{x_event_date:T,x_activity_type_id:{i:1}},tick:'#x_absent input',read:T},
- {d:'fitness',i:0,fill:{x_soldier_id:{i:1},x_test_type_id:{i:2},x_test_date:T,x_pullups:'8',x_parallel_bars:'20',x_trap_bar:'10',x_run150x2:'00:55',x_run3km:'13:30'},read:T},
+ {d:'fitness',i:0,fill:{x_soldier_id:{i:1},x_test_type_id:{i:1},x_test_date:T,x_pullups:'8',x_parallel_bars:'20',x_trap_bar:'10',x_run150x2:'00:55',x_run3km:'13:30'},read:T},
  {d:'exams',i:0,fill:{x_name:'מבחן בדיקה'}},
  {d:'exams',i:1,fill:{x_soldier_id:{i:1},x_exam_id:{i:1},x_attempt:'A',x_attempt_date:T,x_score:'85'},read:'ציון 85'},
  {d:'nav',i:1,fill:{x_name:'ניווט בדיקה'}},

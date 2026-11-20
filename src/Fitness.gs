@@ -23,10 +23,13 @@ const Fitness = {
   WAITING_TEXT: 'ממתין להשלמת נתונים',
   REVIEW_TEXT: 'נדרשת בדיקה — ערך מחוץ לטווח הטבלה',
   // approved weights (spec §5.1)
+  // Owner decision (Issue #66): NEW tests use the regular fitness test only. The opening type is no longer seeded for new courses; existing opening types and their results stay readable (history, score version attribution) and are never deleted.
   DEFAULT_TYPES: [
-    { name: 'מבחן פתיחה', is_opening: true, weights: { pullups: 20, parallel_bars: 20, trap_bar: 20, run3km: 40 } },
     { name: 'מבחן רגיל', is_opening: false, weights: { pullups: 20, parallel_bars: 20, trap_bar: 20, run150x2: 10, run3km: 30 } }
   ],
+  /** Test seam ONLY (undefined in production, set by no route, never persisted): lets the regression tests keep creating LEGACY opening results to cover history. */
+  legacyOpeningEntryForTests_: false,
+  OPENING_BLOCKED_TEXT: 'מבחן פתיחה אינו זמין להזנה חדשה — יש להזין מבחן כש״ג רגיל. תוצאות פתיחה קיימות נשארות לצפייה.',
 
   seedTypes_(ctx, courseId) {
     Fitness.DEFAULT_TYPES.forEach(function (t) {
@@ -39,7 +42,7 @@ const Fitness = {
   typesList(ctx, courseId) {
     Records.guardCourse_(ctx, 'course.read', courseId);
     return Db.where('FitnessTestTypes', function (t) { return t.course_id === courseId && (ctx.role === ROLES.ADMIN || Util.isTrue(t.active)); })
-      .map(function (t) { return { id: t.id, name: t.name, active: Util.isTrue(t.active), is_opening: Util.isTrue(t.is_opening), weights: Util.parseJson(t.weights_json, {}), variants: Util.parseJson(t.variants_json, {}) }; });
+      .map(function (t) { return { id: t.id, name: t.name, active: Util.isTrue(t.active), is_opening: Util.isTrue(t.is_opening), selectable: Util.isTrue(t.active) && !Util.isTrue(t.is_opening), weights: Util.parseJson(t.weights_json, {}), variants: Util.parseJson(t.variants_json, {}) }; });
   },
 
   checkWeights_(w) {
@@ -300,6 +303,7 @@ const Fitness = {
       if (!soldier || soldier.course_id !== courseId || soldier.record_status !== RECORD_STATUS.ACTIVE || !Util.isTrue(soldier.active)) throw new AppError('VALIDATION', Records.SOLDIER_UNAVAILABLE);
       const type = Db.get('FitnessTestTypes', Util.str(data.test_type_id));
       if (!type || type.course_id !== courseId || (!Util.isTrue(type.active) && !(existing && existing.test_type_id === type.id))) throw new AppError('VALIDATION', 'סוג מבחן לא תקין.');
+      if (Util.isTrue(type.is_opening) && !Fitness.legacyOpeningEntryForTests_ && !(existing && existing.test_type_id === type.id)) throw new AppError('VALIDATION', Fitness.OPENING_BLOCKED_TEXT);
       const date = Util.isoDate(Util.cellToIsoDate(data.test_date), 'תאריך מבחן');
       const raw = existing ? Object.assign({}, Util.parseJson(existing.raw_values_json, {})) : {};
       Fitness.COMPONENTS.forEach(function (c) { if (c in data && (!existing || typeof data[c] !== 'undefined')) raw[c] = Util.isBlank(data[c]) ? '' : data[c]; });
@@ -329,6 +333,95 @@ const Fitness = {
       Audit.log(ctx, { courseId: cur.course_id, action: 'EDIT', table: 'FitnessTests', recordId: cur.id, before: Util.pick(cur, ['component_scores_json', 'weighted_score', 'scoring_version_id']), after: Util.pick(upd, ['component_scores_json', 'weighted_score', 'scoring_version_id']), reason: reason });
       return { record: Db.get('FitnessTests', cur.id) };
     });
+  },
+
+
+  // ---------------- read-only preview + reference (Issue #66) ----------------
+  /** Sorted table rows -> display rows. Time rows in mm:ss, reps as numbers. */
+  refRows_(kind, rows) {
+    const fmt = function (sec) { return sec === null || sec === undefined || sec === '' ? null : Math.floor(Number(sec) / 60) + ':' + ('0' + (Number(sec) % 60)).slice(-2); };
+    return rows.map(function (r) { return kind === 'time' ? { score: r.score, from: fmt(r.from_sec), to: fmt(r.to_sec) } : { score: r.score, from: r.reps_min, to: r.reps_max }; });
+  },
+  /** The regular (non-opening) active type of a course, or null. */
+  regularType_(courseId) {
+    return Db.where('FitnessTestTypes', function (t) { return t.course_id === courseId && Util.isTrue(t.active) && !Util.isTrue(t.is_opening); })[0] || null;
+  },
+  /**
+   * READ-ONLY. Full scoring reference: the SAME table data the calculator uses. Official only when an APPROVED version exists; otherwise the newest DRAFT (imported) or the raw transcription is shown
+   * with an explicit "unverified — not used for scoring" status and the still-open transcription items. Nothing is approved or invented here. No personal data.
+   */
+  reference(ctx, courseId) {
+    Records.guardCourse_(ctx, 'course.read', courseId);
+    const gl = { M: 'בנים', F: 'בנות' }, active = Fitness.activeVersion_(courseId);
+    let status, version = null, tables = [], source;
+    if (active) {
+      status = 'APPROVED'; version = { id: active.id, label: active.label, status: active.status, approved_at: active.approved_at || '', source_note: active.source_note || '' }; source = 'version';
+      Fitness.groups_(active.id).forEach(function (g) { const rows = Fitness.tableRows_(active, g.gender, g.component, g.variant), t = Fitness.buildTable_(active, rows); tables.push({ gender: g.gender, component: g.component, variant: g.variant, kind: t.kind, rows: Fitness.refRows_(t.kind, t.rows) }); });
+    } else {
+      status = 'NOT_APPROVED'; source = 'draft_transcription';
+      const drafts = Db.where('FitnessScoringVersions', function (v) { return v.course_id === courseId && v.status === 'DRAFT'; }).sort(function (a, b) { return String(a.created_at || '').localeCompare(String(b.created_at || '')); });
+      const d = drafts[drafts.length - 1];
+      if (d) { source = 'draft_version'; version = { id: d.id, label: d.label, status: d.status, approved_at: '', source_note: d.source_note || '' };
+        Fitness.groups_(d.id).forEach(function (g) { const rows = Fitness.tableRows_(d, g.gender, g.component, g.variant), t = Fitness.buildTable_({ status: 'APPROVED' }, rows); tables.push({ gender: g.gender, component: g.component, variant: g.variant, kind: t.kind, rows: Fitness.refRows_(t.kind, t.rows) }); }); }
+      else FITNESS_DRAFT.tables.forEach(function (t) {
+        if (t.excluded || Fitness.forbiddenTable_(t.gender, t.component, t.variant) || Fitness.COMPONENTS.indexOf(t.component) === -1) return;
+        const kind = t.kind || (Fitness.TIME.indexOf(t.component) !== -1 ? 'time' : 'reps');
+        tables.push({ gender: t.gender, component: t.component, variant: t.variant || '', kind: kind, rows: Fitness.refRows_(kind, t.rows.map(function (r) { return kind === 'time' ? { score: r[0], from_sec: r[1], to_sec: r[2] } : { score: r[0], reps_min: r[1], reps_max: r[2] }; })) });
+      });
+    }
+    tables = tables.filter(function (t) { return Fitness.COMPONENTS.indexOf(t.component) !== -1 && !Fitness.forbiddenTable_(t.gender, t.component, t.variant); })
+      .map(function (t) { return Object.assign({ gender_label: gl[t.gender] || t.gender, component_label: Fitness.LABELS[t.component] }, t); })
+      .sort(function (a, b) { return a.gender === b.gender ? Fitness.COMPONENTS.indexOf(a.component) - Fitness.COMPONENTS.indexOf(b.component) : (a.gender < b.gender ? 1 : -1); });
+    const type = Fitness.regularType_(courseId), weights = type ? Util.parseJson(type.weights_json, {}) : Fitness.DEFAULT_TYPES[0].weights, need = Object.keys(weights), missing = [];
+    GENDERS.forEach(function (g) { need.forEach(function (c) { if (!tables.some(function (t) { return t.gender === g && t.component === c; })) missing.push({ gender: g, gender_label: gl[g], component: c, component_label: Fitness.LABELS[c] }); }); });
+    const open = status === 'APPROVED' ? [] : (FITNESS_DRAFT.uncertain || []).filter(function (u) { return u.status !== 'CLOSED'; }).map(function (u) { return { id: u.id, topic: u.topic, detail: u.detail }; });
+    return { status: status, source: source, version: version, test_type: 'מבחן כש״ג רגיל', weights: weights, weight_labels: Fitness.LABELS, tables: tables, missing_tables: missing, open_items: open,
+      rule_note: Fitness.BOYS_PULLUPS_RULE_TEXT,
+      warning: status === 'APPROVED' ? '' : 'הטבלאות להלן הן טיוטת תמלול שטרם אושרה: אינן משמשות לחישוב ציון רשמי עד שמנהל מאשר שהערכים אומתו מול המקור.' };
+  },
+
+  /**
+   * READ-ONLY live preview of the regular test. Writes nothing and is never trusted by a save: Records.create recomputes with the same Fitness.compute_ on the server.
+   * p: { test_type_id?, soldier_id (required), raw: { pullups, parallel_bars, trap_bar, run150x2, run3km } }. Returns a per-component breakdown, the weighted total only when every required component is valid, or the exact reason.
+   */
+  preview(ctx, courseId, p) {
+    Records.guardCourse_(ctx, 'course.read', courseId); p = p || {};
+    let type = p.test_type_id ? Db.get('FitnessTestTypes', Util.str(p.test_type_id)) : Fitness.regularType_(courseId);
+    if (!type || type.course_id !== courseId) throw new AppError('VALIDATION', 'סוג מבחן לא תקין.');
+    if (Util.isTrue(type.is_opening) && !Fitness.legacyOpeningEntryForTests_) throw new AppError('VALIDATION', Fitness.OPENING_BLOCKED_TEXT);
+    let gender;
+    if (Util.isBlank(p.soldier_id)) throw new AppError('VALIDATION', 'יש לבחור חייל.');   // the soldier is required and scope-checked: the preview discloses nothing about anyone outside the caller's scope
+    {
+      const vis = Soldiers.visibleFn_(ctx, courseId), s = Db.get('Soldiers', Util.str(p.soldier_id));
+      if (!s || s.course_id !== courseId || !vis(s)) throw new AppError('NOT_FOUND', 'החייל לא נמצא.');
+      gender = s.gender;
+    }
+    const raw = p.raw && typeof p.raw === 'object' && !Array.isArray(p.raw) ? p.raw : {}, weights = Util.parseJson(type.weights_json, {});
+    const version = Fitness.activeVersion_(courseId), variantCfg = Util.parseJson(type.variants_json, {}) || {};
+    const comps = {}, scores = {}; let invalid = 0, entered = 0;
+    Object.keys(weights).forEach(function (c) {
+      const v = raw[c]; let r;
+      if (!Util.isBlank(v)) entered++;
+      try { r = Fitness.componentScore_(version, gender, c, Util.isBlank(v) ? '' : v, variantCfg); }
+      catch (e) { if (e && e.code === 'VALIDATION') { r = { score: null, reason: 'invalid', message: String(e.message) }; invalid++; } else throw e; }
+      comps[c] = { label: Fitness.LABELS[c], weight: weights[c], score: r.score, reason: r.reason, text: r.reason === 'invalid' ? r.message : (r.reason === 'ok' ? '' : (Fitness.REASON_TEXT[r.reason] || r.reason)),
+        points: r.score === null ? null : Math.round(r.score * weights[c]) / 100 };
+      scores[c] = r.score;
+    });
+    const w = Calc.weightedFitness(scores, weights), gl = GENDERS.indexOf(gender) !== -1;
+    let state = 'ok', explain = '';
+    if (!version) { state = 'no_approved_table'; explain = 'אין טבלאות ניקוד מאושרות — לא ניתן לחשב ציון סופי.'; }
+    else if (!gl) { state = 'gender_missing'; explain = 'מין החייל לא מוגדר — לא ניתן לבחור טבלת ניקוד.'; }
+    else if (invalid) { state = 'invalid'; explain = 'יש ערך שגוי — תקנו כדי לקבל ציון.'; }
+    else if (w.score === null && Object.keys(comps).some(function (c) { return comps[c].reason === 'out_of_range'; })) { state = 'out_of_range'; explain = Fitness.REVIEW_TEXT; }
+    else if (w.score === null && Object.keys(comps).some(function (c) { return comps[c].reason === 'no_table'; })) { state = 'missing_table'; explain = 'חסרה טבלה מאושרת לרכיב — לא ניתן לחשב ציון סופי.'; }
+    else if (w.score === null) { state = 'incomplete'; explain = entered ? 'חסרים רכיבים — הציון הסופי יחושב כשכל הרכיבים יוזנו.' : 'הזינו ערכים לרכיבי המבחן.'; }
+    const missing = [];
+    if (!version) GENDERS.forEach(function (g) { if (!gl || g === gender) Object.keys(weights).forEach(function (c) { missing.push({ gender: g, gender_label: g === 'M' ? 'בנים' : 'בנות', component: c, component_label: Fitness.LABELS[c] }); }); });
+    return { state: state, explain: explain, weighted: w.score, weighted_display: w.score === null ? null : Util.display1(w.score), components: comps, test_type: type.name, test_type_id: type.id,
+      version: version ? { id: version.id, label: version.label, approved_at: version.approved_at || '' } : null, missing_tables: missing,
+      has_draft: !version && Db.where('FitnessScoringVersions', function (v) { return v.course_id === courseId && v.status === 'DRAFT'; }).length > 0,
+      note: 'תצוגה מקדימה בלבד — לא נשמר דבר. הציון הרשמי מחושב מחדש בשרת בעת השמירה.' };
   },
 
   // ---------------- read models ----------------

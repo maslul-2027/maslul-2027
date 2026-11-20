@@ -60,6 +60,8 @@ const API_ = {
   'fitness.addTable': function (ctx, a) { return Fitness.addTable(ctx, a.versionId, a.data); },
   'fitness.approve': function (ctx, a) { return Fitness.approve(ctx, a.versionId, a.data); },
   'fitness.create': function (ctx, a) { return Records.create(ctx, 'FitnessTests', a.courseId, a.data); },
+  'fitness.preview': function (ctx, a) { return Fitness.preview(ctx, a.courseId, a.data); },
+  'fitness.reference': function (ctx, a) { return Fitness.reference(ctx, a.courseId); },
   'fitness.list': function (ctx, a) { return Fitness.list(ctx, a.courseId, a.opts || {}); },
   'fitness.summary': function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Fitness.summary(ctx, a.courseId, a.soldierId); }); },
   'fitness.completion': function (ctx, a) { return Fitness.completion(ctx, a.courseId, a.opts || {}); },

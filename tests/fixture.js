@@ -1,8 +1,11 @@
 // Shared fixture for the v1.0.0 module tests (Node, in-memory Db). Synthetic data only.
 const { load } = require('./harness'); const fakes = require('./fakes');
-function setup() {
+function setup(opts) {
   const X = load(); let tick = 0; const base = Date.now(); X.Util._clock = () => new Date(Math.max(Date.now(), base) + (++tick)); /* strictly increasing: optimistic-concurrency tokens are never equal within a test */ const fake = fakes.install(X); const admin = { email: 'admin@x.com', role: 'admin', courseScope: '*' };
   const c1 = X.Courses.create(admin, { name: 'קורס א', start_date: '2099-01-01' }).id, c2 = X.Courses.create(admin, { name: 'קורס ב', start_date: '2099-02-01' }).id;
+  // Issue #66: new courses are seeded with the REGULAR fitness type only. Older courses still carry a legacy opening type; the shared fixture reproduces such a course (unless { noLegacyOpening: true }) so the opening-type regression tests keep covering history and legacy data.
+  if (!(opts && opts.noLegacyOpening)) X.Fitness.legacyOpeningEntryForTests_ = true;   // test seam: legacy opening results may still be created by the regression suites
+  if (!(opts && opts.noLegacyOpening)) [c1, c2].forEach(cid => X.Db.insert('FitnessTestTypes', { id: X.Util.uuid(), course_id: cid, name: 'מבחן פתיחה', components_json: JSON.stringify(['pullups', 'parallel_bars', 'trap_bar', 'run3km']), weights_json: JSON.stringify({ pullups: 20, parallel_bars: 20, trap_bar: 20, run3km: 40 }), active: true, created_at: X.Util.nowIso(), created_by: 'legacy', variants_json: '{}', is_opening: true }));
   const o1 = X.Courses.org(admin, c1), o2 = X.Courses.org(admin, c2);
   const dep = i => o1.departments[i].id, team = (d, i) => o1.teams.filter(t => t.department_id === o1.departments[d].id)[i].id;
   X.Courses.addUser(admin, { email: 'admin@x.com', role: 'admin', display_name: 'מנהל' });
