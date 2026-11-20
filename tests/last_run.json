@@ -1,12 +1,44 @@
 {
- "when": "2026-11-19T20:57:40.685Z",
+ "when": "2026-11-20T12:14:16.972Z",
  "node": "v22.23.4",
  "flags": {
-  "ui": false,
-  "strict": true
+  "ui": true,
+  "strict": false
  },
  "env_ok": true,
  "suites": [
+  {
+   "s": "idempotency",
+   "types": null,
+   "state": "PASS",
+   "pass": 8,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "pin_auth",
+   "types": null,
+   "state": "PASS",
+   "pass": 10,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "preview_fresh",
+   "types": null,
+   "state": "PASS",
+   "pass": 1,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "preview_contracts",
+   "types": null,
+   "state": "PASS",
+   "pass": 2,
+   "fail": 0,
+   "why": ""
+  },
   {
    "s": "run",
    "types": null,
@@ -549,87 +581,115 @@
   },
   {
    "s": "ui_staging_smoke",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 17,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_smoke",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_v1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 9,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_form",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 5,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_fitness",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 20,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_b7b8",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_r3",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 10,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 21,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd2",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 11,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd6_meetings",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 20,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd6_qa",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 18,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_uxqa",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 43,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
+  },
+  {
+   "s": "ui_ux_sprint1",
+   "types": null,
+   "state": "PASS",
+   "pass": 8,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "ui_synthetic_app",
+   "types": null,
+   "state": "FAIL",
+   "pass": 0,
+   "fail": 1,
+   "why": "failed tests"
   }
  ],
  "totals": {
@@ -637,17 +697,17 @@
    "node_unit": 95,
    "node_integration": 294,
    "node_hardening": 234,
-   "browser": 0,
-   "unclassified": 31
+   "browser": 234,
+   "unclassified": 52
   },
-  "node_total": 654,
-  "suites": 59,
-  "PASS": 47,
-  "FAIL": 0,
-  "SKIP": 12,
-  "tests_run": 654,
-  "passed": 654,
-  "failed": 0
+  "node_total": 675,
+  "suites": 65,
+  "PASS": 64,
+  "FAIL": 1,
+  "SKIP": 0,
+  "tests_run": 910,
+  "passed": 909,
+  "failed": 1
  },
  "result": "FAILED"
 }
