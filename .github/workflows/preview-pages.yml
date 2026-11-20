@@ -1,9 +1,16 @@
 name: Deploy synthetic PWA preview to GitHub Pages
+# PUBLIC, synthetic-only static preview. It is NOT the shared-data application: no backend, no real data, no secrets, no CI screenshots.
+# Rollback: run this workflow manually (Actions → Run workflow) with `ref` = the last good commit SHA; the live /build-info.json then shows that SHA.
 on:
   push:
     branches: [main]
-    paths: ['preview/**', 'native/**', 'scripts/build_native_app.js', 'src/**', '.github/workflows/preview-pages.yml']
+    paths: ['preview/**', 'native/**', 'scripts/build_native_app.js', 'scripts/lib/**', 'scripts/scan_pages_artifact.js', 'src/**', '.github/workflows/preview-pages.yml']
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit SHA / branch to publish (rollback = a previous good SHA)'
+        required: false
+        default: 'main'
 permissions:
   contents: read
   pages: write
@@ -12,27 +19,51 @@ concurrency:
   group: pages-preview
   cancel-in-progress: true
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.meta.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
-      - run: node scripts/build_native_app.js
-      - name: Assert synthetic-only preview and no backend secrets
+        with:
+          ref: ${{ github.event.inputs.ref || github.sha }}
+      - id: meta
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Build is reproducible (committed preview == fresh build)
         run: |
-          test -f preview/index.html
-          test -f preview/manifest.webmanifest
-          ! grep -E -i '(AKfycb[A-Za-z0-9_-]+|script.google.com/macros|BEGIN PRIVATE KEY|client_secret)' preview/index.html preview/engine.js
+          node scripts/build_native_app.js
+          git diff --exit-code -- preview/index.html preview/engine.js
+      - name: Privacy/secret scan tests + stage the public site (allow-listed files + build-info)
+        run: |
+          node scripts/test_pages_scan.js
+          rm -rf site && mkdir site
+          cp preview/index.html preview/engine.js preview/sw.js preview/manifest.webmanifest preview/icon.svg preview/capabilities.json site/
+          printf '{"sha":"%s","run":"%s","built_at":"%s","kind":"synthetic-preview-only"}\n' "${{ steps.meta.outputs.sha }}" "${{ github.run_id }}" "$(date -u +%FT%TZ)" > site/build-info.json
+          node scripts/scan_pages_artifact.js site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: preview
+          path: site
           name: github-pages-${{ github.run_attempt }}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Allow artifact metadata to propagate
         run: sleep 8
       - id: deployment
         uses: actions/deploy-pages@v4
         with:
           artifact_name: github-pages-${{ github.run_attempt }}
+      - name: Live check — the public URL serves exactly the tested SHA (retries; fails visibly if not)
+        run: |
+          url="${{ steps.deployment.outputs.page_url }}"
+          for i in 1 2 3 4 5 6 7 8; do
+            body="$(curl -fsS --max-time 20 "${url}build-info.json?cb=$RANDOM" || true)"
+            echo "$body" | grep -q "${{ needs.build.outputs.sha }}" && { echo "LIVE OK: $url serves ${{ needs.build.outputs.sha }}"; curl -fsS --max-time 20 "$url" | grep -q "MASLUL" && exit 0; }
+            sleep 10
+          done
+          echo "LIVE CHECK FAILED: $url did not serve ${{ needs.build.outputs.sha }}"; exit 1
