@@ -35,6 +35,7 @@ function create(opts) {
       db.users.push(u); log('seed_admin', { user: u.id }); return { id: u.id };
     },
     listPending(ctx) { needAdmin(ctx); return db.requests.filter(r => r.status === 'pending').map(r => ({ id: r.id, name: r.name, phone: r.phone, created_at: r.created_at })); },
+    listUsers(ctx) { needAdmin(ctx); return db.users.map(u => ({ id: u.id, name: u.name, phone: u.phone, role: u.role, courseIds: u.courseIds.slice(), unitIds: u.unitIds.slice(), active: u.active, locked: u.lockedUntil > now() })); },
     approve(ctx, requestId, grant) {
       needAdmin(ctx); const r = db.requests.find(x => x.id === requestId && x.status === 'pending'); if (!r) throw new AuthError('NOT_FOUND', 'בקשה לא נמצאה.');
       if (!grant || !ROLES.includes(grant.role)) throw new AuthError('INVALID', 'תפקיד לא תקין.'); if (grant.role !== 'admin' && !(grant.courseIds || []).length) throw new AuthError('INVALID', 'יש לשייך קורס.');

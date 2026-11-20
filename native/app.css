@@ -24,3 +24,4 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 .b7t{border-collapse:collapse;width:100%;font-size:13px}
 .b7t th,.b7t td{padding:8px 10px;text-align:right;border-bottom:1px solid #eef2f3;white-space:nowrap}
 .b7t th{background:#f4f7f8;font-weight:700;position:sticky;top:0}
+.chip{min-height:44px;display:inline-flex;align-items:center}

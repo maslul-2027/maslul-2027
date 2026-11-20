@@ -27,6 +27,6 @@ t('integration', 'load: 200 soldiers x 6 results each + attendance, home/overvie
 t('integration', 'end-to-end: result -> alert -> handled -> report -> import preview does not overwrite -> assistant answer from the same figures', () => {
   const S = setup(); const { X, admin, c1, S: sol } = S; X.Records.create(admin, 'MarksmanshipTests', c1, { request_id: S.rid(), soldier_id: sol.a.id, test_date: '2026-03-02', weapon_type: 'M16', distance_m: 100, examiner_score: 80, weapon_zeroed: true });
   const card = X.Card.build(admin, sol.a.id); assert.strictEqual(card.marksmanship.regular.mean, 80); const rep = X.Reports.fullExport(admin, c1, false); assert.ok(rep.id && rep.rows_count > 0, 'export has rows');
-  const a = X.Assistant.ask(admin, c1, 'מה ממוצע הקליעה של ' + 'אלף', {}); assert.ok(JSON.stringify(a).includes('80'), 'assistant states the same figure: ' + JSON.stringify(a).slice(0, 200));
+  const a = X.Assistant.ask(admin, c1, 'מה ממוצע הקליעה?', {}); assert.ok(a.missing.some(m => /מדוכא/.test(m)) && !JSON.stringify(a).includes('80'), 'group of < N: the figure is suppressed (owner policy), never stated: ' + JSON.stringify(a).slice(0, 200));
 });
 done();

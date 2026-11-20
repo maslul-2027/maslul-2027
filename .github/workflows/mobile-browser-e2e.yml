@@ -6,6 +6,11 @@ on:
       - 'native/**'
       - 'src/**'
       - 'scripts/build_native_app.js'
+      - 'scripts/lib/**'
+      - 'backend_next/**'
+      - 'tests/secure_test_server.js'
+      - 'tests/route_table.js'
+      - 'scripts/e2e_secure_browser.js'
       - 'scripts/e2e_native.js'
       - 'scripts/e2e_native_domains.js'
       - 'scripts/e2e_native_roles.js'
@@ -57,6 +62,15 @@ jobs:
       - run: E2E_CALLS_OUT=artifacts/calls_native_qa.json node scripts/e2e_native_qa.js preview artifacts/qa_screens
       - run: E2E_CALLS_OUT=artifacts/calls_native_batch6.json node scripts/e2e_native_batch6.js preview artifacts/batch6_screens
       - run: E2E_CALLS_OUT=artifacts/calls_native_batch7.json node scripts/e2e_native_batch7.js preview artifacts/batch7_screens
+      - name: Private TEST server — secure API tests over real TLS (Issue #43)
+        run: |
+          node scripts/build_native_app.js --server
+          node tests/route_table.js
+          node tests/secure_test_server.js
+      - name: Private TEST server — browser E2E over real TLS, admin/commander/viewer at 320/360/390/414 (Issue #43)
+        run: |
+          node scripts/build_native_app.js --server
+          SHOTS_DIR=artifacts/secure_screens node scripts/e2e_secure_browser.js
       - name: 174-route evidence ledger (generated from the browser runs)
         run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Enforce truthful route ledger counts and native-screen evidence
@@ -78,6 +92,7 @@ jobs:
             artifacts/qa_screens
             artifacts/batch6_screens
             artifacts/batch7_screens
+            artifacts/secure_screens
             artifacts/ledger
             artifacts/calls_*.json
           if-no-files-found: ignore

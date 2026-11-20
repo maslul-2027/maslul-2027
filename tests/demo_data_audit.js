@@ -10,7 +10,8 @@ const trimU = u => u.replace(/[.,;:]+$/, '');
 // the legitimate scopes = exactly the oauthScopes of the product manifest (read from src/appsscript.json)
 const SCOPES = new Set(JSON.parse(fs.readFileSync(path.join(root, 'src', 'appsscript.json'), 'utf8')).oauthScopes || []);
 // REVIEWED, file-scoped allowances (each is a synthetic INPUT to a validation/attack test, never a request target): [file regex, finding regex, reason]
-const ALLOW = [[/auth_gateway\.js$/, /https:\/\/(maslul\.test\.invalid|evil\.example)/, 'synthetic Origin header values fed to the gateway CSRF test (never a request target)'],
+const ALLOW = [[/secure_test_server\.js$/, /https:\/\/evil\.example|network\/Google client module required/, 'loopback-only TLS client (127.0.0.1, self-signed test cert) against the private TEST server started by the test itself; evil.example is a hostile Origin header VALUE, never a request target'],
+  [/auth_gateway\.js$/, /https:\/\/(maslul\.test\.invalid|evil\.example)/, 'synthetic Origin header values fed to the gateway CSRF test (never a request target)'],
   [/fakesheets\.js$/, /https:\/\/fake\//, 'fake base URL of the in-memory sheet fake'],
   [/hardening\.js$/, /http:\/\/evil/, 'hostile-input string for an injection/redirect test'], [/integration\.js$/, /x\.com2\.com/, 'malformed-domain input for an e-mail validation test'], [/(stg_f2_dailyjob|stg_setup_guard)\.js$/, /admin@x\.co(m\.evil\.com)?$/, 'look-alike e-mail inputs for owner-identity guard tests (must be rejected)'], [/v1_preflight\.js$/, /stranger@gmail\.com/, 'synthetic stranger identity; no such account is contacted'], [/v1_reports\.js$/, /http:\/\/evil/, 'hostile-input string for a link-sanitising test'],
   [/(r3_forms_reports|ui_r3)\.js$/, /docs\.google\.com|forms\.gle|pw@docs|Google URL/, 'placeholder AbCdEf… form ids used only as INPUT to the form-link URL validator (accept/reject); never fetched']];
