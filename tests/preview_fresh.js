@@ -1,6 +1,6 @@
-// preview/index.html is a BUILD OUTPUT of src/Index.html + src/*.gs (scripts/build_synthetic_app.js --pwa). It must never drift from the source it claims to be.
+// preview/index.html + preview/engine.js are BUILD OUTPUTS of native/* + src/*.gs (scripts/build_native_app.js). They must never drift from the source they claim to be.
 const fs = require('fs'), path = require('path'), cp = require('child_process'), os = require('os'), assert = require('assert'), crypto = require('crypto');
-const tmp = path.join(os.tmpdir(), 'maslul_preview_' + process.pid + '.html'); cp.execFileSync('node', [path.join(__dirname, '..', 'scripts', 'build_synthetic_app.js'), '--pwa', '--out=' + tmp], { stdio: 'ignore' });
+const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'maslul_native_')); cp.execFileSync('node', [path.join(__dirname, '..', 'scripts', 'build_native_app.js'), '--out=' + tmp], { stdio: 'ignore' });
 const h = f => crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); let ok = true, msg = '';
-try { assert.strictEqual(h(tmp), h(path.join(__dirname, '..', 'preview', 'index.html'))); } catch (e) { ok = false; msg = 'preview/index.html is stale: run `node scripts/build_synthetic_app.js --pwa` and commit'; } finally { fs.unlinkSync(tmp); }
-console.log((ok ? 'PASS' : 'FAIL') + ' [integration] preview/index.html equals the build of the current source' + (ok ? '' : '\n   ' + msg)); console.log('\nPREVIEW FRESH TOTAL pass=' + (ok ? 1 : 0) + ' fail=' + (ok ? 0 : 1)); process.exit(ok ? 0 : 1);
+try { for (const f of ['index.html', 'engine.js']) assert.strictEqual(h(path.join(tmp, f)), h(path.join(__dirname, '..', 'preview', f)), f); } catch (e) { ok = false; msg = 'preview is stale (' + e.message.split('\n')[0] + '): run `node scripts/build_native_app.js` and commit'; } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
+console.log((ok ? 'PASS' : 'FAIL') + ' [integration] preview/index.html + engine.js equal the build of the current source' + (ok ? '' : '\n   ' + msg)); console.log('\nPREVIEW FRESH TOTAL pass=' + (ok ? 1 : 0) + ' fail=' + (ok ? 0 : 1)); process.exit(ok ? 0 : 1);
