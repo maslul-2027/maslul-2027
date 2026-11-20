@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save --no-package-lock playwright@1.56.1
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium
       - run: node scripts/build_course_preview.cjs legacy-source
       - run: python3 -m http.server 8787 --directory preview > /tmp/maslul-http.log 2>&1 &
       - run: node scripts/e2e_unified_mobile.cjs
