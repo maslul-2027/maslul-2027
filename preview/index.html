@@ -18,6 +18,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 .app>.scr{animation:none}.mode{font-size:11px;color:#68747a}.toast{max-width:90%}
 @media(min-width:821px){.nav{border-radius:16px 16px 0 0}}
 [tabindex="-1"]:focus{outline:none}
+#askbox .chip{min-height:44px;padding:10px 14px}
 
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
@@ -76,23 +77,73 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
   function ctxLine() { return 'פיילוט מסלול 2027 · סביבת תצוגה בלבד'; }
   function depName(id) { var d = (S.org.departments || []).filter(function (x) { return x.id === id; })[0]; return d ? d.name.replace(/\s*\(זמני\)/, '') : ''; }
 
-  /* ---------- HOME ---------- */
+  /* ---------- HOME (smart) ---------- */
+  /* insightProvider: replaceable generative layer — OFF by default. When enabled it may receive ONLY groupSafePayload(items) (titles/text/N/window of
+     group-level insights already filtered by the server's N>=5 rules): no names, IDs, free-text notes or operational records. No external provider is connected. */
+  var SRC = { NavigationTests: 'ניווט', MarksmanshipTests: 'קליעה', FitnessTests: 'כש״ג', TheoreticalExamAttempts: 'מבחנים', Soldiers: 'חניכים', AttendanceEvents: 'אירועי נוכחות', AttendanceRecords: 'נוכחות', Marches: 'מסעות' };
+  var INSIGHT = { enabled: false, name: null };
+  function groupSafePayload(items) { return (items || []).map(function (i) { return { kind: i.kind, title: i.title, text: i.text, n: i.n, window: i.window }; }); }
+  function hhmm(iso) { try { var d = new Date(iso); return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
+  function parseTrend(it) { var m = /הוא ([\d.\-]+) לעומת ([\d.\-]+) בחודש ([\d-]+) \(([+\-]?[\d.]+)\)/.exec(it.text || ''); return m ? { b: +m[1], a: +m[2], delta: m[4], from: m[3] } : null; }
+  function miniChart(t) { var mx = Math.max(t.a, t.b, 1), W = 120, H = 34, svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="ממוצע קודם ' + t.a + ', נוכחי ' + t.b + '"><rect x="4" y="' + (H - 4 - (t.a / mx) * (H - 8)) + '" width="40" height="' + ((t.a / mx) * (H - 8)) + '" rx="4" fill="#cce5e4"/><rect x="64" y="' + (H - 4 - (t.b / mx) * (H - 8)) + '" width="40" height="' + ((t.b / mx) * (H - 8)) + '" rx="4" fill="#007f83"/></svg>', w = document.createElement('span'); w.innerHTML = svg; return w; }
+  var CTA = { followups: ['d/none', 'tasks', 'למעקבים'], coverage: 'd/insights', trend: 'd/insights', attendance: 'd/attendance', group_gap: 'd/insights', distribution: 'd/insights' };
+  function insightCard(o) { var b = h('div', { class: 'card', style: 'display:block' }, [h('h3', { text: o.title }), h('p', { text: o.text, style: 'line-height:1.6;margin:6px 0' }), o.chart || null, h('p', { class: 'muted', text: o.meta || '', style: 'margin:6px 0 8px' }), h('button', { class: 'secondary', type: 'button', text: o.cta + ' ←', onclick: function () { go(o.go); } })]); return b; }
   function Home() {
     var kp = [h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k1' }), h('small', { text: 'חניכים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k2' }), h('small', { text: 'מעקבים פתוחים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k3' }), h('small', { text: 'התראות פתוחות' })])];
+    var today = h('div', { id: 'today', 'aria-busy': 'true' }, skeleton(2)), brief = h('div', { id: 'brief', 'aria-busy': 'true' }, skeleton(1)), more = h('div', { id: 'deep' }), ask = h('div', { id: 'askbox' }), upd = h('span', { class: 'count', id: 'upd', text: 'נתוני הדגמה' });
     mount('home', [
       h('div', { class: 'hero' }, [h('small', { text: 'בוקר טוב 👋' }), h('h1', { text: 'הכול ברור. אפשר להתקדם.' }), h('p', { text: 'מסך בית שמציג את הפעולה החשובה הבאה, בלי לחפש בין עשרות תפריטים.' }), h('button', { class: 'primary', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
       sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp),
+      h('div', { class: 'section' }, [h('h2', { text: 'מה חשוב לדעת היום' }), upd]), today,
+      sectionHead('תמונת מצב פיקודית', null), brief, more, ask,
       sectionHead('גישה מהירה', 'הכי שימושי'),
       card('חיפוש חניך', 'מוצאים אדם בשניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldiers'); }),
       card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('tasks'); }),
       card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
     ], 'בית');
     if (!S.course) return;
-    api('soldiers.list', { courseId: S.course.id, opts: { active: true } }).then(function (r) { $('#k1').textContent = r.ok ? String(r.data.length) : '—'; });
-    Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), api('tasks.indicators', { courseId: S.course.id })]).then(function (r) {
-      var f = r[0].ok ? r[0].data.filter(function (x) { return x.status === 'open'; }).length : 0, t = r[1].ok ? (r[1].data.my_open || 0) : 0; $('#k2').textContent = (r[0].ok || r[1].ok) ? String(f + t) : '—';
+    var cid = S.course.id, st = { soldiers: null, follow: 0, tasks: 0, overdue: 0, alerts: null };
+    var pS = api('soldiers.list', { courseId: cid, opts: { active: true } }).then(function (r) { st.soldiers = r.ok ? r.data.length : null; $('#k1').textContent = r.ok ? String(r.data.length) : '—'; });
+    var pF = Promise.all([api('followups.list', { courseId: cid, opts: {} }), api('tasks.indicators', { courseId: cid })]).then(function (r) { st.follow = r[0].ok ? r[0].data.filter(function (x) { return x.status === 'open'; }).length : 0; st.tasks = r[1].ok ? (r[1].data.my_open || 0) : 0; st.overdue = r[1].ok ? (r[1].data.my_overdue || r[1].data.overdue || 0) : 0; $('#k2').textContent = (r[0].ok || r[1].ok) ? String(st.follow + st.tasks) : '—'; });
+    var pA = api('alerts.counts', { courseId: cid }).then(function (r) { st.alerts = r.ok ? r.data.open : null; var k = $('#k3'); k.textContent = r.ok ? String(r.data.open) : '—'; if (r.ok && r.data.red > 0) k.style.color = '#c52d36'; });
+    var pI = api('analytics.insights', { courseId: cid, f: {} });
+    Promise.all([pS, pF, pA, pI]).then(function (all) {
+      var ins = all[3], items = [], reason = '', gen = '';
+      if (ins.ok) { items = ins.data.items || []; gen = ins.data.generated_at; if (ins.data.small_group) reason = 'אין עדיין מספיק נתונים לניתוח (קבוצה קטנה מ-5 — מוסתר מטעמי פרטיות).'; } else reason = ins.code === 'FORBIDDEN' ? 'אין הרשאה לתובנות.' : 'התובנות אינן זמינות כרגע. ' + msgOf(ins);
+      if (gen) upd.textContent = 'עודכן ' + hhmm(gen);
+      var by = function (k) { return items.filter(function (i) { return i.kind === k; }); };
+      var cards = [];
+      if (st.follow + st.tasks + st.overdue > 0) cards.push({ title: 'יש מעקבים פתוחים', text: st.follow + ' מעקבים אישיים' + (st.tasks ? ' ו-' + st.tasks + ' משימות פתוחות' : '') + (st.overdue ? ' (' + st.overdue + ' באיחור)' : '') + ' ממתינים לטיפול.', meta: 'מקור: מעקבים ומשימות · עודכן עכשיו', cta: 'למעקבים', go: 'tasks' });
+      by('coverage').slice(0, 1).forEach(function (i) { cards.push({ title: i.title, text: i.text.length > 150 ? i.text.slice(0, 147) + '…' : i.text, meta: 'N=' + i.n + ' · ' + (gen ? 'עודכן ' + hhmm(gen) : ''), cta: 'להשלמת נתונים', go: 'more' }); });
+      by('trend').sort(function (x, y) { var a = parseTrend(x), b = parseTrend(y); return Math.abs(b ? +b.delta : 0) - Math.abs(a ? +a.delta : 0); }).slice(0, 1).forEach(function (i) { var t = parseTrend(i); cards.push({ title: i.title, text: i.text, chart: t ? miniChart(t) : null, meta: 'חלון ' + (i.window.from || '') + '–' + (i.window.to || '') + ' · N=' + i.n + ' · פרשנות תיאורית, לא סיבתית', cta: 'לכל התובנות', go: 'd/insights' }); });
+      if (cards.length < 3) by('attendance').slice(0, 1).forEach(function (i) { cards.push({ title: i.title, text: i.text, meta: 'N=' + i.n, cta: 'לנוכחות', go: 'd/attendance' }); });
+      today.replaceChildren(); today.setAttribute('aria-busy', 'false');
+      if (!cards.length) today.append(emptyBox(reason || 'אין כרגע פריטים הדורשים תשומת לב.')); else { cards.slice(0, 3).forEach(function (c) { today.append(insightCard(c)); }); if (reason) today.append(h('p', { class: 'muted', role: 'status', text: reason })); }
+      /* command summary — fixed, verified templates only */
+      brief.replaceChildren(); brief.setAttribute('aria-busy', 'false');
+      if (!items.length) { brief.append(emptyBox(reason || 'אין עדיין מספיק נתונים לניתוח.')); }
+      else {
+        var parts = [(st.soldiers !== null ? 'בקורס ' + st.soldiers + ' חניכים פעילים. ' : '')];
+        by('trend').forEach(function (i) { parts.push(i.text + ' '); }); by('attendance').slice(0, 1).forEach(function (i) { parts.push(i.text + ' '); });
+        parts.push('פתוחים כעת: ' + (st.follow + st.tasks) + ' מעקבים/משימות' + (st.alerts !== null ? ' ו-' + st.alerts + ' התראות' : '') + '.');
+        var cov = by('coverage')[0]; if (cov) parts.push(' כדאי לבדוק היום: ' + cov.title + '.');
+        var from = items.map(function (i) { return i.window && i.window.from; }).filter(Boolean).sort()[0], to = items.map(function (i) { return i.window && i.window.to; }).filter(Boolean).sort().pop(), nmin = Math.min.apply(null, items.map(function (i) { return i.n || 0; }).filter(Boolean));
+        brief.append(h('div', { class: 'card', style: 'display:block' }, [h('p', { text: parts.join('').trim(), style: 'line-height:1.7;margin:0 0 8px' }), h('p', { class: 'muted', style: 'margin:0', text: 'חלון: ' + (from || '—') + '–' + (to || '—') + ' · N≥' + (isFinite(nmin) ? nmin : '—') + ' · מקור: ' + Array.from(new Set([].concat.apply([], items.map(function (i) { return (i.source || []).map(function (x) { return SRC[x] || x; }); })))).join(', ') + ' · נבנה מתבניות וכללים קבועים (לא AI גנרטיבי). זו פרשנות תיאורית; אינה קובעת סיבה ואינה הערכה אישית.' })]));
+      }
+      /* all insights (expandable) */
+      var det = h('details', { class: 'card', style: 'display:block' }, [h('summary', { text: 'מגמות וניתוח — לכל התובנות (' + items.length + ')', style: 'font-weight:800;min-height:44px;display:flex;align-items:center;cursor:pointer' })]);
+      if (!items.length) det.append(h('p', { class: 'muted', text: reason || 'אין תובנות להצגה.' }));
+      items.forEach(function (i) { var t = i.kind === 'trend' ? parseTrend(i) : null; det.append(h('div', { style: 'border-top:1px solid #e6e9eb;padding:10px 0' }, [h('h3', { text: i.title, style: 'margin:0 0 4px;font-size:14px' }), h('p', { text: i.text, style: 'margin:0 0 4px;font-size:13px;line-height:1.6' }), t ? miniChart(t) : null, h('p', { class: 'muted', style: 'margin:4px 0 0;font-size:12px', text: 'N=' + i.n + ' · מקור: ' + (i.source || []).map(function (x) { return SRC[x] || x; }).join(', ') + (i.caveat ? ' · הסתייגות: ' + i.caveat : '') + (i.formula ? ' · נוסחה: ' + i.formula : '') })])); });
+      var sup = ins.ok ? (ins.data.suppressed || []) : []; if (sup.length) det.append(h('p', { class: 'muted', style: 'font-size:12px', text: 'לא מוצג (' + sup.length + '): ' + sup.slice(0, 4).map(function (x) { return x.reason; }).join(' | ') }));
+      more.replaceChildren(det);
     });
-    api('alerts.counts', { courseId: S.course.id }).then(function (r) { $('#k3').textContent = r.ok ? String(r.data.open) : '—'; var k = $('#k3'); if (r.ok && r.data.red > 0) k.style.color = '#c52d36'; });
+    /* ask the system — rule-based assistant, not generative AI */
+    ask.append(sectionHead('שאל את המערכת', 'עוזר תובנות מבוסס נתונים'));
+    var qi = h('input', { class: 'search', id: 'askq', type: 'search', placeholder: 'למשל: מה נוכחות?', 'aria-label': 'שאלה לעוזר התובנות', maxlength: '500' }), out = h('div', { 'aria-live': 'polite', id: 'askout' }), chips = h('div', { class: 'filters' });
+    function doAsk(q) { if (!q.trim()) return; out.replaceChildren(skeleton(1)); api('ai.ask', { courseId: cid, question: q, include_private: false }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(errBox(r)); return; } var d = r.data, box = h('div', { class: 'card', style: 'display:block' }); (d.facts || []).forEach(function (f) { box.append(h('p', { text: f.text, style: 'margin:0 0 6px' })); }); if (!(d.facts || []).length) box.append(h('p', { text: d.note || 'לא נמצאה תשובה.', style: 'margin:0 0 6px' })); box.append(h('p', { class: 'muted', style: 'margin:6px 0 0;font-size:12px', text: 'מקור: ' + ((d.sources || []).join(', ') || '—') + ' · עודכן ' + hhmm(new Date().toISOString()) + ' · עוזר מבוסס כללים; אין בו מודל שפה.' })); out.append(box); }); }
+    ['כמה חיילים בקורס?', 'מה נוכחות?', 'מה מצב ההתראות?'].forEach(function (q) { chips.append(h('button', { class: 'chip', type: 'button', text: q, onclick: function () { qi.value = q; doAsk(q); } })); });
+    var af = h('form', { novalidate: 'true' }, [qi, h('button', { class: 'secondary', type: 'submit', text: 'שאלו', style: 'margin-top:8px' })]); af.addEventListener('submit', function (e) { e.preventDefault(); doAsk(qi.value); });
+    ask.append(chips, af, out);
   }
 
   /* ---------- TRAINEES ---------- */
@@ -346,7 +397,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
   }
   document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.go); }); });
   window.addEventListener('hashchange', render);
-  window.__app = { api: api, state: S };
+  window.__app = { api: api, state: S, insightProvider: INSIGHT, groupSafePayload: groupSafePayload };
   view.replaceChildren(skeleton(3));
   C.ready.then(loadContext).then(function () { $('#ctx').textContent = ctxLine(); render(); }).catch(function (e) { view.replaceChildren(errBox(e && e.message ? e : { message: 'לא ניתן לטעון את האפליקציה.' }, function () { location.reload(); })); });
 })();

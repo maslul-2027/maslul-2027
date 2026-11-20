@@ -2,14 +2,14 @@
 
 Source: `scripts/build_route_ledger.js` from `src/Code.gs` API_ map, `tests/route_classes.json`, native sources and the calls recorded by the browser E2E (`E2E_CALLS_OUT`). Synthetic data only. **secured TEST E2E = NOT_RUN and deployed = NO for every row** (no secured backend exists yet).
 
-**Summary:** {"total":174,"PASS_SYNTH_E2E":62,"IMPLEMENTED_NOT_E2E":7,"BLOCKED_NOT_CONNECTED":10,"NOT_IMPLEMENTED":95,"native_screen":71}
+**Summary:** {"total":174,"PASS_SYNTH_E2E":62,"IMPLEMENTED_NOT_E2E":8,"BLOCKED_NOT_CONNECTED":10,"NOT_IMPLEMENTED":94,"native_screen":72}
 
 Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser test · IMPLEMENTED_NOT_E2E = native screen exists, no browser evidence yet · BLOCKED_NOT_CONNECTED = needs an adapter that is not connected in synthetic mode (visible to the user, never faked) · NOT_IMPLEMENTED = no native workflow.
 
 | # | Route | Group | Authz class | Native | Status | OK calls | Negative authz seen | Note |
 |---|---|---|---|---|---|---|---|---|
-| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 8 | no |  |
-| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 5 | no |  |
+| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 9 | no |  |
+| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 6 | no |  |
 | 3 | `courses.create` | courses | A | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 4 | `courses.archive` | courses | A | no | NOT_IMPLEMENTED | 0 | no |  |
 | 5 | `courses.reopen` | courses | A | no | NOT_IMPLEMENTED | 0 | no |  |
@@ -17,7 +17,7 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 7 | `users.list` | users | A | yes | PASS_SYNTH_E2E | 2 | yes |  |
 | 8 | `users.add` | users | A | yes | PASS_SYNTH_E2E | 1 | yes |  |
 | 9 | `users.set` | users | A | no | NOT_IMPLEMENTED | 0 | no |  |
-| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 13 | no |  |
+| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 20 | no |  |
 | 11 | `soldiers.card` | soldiers | O | yes | PASS_SYNTH_E2E | 6 | no |  |
 | 12 | `soldiers.private` | soldiers | P | no | NOT_IMPLEMENTED | 0 | no |  |
 | 13 | `emergency.get` | emergency | P | no | NOT_IMPLEMENTED | 0 | no |  |
@@ -110,8 +110,8 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 100 | `notes.save` | notes | P | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 101 | `notes.list` | notes | P | no | NOT_IMPLEMENTED | 0 | no |  |
 | 102 | `followups.create` | followups | O | yes | PASS_SYNTH_E2E | 1 | no |  |
-| 103 | `followups.update` | followups | O | yes | PASS_SYNTH_E2E | 1 | no |  |
-| 104 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 8 | yes |  |
+| 103 | `followups.update` | followups | O | yes | IMPLEMENTED_NOT_E2E | 0 | no |  |
+| 104 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 12 | yes |  |
 | 105 | `favorites.toggle` | favorites | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 106 | `favorites.list` | favorites | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 107 | `snote.add` | snote | O | no | NOT_IMPLEMENTED | 0 | no |  |
@@ -120,7 +120,7 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 110 | `alerts.refresh` | alerts | A | yes | IMPLEMENTED_NOT_E2E | 0 | no |  |
 | 111 | `alerts.list` | alerts | O | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 112 | `alerts.handle` | alerts | O | yes | IMPLEMENTED_NOT_E2E | 0 | no |  |
-| 113 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 6 | no |  |
+| 113 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 11 | no |  |
 | 114 | `forms.generalLink` | forms | N | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 115 | `forms.createLink` | forms | A | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 116 | `forms.list` | forms | O | yes | PASS_SYNTH_E2E | 1 | no |  |
@@ -131,7 +131,7 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 121 | `dash.compareCourses` | dash | G | no | NOT_IMPLEMENTED | 0 | no |  |
 | 122 | `dash.trends` | dash | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 123 | `dash.strengthsGaps` | dash | O | no | NOT_IMPLEMENTED | 0 | no |  |
-| 124 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 1 | no |  |
+| 124 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 13 | no |  |
 | 125 | `reports.build` | reports | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 126 | `reports.preview` | reports | G | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 127 | `reports.generate` | reports | O | yes | BLOCKED_NOT_CONNECTED | 0 | no | needs Drive export adapter |
@@ -157,7 +157,7 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 147 | `ocr.editRow` | ocr | A | no | NOT_IMPLEMENTED | 0 | no |  |
 | 148 | `ocr.approveRow` | ocr | A | no | NOT_IMPLEMENTED | 0 | no |  |
 | 149 | `ocr.rejectRow` | ocr | A | no | NOT_IMPLEMENTED | 0 | no |  |
-| 150 | `ai.ask` | ai | O | no | NOT_IMPLEMENTED | 0 | no |  |
+| 150 | `ai.ask` | ai | O | yes | PASS_SYNTH_E2E | 2 | no |  |
 | 151 | `ai.draft` | ai | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 152 | `ai.drafts` | ai | O | no | NOT_IMPLEMENTED | 0 | no |  |
 | 153 | `ai.reviewDraft` | ai | A | no | NOT_IMPLEMENTED | 0 | no |  |
@@ -175,10 +175,10 @@ Markers: PASS_SYNTH_E2E = called successfully by the real UI/engine in a browser
 | 165 | `meetings.get` | meetings | N | no | NOT_IMPLEMENTED | 0 | no |  |
 | 166 | `meetings.options` | meetings | N | yes | PASS_SYNTH_E2E | 1 | no |  |
 | 167 | `meetings.save` | meetings | A | yes | PASS_SYNTH_E2E | 1 | no |  |
-| 168 | `tasks.list` | tasks | N | yes | PASS_SYNTH_E2E | 2 | no |  |
+| 168 | `tasks.list` | tasks | N | yes | PASS_SYNTH_E2E | 3 | no |  |
 | 169 | `tasks.get` | tasks | N | no | NOT_IMPLEMENTED | 0 | no |  |
 | 170 | `tasks.setStatus` | tasks | N | yes | IMPLEMENTED_NOT_E2E | 0 | no |  |
-| 171 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 6 | no |  |
+| 171 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 11 | no |  |
 | 172 | `meetings.integrity` | meetings | N | no | NOT_IMPLEMENTED | 0 | no |  |
 | 173 | `meetings.auditRepair` | meetings | A | no | NOT_IMPLEMENTED | 0 | no |  |
 | 174 | `audit.list` | audit | A | yes | PASS_SYNTH_E2E | 1 | yes |  |
