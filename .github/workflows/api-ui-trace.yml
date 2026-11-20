@@ -1,0 +1,31 @@
+name: Legacy API to UI trace audit
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit_api_ui_trace.cjs'
+      - '.github/workflows/api-ui-trace.yml'
+      - 'docs/capability-inventory.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  trace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: c9bc782df72fe1ab91016c003b65f2e3d82a58e8
+          path: legacy-source
+          sparse-checkout: |
+            /src/
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/audit_api_ui_trace.cjs legacy-source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-ui-traceability
+          path: artifacts/api-ui-traceability.json
