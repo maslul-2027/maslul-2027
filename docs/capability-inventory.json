@@ -72,8 +72,6 @@
     ],
     "fitness": [
       "fitness.types",
-      "fitness.preview",
-      "fitness.reference",
       "fitness.typeCreate",
       "fitness.typeWeights",
       "fitness.typeActive",
