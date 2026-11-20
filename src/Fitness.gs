@@ -107,13 +107,15 @@ const Fitness = {
       tables: FITNESS_DRAFT.tables.map(function (t) { return { id: t.id, component: t.component, variant: t.variant, gender: t.gender, sheet: t.sheet, kind: t.kind, meta: t.meta || null, rows: t.rows.length }; }) };
   },
 
-  versionsList(ctx, courseId) {
+  /** Admin read. Optional rowsFor (a version id of THIS course): additionally returns that version's table rows (id, score, from, to) so a row can be corrected with editRow. Additive, no write. */
+  versionsList(ctx, courseId, rowsFor) {
     Records.guardCourse_(ctx, 'config.edit', courseId);
     return Db.where('FitnessScoringVersions', function (v) { return v.course_id === courseId; }).map(function (v) {
       const rows = Db.where('FitnessScoringRows', function (r) { return r.version_id === v.id; });
       const tables = {}; rows.forEach(function (r) { const k = r.gender + '|' + r.component + '|' + r.variant; tables[k] = (tables[k] || 0) + 1; });
-      return { id: v.id, label: v.label, status: v.status, approved_by: v.approved_by, approved_at: v.approved_at, gender_map: Util.parseJson(v.gender_map_json, {}), issues: Util.parseJson(v.issues_json, []),
-        tables: Object.keys(tables).map(function (k) { const p = k.split('|'); return { gender: p[0], component: p[1], variant: p[2], rows: tables[k] }; }) };
+      return Object.assign({ id: v.id, label: v.label, status: v.status, approved_by: v.approved_by, approved_at: v.approved_at, gender_map: Util.parseJson(v.gender_map_json, {}), issues: Util.parseJson(v.issues_json, []),
+        tables: Object.keys(tables).map(function (k) { const p = k.split('|'); return { gender: p[0], component: p[1], variant: p[2], rows: tables[k] }; }) },
+      Util.str(rowsFor) === v.id ? { table_rows: rows.map(function (r) { return { id: r.id, gender: r.gender, component: r.component, variant: r.variant, score: r.score, from: r.from_value, to: r.to_value, row_no: r.row_no }; }) } : {});
     });
   },
 
