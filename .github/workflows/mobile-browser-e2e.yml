@@ -1,11 +1,14 @@
-name: Unified course mobile browser E2E
+name: Native mobile app browser E2E + design parity
 on:
   pull_request:
     paths:
       - 'preview/**'
-      - 'scripts/build_course_preview.cjs'
-      - 'scripts/unified_mobile_shell.cjs'
-      - 'scripts/e2e_unified_mobile.cjs'
+      - 'native/**'
+      - 'src/**'
+      - 'scripts/build_native_app.js'
+      - 'scripts/e2e_native.js'
+      - 'scripts/e2e_native_domains.js'
+      - 'scripts/native_screenshots.js'
       - '.github/workflows/mobile-browser-e2e.yml'
   workflow_dispatch:
 permissions:
@@ -16,13 +19,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout pinned original PR 10 visual reference
+        uses: actions/checkout@v4
         with:
-          ref: c9bc782df72fe1ab91016c003b65f2e3d82a58e8
-          path: legacy-source
+          ref: a2f70692d0b6fe112cdc38a3f03d2ca799e46e36
+          path: golden-source
           sparse-checkout: |
-            /src/
-            /tests/harness.js
+            preview/index.html
           sparse-checkout-cone-mode: false
           persist-credentials: false
       - uses: actions/setup-node@v4
@@ -30,6 +33,18 @@ jobs:
           node-version: '22'
       - run: npm install --no-save --no-package-lock playwright@1.56.1
       - run: npx playwright install chromium
-      - run: node scripts/build_course_preview.cjs legacy-source
-      - run: python3 -m http.server 8787 --directory preview > /tmp/maslul-http.log 2>&1 &
-      - run: node scripts/e2e_unified_mobile.cjs
+      - run: node scripts/build_native_app.js
+      - run: git diff --exit-code -- preview/index.html preview/engine.js
+      - run: node scripts/test_unified_mobile_contract.cjs
+      - run: node scripts/e2e_native.js preview
+      - run: node scripts/e2e_native_domains.js preview
+      - name: Design parity screenshots (original PR #10 vs native)
+        run: |
+          test -s golden-source/preview/index.html
+          node scripts/native_screenshots.js golden-source/preview/index.html preview artifacts/design_parity
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: design-parity
+          path: artifacts/design_parity
+          if-no-files-found: ignore

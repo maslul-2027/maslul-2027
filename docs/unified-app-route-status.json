@@ -1,0 +1,1055 @@
+{
+ "summary": {
+  "total": 174,
+  "server_logic_runs": 172,
+  "needs_google_service": 2,
+  "error": 0,
+  "with_ui_call_site": 128
+ },
+ "rows": [
+  {
+   "action": "acttypes.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "acttypes.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "acttypes.rename",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "acttypes.setActive",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "ai.ask",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ai.draft",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ai.drafts",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ai.reviewDraft",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "alerts.counts",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "alerts.handle",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "alerts.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "alerts.refresh",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "analytics.insights",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "assess.add",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "assess.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "assignments.create",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "assignments.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "assignments.mine",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "assignments.setActive",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "assignments.update",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "attendance.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "attendance.events",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "attendance.roll",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "attendance.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "audit.list",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "backup.create",
+   "answer": "NOT_CONNECTED",
+   "status": "needs_google_service",
+   "ui_call_site": true
+  },
+  {
+   "action": "backup.list",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "backup.plan",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "backup.prune",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "backup.recover",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "backup.restore",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "backup.verify",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "correction.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "correction.request",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "correction.review",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "courses.archive",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "courses.create",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "courses.list",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "courses.org",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "courses.rename",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "courses.reopen",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "dash.compareCourses",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "dash.groups",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "dash.home",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "dash.overview",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "dash.strengthsGaps",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "dash.trends",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "docs.attachEvidence",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "docs.download",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "docs.evidence",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "docs.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "docs.pendingLinks",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "docs.requestLink",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "docs.reviewLink",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "docs.upload",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "emergency.get",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "emergency.orphans",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "emergency.set",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "events.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "events.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "exams.attempt",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "exams.attempts",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "exams.defCreate",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "exams.defPass",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "exams.defs",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "exams.meetings",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "exams.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "favorites.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "favorites.toggle",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.addTable",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.approve",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.completion",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.draftSource",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.editRow",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.importDraft",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.quality",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.recompute",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.typeActive",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.typeCreate",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.typeVariant",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.typeWeights",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "fitness.types",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "fitness.versions",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "followups.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "followups.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "followups.update",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "forms.createLink",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "forms.generalLink",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "forms.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "forms.review",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "import.cancel",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "import.commit",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "import.decide",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "import.jobs",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "import.preview",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "import.start",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "marches.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "marches.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "marches.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "meetings.auditRepair",
+   "answer": "FORBIDDEN",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "meetings.get",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "meetings.integrity",
+   "answer": "FORBIDDEN",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "meetings.list",
+   "answer": "FORBIDDEN",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "meetings.options",
+   "answer": "FORBIDDEN",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "meetings.save",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "migration.run",
+   "answer": "NOT_CONNECTED",
+   "status": "needs_google_service",
+   "ui_call_site": false
+  },
+  {
+   "action": "mk.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "mk.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "mk.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "nav.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "nav.groups",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "nav.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "nav.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "navtypes.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "navtypes.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "navtypes.rename",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "navtypes.setActive",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "notes.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "notes.save",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ocr.approveRow",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ocr.editRow",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "ocr.rejectRow",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ocr.rows",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "ocr.start",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "preflight.last",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "preflight.run",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "qual.assignments",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "qual.define",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "qual.dueHistory",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "qual.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "qual.postpone",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "qual.requestExclusion",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "qual.reviewExclusion",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "qual.setActive",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "qual.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "qual.update",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "readiness.assess",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "readiness.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "readiness.notEntered",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "readiness.summary",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "record.cancel",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "record.edit",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "record.history",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "record.restore",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "reports.build",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "reports.download",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "reports.fullExport",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "reports.generate",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "reports.jobs",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "reports.preview",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "settings.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "settings.set",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "snote.add",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "snote.cancel",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "snote.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": false
+  },
+  {
+   "action": "soldiers.cancel",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.card",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.create",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.list",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.private",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.reassign",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.restore",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.setActive",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "soldiers.update",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "tasks.get",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "tasks.indicators",
+   "answer": "FORBIDDEN",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "tasks.list",
+   "answer": "FORBIDDEN",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "tasks.setStatus",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "users.add",
+   "answer": "VALIDATION",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "users.list",
+   "answer": "OK",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  },
+  {
+   "action": "users.set",
+   "answer": "NOT_FOUND",
+   "status": "server_logic_runs",
+   "ui_call_site": true
+  }
+ ]
+}

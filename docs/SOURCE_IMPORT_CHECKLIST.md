@@ -12,4 +12,4 @@ The available candidate archive is `MASLUL_2027_R5_2_16_4_4_PRIVACY_SUBCOHORT_CA
 - Do not overwrite the existing TEST project or deploy until reconciliation and test gates pass.
 - Preserve the existing private web app's execute-as and access settings.
 
-**Status:** import not yet approved by the above checks. GitHub is not yet the source of truth for the deployed app.
+**Status (import PR):** source imported on branch `claude/import-r5-2-16-4-4-final` with the scan in `docs/IMPORT_SCAN_REPORT.md`; the live `Setup.gs` reconciliation is still OPEN (live code not provided). GitHub is NOT yet the source of truth for the deployed app.

@@ -1,0 +1,18 @@
+'use strict';
+const fs = require('fs');
+const assert = require('assert');
+const html = fs.readFileSync(require('path').join(__dirname, '../src/Index.html'), 'utf8');
+const backup = html.slice(html.indexOf("{id:'backup',"), html.indexOf('/* Recovery:'));
+const recovery = html.slice(html.indexOf('/* Recovery:'), html.indexOf('/* restore: show WHAT'));
+assert.ok(backup.includes("['started_at','זמן']"), 'backup list uses the field returned by Backup.view_');
+assert.ok(!backup.includes("['created_at','זמן']"), 'no stale created_at field');
+assert.ok(backup.includes("d.warning||'הגיבוי נוצר.'"), 'backup creation warning is shown to admin');
+assert.ok(backup.includes("r.status==='pruning'?'ממתין לאימות מחיקה'"), 'pruning state is explained');
+assert.ok(backup.includes("r.status==='rollback_failed'?'נדרש שחזור התאוששות'"), 'rollback failure is explained');
+assert.ok(backup.includes("if(r.status==='restoring'||r.status==='rollback_failed')"), 'incomplete restore markers expose recovery action');
+assert.ok(backup.includes("if(r.status!=='ok')return"), 'only verified available backups offer verify/restore actions');
+assert.ok(recovery.includes("vcall('backup.recover',{id:r.id,data:{confirm:'RECOVER',reason:rs.value.trim()}}"), 'recovery calls the protected server API with typed confirmation and reason');
+assert.ok(recovery.includes("cf.value==='RECOVER'&&rs.value.trim()"), 'recovery button stays disabled until explicit confirmation and reason');
+assert.ok(recovery.includes("showTab('backup')"), 'backup list refreshes after recovery');
+assert.ok(html.includes("d.warning||'השחזור הושלם ואומת.'"), 'restore audit warning is shown; no misleading plain success');
+console.log('backup_ui_compat: 11/11 PASS');

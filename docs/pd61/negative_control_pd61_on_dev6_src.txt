@@ -1,0 +1,18 @@
+FAIL [hardening] QA-01 (1): a commander with ONE department cannot filter by another department — FORBIDDEN; unknown ids get the identical refusal (
+FAIL [hardening] QA-01 (2): a commander assigned to SEVERAL departments (department + team of another) may filter only by those, nothing else 
+FAIL [integration] QA-01 (3): the admin can filter by every department; a non-existent department is a validation error, not a leak 
+FAIL [hardening] QA-01 (4): no leak through department_ids, counts, KPI, total_matching, pagination or filter options — only departments inside the 
+PASS [integration] QA-01 (5): authorised users keep their behaviour — course-wide commander and admin see every department; department filter matche
+FAIL [hardening] QA-01 (6): IDOR / escalation sweep — other course, no assignment, soldier, tampered ids; nothing leaks and nothing changes 
+FAIL [integration] QA-02 (A): audit write fails AFTER the commit (create) — the save is reported as SUCCESS with an explicit AUDIT_FAILED warning, n
+FAIL [integration] QA-02 (B): the missing audit event can be FOUND and REPAIRED by an admin (append-only, audited, reason required); nobody else can 
+FAIL [integration] QA-02 (C): audit fails after the commit of an EDIT — success + warning, edit applied once, history intact, gap rev=2 found and re
+FAIL [integration] QA-02 (D): COMMIT write fails (create and edit) — SAVE_FAILED, nothing visible, NO success audit event, only MEETING_SAVE_FAILED;
+PASS [integration] QA-02 (E): meeting INSERT fails (create) — SAVE_FAILED, no rows, no success event; edit: a failure while writing a task restores 
+FAIL [integration] QA-02 (F): a commit write that THROWS BUT LANDED is detected — the data is saved so the answer is success (never SAVE_FAILED), wi
+FAIL [integration] QA-02 (G): when the FAILURE audit itself cannot be written the rollback is still clean (SAVE_FAILED, not SAVE_PARTIAL); a failed ro
+FAIL [hardening] QA-02 (H): no path writes a success audit event for a save that did not commit — failure-injection matrix over every write point; M
+FAIL [hardening] QA-02 (I): ordering is enforced in the source (commit precedes the success audit write) and the module still has NO standalone task-c
+FAIL [integration] task history stays complete after meeting edits, a removed task (cancelled) and audit failures; creation events are never duplicate
+BY TYPE: {"unit":0,"integration":2,"hardening":0} TOTAL pass=2 fail=14
+FAILED: QA-01 (1): a commander with ONE department cannot filter by another department — FORBIDDEN; unknown ids get the identical refusal (no probin
