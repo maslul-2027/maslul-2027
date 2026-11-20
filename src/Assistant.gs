@@ -20,7 +20,12 @@ const Assistant = {
     if (opts.include_private !== undefined && typeof opts.include_private !== 'boolean') throw new AppError('VALIDATION', 'include_private חייב להיות כן/לא.');
     const priv = opts.include_private === true; if (priv) { Records.guardCourse_(ctx, 'ai.private.optin', courseId); Records.guardCourse_(ctx, 'private.read', courseId); }
     const q = question.trim(), facts = [], assessments = [], missing = [], used = {}; let soldier = null;
-    Snapshot.soldiers(ctx, courseId, {}).forEach(function (s) { if (!soldier && q.indexOf(s.full_name) !== -1) soldier = s; });   // only soldiers visible to the caller can be matched
+    // OWNER POLICY (group-only analytics, N>=5): the assistant never answers about a named individual. A question that names a trainee (full name or personal number) is refused with no personal fact, for every role.
+    const named = Snapshot.soldiers(ctx, courseId, {}).some(function (s) { return (s.full_name && q.indexOf(s.full_name) !== -1) || (s.personal_number && q.indexOf(String(s.personal_number)) !== -1); });
+    if (named) {
+      Audit.log(ctx, { courseId: courseId, action: 'AI_ASK', table: 'Assistant', recordId: '', after: { topics: [], soldier: true, refused: true, private: false, question_length: q.length } });
+      return { facts: [], assessments: [], missing: [], sources: [], private_included: false, refused: true, note: 'השאלה מתייחסת לאדם מסוים. העוזר עונה על שאלות קבוצתיות בלבד (קבוצות של 5 ומעלה) — אפשר לשאול על הקורס, מחלקה או צוות. פרטי חניך נמצאים בכרטיס החניך למורשים.' };
+    }
     const topics = Assistant.TOPICS.filter(function (t) { return t[1].test(q); }).map(function (t) { return t[0]; });
     const sid = soldier ? soldier.id : '', f = soldier ? { soldierId: soldier.id } : {}, who = soldier ? ('עבור ' + soldier.full_name + ': ') : (ctx.role === ROLES.ADMIN ? '' : 'בהיקף שלך: ');
     const fact = function (text, source) { facts.push({ text: who + text, source: source }); used[source] = true; };

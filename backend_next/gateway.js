@@ -4,7 +4,7 @@
 // Every record is resolved to its course/unit on the server; unresolved scope => deny (fail closed). Export/audit are admin-only; viewers never write.
 const crypto = require('crypto');
 const { create, AuthError } = require('./pin_auth');
-const COOKIE = '__Host-maslul_sid', STATUS = { INVALID: 400, WEAK_PIN: 400, BAD_CREDENTIALS: 401, UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, LOCKED: 423, RATE_LIMITED: 429, CSRF: 403, TLS_REQUIRED: 426 };
+const COOKIE = '__Host-maslul_sid', STATUS = { INVALID: 400, WEAK_PIN: 400, BAD_CREDENTIALS: 401, UNAUTHENTICATED: 401, FORBIDDEN: 403, NOT_FOUND: 404, LOCKED: 423, RATE_LIMITED: 429, CSRF: 403, TLS_REQUIRED: 426, POLICY_BLOCKED: 403, GRANT_FAILED: 409 };
 const csrfOf = (token, pepper) => crypto.createHmac('sha256', pepper).update('csrf|' + token).digest('base64url');
 const eq = (a, b) => { const x = Buffer.from(String(a || '')), y = Buffer.from(String(b || '')); return x.length === y.length && crypto.timingSafeEqual(x, y); };
 function parseCookies(h) { const o = {}; String(h || '').split(';').forEach(p => { const i = p.indexOf('='); if (i > 0) o[p.slice(0, i).trim()] = p.slice(i + 1).trim(); }); return o; }
@@ -26,6 +26,10 @@ function gateway(opts) {
     if (['export', 'audit'].includes(action)) { if (!ctx) throw new AuthError('UNAUTHENTICATED', 'נדרשת התחברות.'); if (ctx.role !== 'admin') throw new AuthError('FORBIDDEN', 'פעולה למנהל בלבד.'); return res; }
     auth.authorize(ctx, action === 'read' || action === 'evidence_read' ? 'read' : 'write', res); return res;
   };
+  /** Run a grant change as ONE unit: any failure (auth or engine assignment) restores the whole state in place — no approved user without a valid scope, no widened access. */
+  function restoreInPlace(snap) { Object.keys(snap).forEach(k => { const cur = state[k], old = snap[k]; if (Array.isArray(cur)) { cur.length = 0; old.forEach(x => cur.push(x)); } else if (cur && typeof cur === 'object') { Object.keys(cur).forEach(x => delete cur[x]); Object.assign(cur, old); } else state[k] = old; }); }
+  function transact(fn) { const snap = JSON.parse(JSON.stringify(state)); try { return fn(); } catch (e) { restoreInPlace(snap); auth.audit.push({ at: new Date((opts.now || Date.now)()).toISOString(), ev: 'grant_rolled_back', code: e && e.code || 'ERR' }); throw e instanceof AuthError ? e : new AuthError('GRANT_FAILED', 'עדכון ההרשאה נכשל ובוטל.'); } }
+  function grantEngine(adminCtx, userId, grant) { if (!opts.api || !opts.api.applyGrant) return; const r = opts.api.applyGrant({ userId: adminCtx.userId, role: 'admin', name: '' }, userId, grant || {}); if (!r || r.ok !== true) throw new AuthError('GRANT_FAILED', (r && r.message) || 'שיוך ההיקף נכשל; האישור בוטל.'); }
   let skipSave = false;   // successful READ-only application calls change nothing (the engine's sessions/audit are untouched), so they are not re-sealed to disk
   async function handle(req) {
     return store.serial(async () => {
@@ -60,7 +64,9 @@ function gateway(opts) {
       if (!opts.api) throw new AuthError('NOT_FOUND', 'לא נמצא.');
       const method = typeof body.method === 'string' ? body.method : '', args = body.args && typeof body.args === 'object' && !Array.isArray(body.args) ? body.args : {};
       if (!/^[A-Za-z]+(\.[A-Za-z]+)?$/.test(method)) throw new AuthError('INVALID', 'שיטה לא תקינה.');
-      const write = opts.api.isWrite(method);
+      const kind = opts.api.classify(method), write = kind === 'write';      // explicit route table (backend_next/route_table.js); anything unlisted is denied
+      if (kind === 'blocked') { auth.audit.push({ at: new Date((opts.now || Date.now)()).toISOString(), ev: 'api_policy_blocked', user: ctx.userId, method }); throw new AuthError('POLICY_BLOCKED', 'הפעולה חסומה לפי מדיניות הבעלים (תצוגה קבוצתית בלבד / ללא הרצת מיגרציה).'); }
+      if (kind !== 'read' && kind !== 'write') { auth.audit.push({ at: new Date((opts.now || Date.now)()).toISOString(), ev: 'api_unknown_route', user: ctx.userId, method }); throw new AuthError('FORBIDDEN', 'פעולה לא מוכרת.'); }
       if (write && ctx.role === 'viewer') auth.authorize(ctx, 'write', { courseId: String(args.courseId || '') });          // logs + FORBIDDEN: viewers never write
       if (ctx.role !== 'admin' && args.courseId !== undefined && !ctx.courseIds.includes(String(args.courseId))) { auth.authorize(ctx, 'read', { courseId: String(args.courseId) }); }   // fail closed on a foreign course before the engine is reached
       const u = state.users.find(x => x.id === ctx.userId);
@@ -72,10 +78,10 @@ function gateway(opts) {
     if (p.startsWith('/admin/')) {
       if (m === 'GET' && p === '/admin/pending') return ok({ pending: auth.listPending(ctx) });
       if (m === 'GET' && p === '/admin/users') return ok({ users: auth.listUsers(ctx) });
-      if (m === 'POST' && p === '/admin/approve') { const r = auth.approve(ctx, String(body.requestId), body.grant); if (opts.api && opts.api.afterGrant) opts.api.afterGrant({ userId: ctx.userId, role: 'admin', name: '' }, r.id, body.grant || {}); return ok(r); }
+      if (m === 'POST' && p === '/admin/approve') return ok(transact(() => { const r = auth.approve(ctx, String(body.requestId), body.grant); grantEngine(ctx, r.id, body.grant); return r; }));
       if (m === 'POST' && p === '/admin/reject') return ok(auth.reject(ctx, String(body.requestId)));
       if (m === 'POST' && p === '/admin/revoke') return ok(auth.revokeUser(ctx, String(body.targetUserId)));
-      if (m === 'POST' && p === '/admin/set-scope') { const r = auth.setScope(ctx, String(body.targetUserId), body.grant || {}); if (opts.api && opts.api.afterGrant) opts.api.afterGrant({ userId: ctx.userId, role: 'admin', name: '' }, String(body.targetUserId), body.grant || {}); return ok(r); }
+      if (m === 'POST' && p === '/admin/set-scope') return ok(transact(() => { const r = auth.setScope(ctx, String(body.targetUserId), body.grant || {}); grantEngine(ctx, String(body.targetUserId), body.grant || {}); return r; }));
       if (m === 'POST' && p === '/admin/set-active') return ok(auth.setActive(ctx, String(body.targetUserId), !!body.active));
       throw new AuthError('NOT_FOUND', 'לא נמצא.');
     }

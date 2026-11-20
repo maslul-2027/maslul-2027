@@ -6,8 +6,6 @@
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const root = path.join(__dirname, '..');
 const GOOGLE = ['DriveApp', 'SpreadsheetApp', 'UrlFetchApp', 'ScriptApp', 'HtmlService', 'MailApp', 'GmailApp'];
-// Methods that change state (same pattern the native client uses to tag writes); viewers are denied these, and any call a viewer makes is ALSO rolled back (defence in depth).
-const WRITE = /(^|\.)(create|add|set|update|cancel|restore|toggle|save|assess|attempt|define|archive|reopen|rename|approve|review|handle|refresh|upload|import|commit|start|draft|generate|build|recompute|postpone|submit|request|reassign|edit|attach|link|apply|reset|ask|issue|revoke|delete|remove|confirm|publish|seed|mark|close|open|backup|verify|prune|typeCreate|typeWeights|typeActive|typeVariant|defCreate|defPass|editRow|addTable|importDraft|requestExclusion|reviewExclusion|createLink|setStatus|setActive|setUser|reviewLink|attachEvidence|requestLink|fullExport|decide|rejectRow|run|auditRepair|recover|plan|approveRow|reviewDraft|migrate)/i;
 function loadSource() {
   const hs = fs.readFileSync(path.join(root, 'tests', 'harness.js'), 'utf8'), order = JSON.parse(/const order = (\[[^\]]*\]);/.exec(hs)[1].replace(/'/g, '"'));
   const srcs = order.filter(f => fs.existsSync(path.join(root, 'src', f + '.gs'))).map(f => fs.readFileSync(path.join(root, 'src', f + '.gs'), 'utf8'));
@@ -49,9 +47,8 @@ function create(opts) {
     if (r && r.ok === false && r.code === 'INTERNAL' && /(Utilities|DriveApp|SpreadsheetApp|UrlFetchApp|ScriptApp|HtmlService|MailApp|GmailApp) is not defined|NOT_CONNECTED/.test(lastErr)) r = { ok: false, code: 'NOT_CONNECTED', message: 'טרם חובר: פעולה זו דורשת שירות חיצוני (Drive/PDF/OCR) שלא אושר לסביבת הבדיקה.' };
     return clone(r);
   }
-  const isWrite = m => WRITE.test(String(m));
   return {
-    isWrite, emailOf, ensure: sync,
+    emailOf, ensure: sync,
     /** identity = {userId, role: admin|commander|viewer, name, courseIds} from the gateway session. */
     call(id, method, args) {
       email = sync(id); const viewer = id.role === 'viewer', snap = JSON.stringify(mem); this.dirty = false;
@@ -65,4 +62,4 @@ function create(opts) {
     X,
   };
 }
-module.exports = { create, WRITE };
+module.exports = { create };

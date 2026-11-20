@@ -101,7 +101,7 @@
   D.attendance.lists.push({ h: 'סוגי פעילות (לחיצה לשינוי שם/סטטוס)', m: 'acttypes.list', a: CID, row: function (t) { return [t.name, '', status(t.active ? 'פעיל' : 'מושבת', !t.active)]; }, click: function (t, reload) { typeDialog('acttypes', t, reload, 'סוג פעילות'); } });
   D.nav.lists.push({ h: 'סוגי ניווט (לחיצה לשינוי שם/סטטוס)', m: 'navtypes.list', a: CID, row: function (t) { return [t.name, '', status(t.active ? 'פעיל' : 'מושבת', !t.active)]; }, click: function (t, reload) { typeDialog('navtypes', t, reload, 'סוג ניווט'); } });
   function Domain(id) {
-    var d = D[id]; if (!d) return More();
+    var d = D[id]; if (!d || (id === 'access' && !(C.mode === 'server' && isAdmin()))) return More();
     var body = h('div', { 'aria-live': 'polite' }), top = [h('button', { class: 'back', type: 'button', onclick: function () { go('more'); }, text: '→ חזרה ל"עוד"' }), sectionHead(d.title, null), body];
     mount('more', top, d.title);
     var bar = h('div', { class: 'btns', style: 'margin-top:0' }); (d.actions || []).forEach(function (ac) { if (ac.admin && !isAdmin()) return; bar.append(h('button', { class: 'secondary', type: 'button', text: ac.t, onclick: function (ev) { var btn = ev.currentTarget; busy(btn, true); ac.run().then(function (r) { busy(btn, false); if (!r.ok) { toast(msgOf(r) + (r.code === 'NOT_CONNECTED' ? '' : ''), 'err'); } else if (!r.silent) { toast(ac.ok || 'בוצע'); Domain(id); } }); } })); }); d.forms.forEach(function (f, i) { if (f.admin && !isAdmin()) return; bar.append(h('button', { class: i ? 'secondary' : 'primary', type: 'button', text: '+ ' + f.t, onclick: function () { go('d/' + id + '/' + i); } })); }); if (bar.children.length) body.append(bar);
