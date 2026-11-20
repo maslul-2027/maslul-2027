@@ -15,6 +15,13 @@ const WIDTHS=[320,360,390,414];
 const open=async(w)=>{const c=await b.newContext({viewport:{width:w,height:780}});const p=await c.newPage();p.on('pageerror',e=>errs.push(e.message));await p.goto(base+'/');await p.waitForSelector('#k1');await p.waitForFunction(()=>window.__app.state.course);return p};
 const p=await open(390);const cid=await p.evaluate(()=>window.__app.state.course.id);
 const sols=(await API(p,'soldiers.list',{courseId:cid,opts:{}})).data;
+await t('fitness source status uses a clear Hebrew explanation, never an internal backend token',async()=>{
+ await go(p,'#/d/fitadmin');
+ await has(p,'טבלאות הכושר תומללו');
+ const visible=await p.locator('#view').innerText();
+ assert.ok(!visible.includes('TRANSCRIBED_FROM_IMAGES_PENDING_USER_CONFIRMATION'), 'internal enum leaked into UI');
+ await go(p,'#/home');
+});
 // ---------- responsive / RTL / a11y on the new screens ----------
 const ROUTES=['#/home','#/more','#/d/summaries','#/d/fitadmin','#/d/qual','#/d/marches','#/d/attendance','#/d/corrections'];
 for(const w of WIDTHS){await t('responsive+RTL+a11y @'+w+' on '+ROUTES.length+' screens + record-sheet dialog',async()=>{const q=await open(w);
