@@ -1,0 +1,653 @@
+{
+ "when": "2026-11-19T20:57:40.685Z",
+ "node": "v22.23.4",
+ "flags": {
+  "ui": false,
+  "strict": true
+ },
+ "env_ok": true,
+ "suites": [
+  {
+   "s": "run",
+   "types": null,
+   "state": "PASS",
+   "pass": 45,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "d7_authz",
+   "types": {
+    "unit": 0,
+    "integration": 0,
+    "hardening": 9
+   },
+   "state": "PASS",
+   "pass": 9,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "pd2_corrections",
+   "types": {
+    "unit": 0,
+    "integration": 5,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "pd5_f1_fitness_snapshot",
+   "types": {
+    "unit": 0,
+    "integration": 25,
+    "hardening": 0
+   },
+   "state": "PASS",
+   "pass": 25,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "integration",
+   "types": null,
+   "state": "PASS",
+   "pass": 29,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "hardening",
+   "types": null,
+   "state": "PASS",
+   "pass": 53,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "soldiers",
+   "types": {
+    "unit": 12,
+    "integration": 22,
+    "hardening": 18
+   },
+   "state": "PASS",
+   "pass": 52,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "stage3",
+   "types": {
+    "unit": 9,
+    "integration": 23,
+    "hardening": 11
+   },
+   "state": "PASS",
+   "pass": 43,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_tracking",
+   "types": {
+    "unit": 4,
+    "integration": 13,
+    "hardening": 7
+   },
+   "state": "PASS",
+   "pass": 24,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_qual",
+   "types": {
+    "unit": 0,
+    "integration": 4,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 6,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_private",
+   "types": {
+    "unit": 0,
+    "integration": 4,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 6,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_alerts",
+   "types": {
+    "unit": 0,
+    "integration": 3,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_forms",
+   "types": {
+    "unit": 0,
+    "integration": 1,
+    "hardening": 27
+   },
+   "state": "PASS",
+   "pass": 28,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "emergency_orphan_ui_contract",
+   "types": null,
+   "state": "PASS",
+   "pass": 1,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_dashboard",
+   "types": {
+    "unit": 0,
+    "integration": 3,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_docs",
+   "types": {
+    "unit": 0,
+    "integration": 2,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_reports",
+   "types": {
+    "unit": 0,
+    "integration": 2,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 3,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_import",
+   "types": {
+    "unit": 0,
+    "integration": 2,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 3,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_import_dups",
+   "types": {
+    "unit": 0,
+    "integration": 7,
+    "hardening": 0
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_import_infile",
+   "types": {
+    "unit": 0,
+    "integration": 8,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 9,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_ocr",
+   "types": {
+    "unit": 0,
+    "integration": 2,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 3,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_assistant",
+   "types": {
+    "unit": 0,
+    "integration": 2,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 3,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_backup",
+   "types": {
+    "unit": 0,
+    "integration": 3,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 5,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_migration",
+   "types": {
+    "unit": 0,
+    "integration": 2,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_card",
+   "types": {
+    "unit": 0,
+    "integration": 1,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 2,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_pentest",
+   "types": {
+    "unit": 0,
+    "integration": 0,
+    "hardening": 11
+   },
+   "state": "PASS",
+   "pass": 11,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "pd6_meetings_tasks",
+   "types": {
+    "unit": 2,
+    "integration": 14,
+    "hardening": 10
+   },
+   "state": "PASS",
+   "pass": 26,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "pd61_qa_fixes",
+   "types": {
+    "unit": 0,
+    "integration": 10,
+    "hardening": 6
+   },
+   "state": "PASS",
+   "pass": 16,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "uxqa_server",
+   "types": {
+    "unit": 1,
+    "integration": 7,
+    "hardening": 21
+   },
+   "state": "PASS",
+   "pass": 29,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_system",
+   "types": {
+    "unit": 1,
+    "integration": 3,
+    "hardening": 0
+   },
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "b7_gaps",
+   "types": {
+    "unit": 0,
+    "integration": 24,
+    "hardening": 0
+   },
+   "state": "PASS",
+   "pass": 24,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "stg_setup_guard",
+   "types": {
+    "unit": 0,
+    "integration": 1,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 3,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "stg_f2_dailyjob",
+   "types": {
+    "unit": 0,
+    "integration": 3,
+    "hardening": 4
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "stg_clean_machine_script",
+   "types": {
+    "unit": 3,
+    "integration": 3,
+    "hardening": 9
+   },
+   "state": "PASS",
+   "pass": 15,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "r3_forms_reports",
+   "types": {
+    "unit": 0,
+    "integration": 5,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_restore_fault",
+   "types": {
+    "unit": 0,
+    "integration": 1,
+    "hardening": 6
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_replaceall_text",
+   "types": {
+    "unit": 0,
+    "integration": 1,
+    "hardening": 4
+   },
+   "state": "PASS",
+   "pass": 5,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v1_preflight",
+   "types": {
+    "unit": 0,
+    "integration": 1,
+    "hardening": 3
+   },
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v103_fitness",
+   "types": {
+    "unit": 4,
+    "integration": 6,
+    "hardening": 1
+   },
+   "state": "PASS",
+   "pass": 11,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v104_audit",
+   "types": {
+    "unit": 0,
+    "integration": 5,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v105_missing",
+   "types": {
+    "unit": 2,
+    "integration": 21,
+    "hardening": 0
+   },
+   "state": "PASS",
+   "pass": 23,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v106_pullups",
+   "types": {
+    "unit": 6,
+    "integration": 3,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 11,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "v105_fitness_governance",
+   "types": {
+    "unit": 1,
+    "integration": 5,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 8,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "demo_data_audit",
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "r5_privacy_subcohort",
+   "types": {
+    "unit": 3,
+    "integration": 9,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 14,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "r5_final_closure",
+   "types": {
+    "unit": 2,
+    "integration": 9,
+    "hardening": 2
+   },
+   "state": "PASS",
+   "pass": 13,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "src_identity",
+   "types": null,
+   "state": "PASS",
+   "pass": 4,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "ui_staging_smoke",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_smoke",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_v1",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_form",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_fitness",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_b7b8",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_r3",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_pd1",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_pd2",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_pd6_meetings",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_pd6_qa",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  },
+  {
+   "s": "ui_uxqa",
+   "state": "SKIP",
+   "pass": 0,
+   "fail": 0,
+   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+  }
+ ],
+ "totals": {
+  "breakdown": {
+   "node_unit": 95,
+   "node_integration": 294,
+   "node_hardening": 234,
+   "browser": 0,
+   "unclassified": 31
+  },
+  "node_total": 654,
+  "suites": 59,
+  "PASS": 47,
+  "FAIL": 0,
+  "SKIP": 12,
+  "tests_run": 654,
+  "passed": 654,
+  "failed": 0
+ },
+ "result": "FAILED"
+}

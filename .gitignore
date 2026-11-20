@@ -12,3 +12,6 @@ service-account*.json
 node_modules/
 coverage/
 .DS_Store
+
+# built by scripts/build_synthetic_app.js (tests/ui_synthetic_app.js; CI uploads it as an artifact)
+synthetic_app/

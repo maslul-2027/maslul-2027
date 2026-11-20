@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>מערכת מעקב קורס</title>
+<style>
+:root{--ink:#17212b;--muted:#667482;--line:#e3e8ed;--bg:#f5f7f9;--card:#fff;--accent:#243746;--ok:#1b7f3b;--bad:#b3261e;--warn:#8a5a00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,sans-serif;color:var(--ink)}
+header{background:var(--accent);color:#fff;padding:14px 18px}header h1{font-size:18px;margin:0}header p{margin:4px 0 0;font-size:12px;color:#dbe3e9}
+main{max-width:980px;margin:16px auto;padding:0 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.notice{background:#fff8e6;border:1px solid #f0dfb2;padding:10px;border-radius:10px;color:#66521e;font-size:13px;margin-bottom:12px}
+label{display:block;font-size:13px;margin:10px 0 4px}input,select,textarea{width:100%;font-size:16px;padding:10px;border:1px solid #c9d2da;border-radius:8px;background:#fff}
+input[type=checkbox]{width:auto;margin-inline-end:6px}
+button{font-size:16px;padding:10px 14px;border:0;border-radius:8px;background:var(--accent);color:#fff;min-height:44px;cursor:pointer}
+button.sec{background:#e9eef2;color:var(--ink)}button.tab{background:#e9eef2;color:var(--ink)}button.tab.on{background:var(--accent);color:#fff}tr.bad{background:#fff4f2}.warn{color:var(--warn)}button.danger{background:var(--bad)}button:disabled{opacity:.5}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.row3{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:700px){.row,.row3{grid-template-columns:1fr}}
+.msg{margin-top:10px;font-size:14px}.msg.ok{color:var(--ok)}.msg.err{color:var(--bad)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+tr.click{cursor:pointer}tr.click:hover,tr.click:focus{background:#f0f4f7;outline:none}
+.badge{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;background:#e9eef2}.badge.off{background:#fde8e6;color:var(--bad)}.badge.can{background:#f3e8d0;color:var(--warn)}
+dl{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;margin:0}dt{color:var(--muted);font-size:13px}dd{margin:0}
+h3{margin:0 0 8px}.muted{color:var(--muted);font-size:13px}.hide{display:none}
+@media(max-width:700px){table.resp thead{display:none}table.resp tr{display:block;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;padding:6px}table.resp td{display:flex;justify-content:space-between;border:0;padding:4px 6px}table.resp td::before{content:attr(data-l);color:var(--muted);font-size:12px;margin-inline-end:10px}}
+</style>
+</head>
+<body>
+<header><h1>מערכת מעקב קורס</h1><p id="who">טוען…</p></header>
+<main>
+  <div class="notice">גרסת פיתוח (שלב 3 — שיוכי מפקדים וניווט). אין להזין נתוני אמת לפני אישור אבטחת מידע.</div>
+  <section class="card"><label for="course">קורס</label><select id="course"></select><div id="org" class="msg"></div></section>
+  <div id="mineMsg" class="notice hide" role="status"></div>
+  <div id="tabs" class="bar" role="tablist"></div>
+  <div id="view"></div>
+</main>
+<script>
+/* All server data is rendered with textContent / DOM nodes only (never innerHTML) — names and notes are untrusted. */
+function call(method,args){return new Promise(function(res,rej){google.script.run.withSuccessHandler(res).withFailureHandler(function(e){rej(e)}).api(method,args||{});});}
+var S={ctx:null,courses:[],courseId:null,org:{departments:[],teams:[]},tab:'soldiers',mine:{course_wide:true,has_assignment:true,department_ids:[],team_ids:[]},types:[],users:[],reqId:null,navF:{departmentId:'',teamId:'',typeId:'',from:'',to:'',includeCancelled:false},filters:{q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false},soldiers:[]};
+var ACTION={SOLDIER_CREATE:'נוצר',SOLDIER_EDIT:'עריכת פרטים',SOLDIER_REASSIGN:'שינוי שיוך',SOLDIER_ACTIVITY:'שינוי סטטוס פעילות',SOLDIER_CANCEL:'ביטול',SOLDIER_RESTORE:'שחזור'};
+function $(id){return document.getElementById(id);}
+function el(tag,props,kids){var e=document.createElement(tag);props=props||{};Object.keys(props).forEach(function(k){
+  if(k==='text')e.textContent=props[k];else if(k==='class')e.className=props[k];else if(k.slice(0,2)==='on')e[k]=props[k];else if(k==='value')e.value=props[k];else if(props[k]!==false&&props[k]!==null&&props[k]!==undefined)e.setAttribute(k,props[k]===true?'':props[k]);});
+  (kids||[]).forEach(function(c){if(c!=null)e.appendChild(typeof c==='string'?document.createTextNode(c):c);});return e;}
+function setMsg(e,t,ok){e.textContent=t;e.className='msg '+(ok?'ok':'err');}
+function isAdmin(){return S.ctx&&S.ctx.role==='admin';}
+function depName(id){var d=S.org.departments.filter(function(x){return x.id===id})[0];return d?d.name:'';}
+function teamName(id){var d=S.org.teams.filter(function(x){return x.id===id})[0];return d?d.name:'';}
+function course(){return S.courses.filter(function(c){return c.id===S.courseId})[0]||{};}
+function archived(){return course().status==='archived';}
+function started(){var s=course().start_date;return !!s&&String(s)<=new Date().toISOString().slice(0,10);}
+function fail(e,box){setMsg(box,e&&e.message?e.message:'שגיאת תקשורת. נסו שוב.',false);}
+function selectOf(items,val,blank){var s=el('select');if(blank!==undefined)s.appendChild(el('option',{value:'',text:blank}));items.forEach(function(i){s.appendChild(el('option',{value:i.id,text:i.name}));});s.value=val||'';return s;}
+function wide(){return isAdmin()||S.mine.course_wide;}
+function depsAllowed(){return S.org.departments.filter(function(d){return wide()||S.mine.department_ids.indexOf(d.id)!==-1;});}
+function teamsOf(dep){return S.org.teams.filter(function(t){return (!dep||t.department_id===dep)&&(wide()||S.mine.team_ids.indexOf(t.id)!==-1);});}
+
+google.script.run.withSuccessHandler(function(r){
+  if(!r.ok){$('who').textContent=r.message;return;}
+  S.ctx=r.data;$('who').textContent=r.data.displayName+' · '+(r.data.role==='admin'?'מנהל מערכת':'מפקד')+' · v'+r.data.version;loadCourses();
+}).whoAmI();
+function loadCourses(){call('courses.list').then(function(r){var s=$('course');s.innerHTML='';
+  if(!r.ok){setMsg($('org'),r.message,false);return;}S.courses=r.data;
+  r.data.forEach(function(c){s.appendChild(el('option',{value:c.id,text:c.name+(c.status==='archived'?' (ארכיון)':'')}));});
+  s.onchange=pickCourse;pickCourse();}).catch(function(e){fail(e,$('org'));});}
+function pickCourse(){S.courseId=$('course').value;S.filters={q:'',departmentId:'',teamId:'',pakal:'',active:'',includeCancelled:false};if(!S.courseId){$('view').innerHTML='';return;}
+  call('courses.org',{courseId:S.courseId}).then(function(r){if(!r.ok){setMsg($('org'),r.message,false);return;}
+    S.org=r.data;$('org').className='msg';$('org').textContent=r.data.departments.length+' מחלקות · '+r.data.teams.length+' צוותים'+(archived()?' · הקורס בארכיון (קריאה בלבד)':'');
+    afterOrg();}).catch(function(e){fail(e,$('org'));});}
+
+/* ---------------- registry list ---------------- */
+var qTimer=null;
+function showList(){
+  var v=$('view');v.innerHTML='';
+  var f=S.filters,box=el('section',{class:'card'});
+  var q=el('input',{id:'fq',type:'search',placeholder:'חיפוש לפי שם או מספר אישי',value:f.q,'aria-label':'חיפוש'});
+  var dep=selectOf(depsAllowed(),f.departmentId,'כל המחלקות');dep.id='fdep';
+  var team=selectOf(teamsOf(f.departmentId),f.teamId,'כל הצוותים');team.id='fteam';
+  var pk=el('input',{id:'fpk',placeholder:'פק״ל',value:f.pakal});
+  var act=el('select',{id:'fact'},[el('option',{value:'',text:'כל הסטטוסים'}),el('option',{value:'true',text:'פעילים'}),el('option',{value:'false',text:'לא פעילים'})]);act.value=f.active;
+  box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{text:'חיפוש'}),q]),el('div',{},[el('label',{text:'פק״ל'}),pk])]));
+  box.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{text:'מחלקה'}),dep]),el('div',{},[el('label',{text:'צוות'}),team]),el('div',{},[el('label',{text:'סטטוס'}),act])]));
+  var bar=el('div',{class:'bar'});
+  if(isAdmin()){var cc=el('input',{type:'checkbox',id:'fcan'});cc.checked=f.includeCancelled;cc.onchange=function(){f.includeCancelled=cc.checked;load();};bar.appendChild(el('label',{style:'margin:0'},[cc,'הצג מבוטלים']));
+    bar.appendChild(el('button',{id:'addBtn',text:'הוסף חייל',disabled:archived(),onclick:function(){showForm(null);}}));}
+  bar.appendChild(el('span',{id:'count',class:'muted'}));box.appendChild(bar);
+  var out=el('div',{id:'listOut'});box.appendChild(out);box.appendChild(el('div',{id:'listMsg',class:'msg',role:'status'}));v.appendChild(box);
+  q.oninput=function(){f.q=q.value;clearTimeout(qTimer);qTimer=setTimeout(load,250);};
+  pk.oninput=function(){f.pakal=pk.value;clearTimeout(qTimer);qTimer=setTimeout(load,250);};
+  dep.onchange=function(){f.departmentId=dep.value;f.teamId='';showList();};
+  team.onchange=function(){f.teamId=team.value;load();};act.onchange=function(){f.active=act.value;load();};
+  load();
+}
+function load(){var f=S.filters,opts={q:f.q,departmentId:f.departmentId,teamId:f.teamId,pakal:f.pakal};
+  if(f.active!=='')opts.active=(f.active==='true');if(f.includeCancelled)opts.includeCancelled=true;
+  call('soldiers.list',{courseId:S.courseId,opts:opts}).then(function(r){var out=$('listOut');if(!out)return;out.innerHTML='';
+    if(!r.ok){setMsg($('listMsg'),r.message,false);return;}$('listMsg').textContent='';S.soldiers=r.data;
+    $('count').textContent=r.data.length+' חיילים';
+    if(!r.data.length){out.appendChild(el('p',{class:'muted',text:'לא נמצאו חיילים.'}));return;}
+    var t=el('table',{class:'resp'},[el('thead',{},[el('tr',{},['שם','מספר אישי','מחלקה','צוות','פק״ל','סטטוס'].map(function(h){return el('th',{text:h});}))])]);
+    var tb=el('tbody');r.data.forEach(function(s){
+      var tr=el('tr',{class:'click',tabindex:'0',role:'button','aria-label':'כרטיס חייל '+s.full_name,onclick:function(){showCard(s.id);},onkeydown:function(e){if(e.key==='Enter')showCard(s.id);}});
+      var st=el('td',{'data-l':'סטטוס'});
+      if(s.record_status==='cancelled')st.appendChild(el('span',{class:'badge can',text:'מבוטל'}));else st.appendChild(el('span',{class:'badge'+(s.active?'':' off'),text:s.active?'פעיל':'לא פעיל'}));
+      tr.appendChild(el('td',{'data-l':'שם',text:s.full_name}));tr.appendChild(el('td',{'data-l':'מספר אישי',dir:'ltr',text:s.personal_number}));
+      tr.appendChild(el('td',{'data-l':'מחלקה',text:s.department_name}));tr.appendChild(el('td',{'data-l':'צוות',text:s.team_name}));
+      tr.appendChild(el('td',{'data-l':'פק״ל',text:s.pakal}));tr.appendChild(st);tb.appendChild(tr);});
+    t.appendChild(tb);out.appendChild(t);}).catch(function(e){fail(e,$('listMsg'));});}
+
+/* ---------------- soldier card ---------------- */
+function showCard(id,flash){
+  var v=$('view');v.innerHTML='';
+  call('soldiers.card',{id:id}).then(function(r){
+    if(!r.ok){var b=el('section',{class:'card'},[el('button',{class:'sec',text:'חזרה לרשימה',onclick:showList}),el('div',{class:'msg err',text:r.message})]);v.appendChild(b);return;}
+    var c=r.data,s=c.soldier,wrap=el('div');
+    var head=el('section',{class:'card'});
+    head.appendChild(el('div',{class:'bar'},[el('button',{class:'sec',id:'back',text:'חזרה לרשימה',onclick:showList})]));
+    head.appendChild(el('h2',{id:'cardName',text:s.full_name,style:'margin:12px 0 4px'}));
+    var badges=el('div');if(s.record_status==='cancelled')badges.appendChild(el('span',{class:'badge can',text:'מבוטל'}));else badges.appendChild(el('span',{class:'badge'+(s.active?'':' off'),text:s.active?'פעיל':'לא פעיל'}));head.appendChild(badges);
+    var dl=el('dl',{style:'margin-top:12px'});
+    function row(k,val,ltr){dl.appendChild(el('dt',{text:k}));dl.appendChild(el('dd',ltr?{dir:'ltr',text:val||'—'}:{text:val||'—'}));}
+    row('מספר אישי',s.personal_number,true);row('קורס',c.course.name);row('מחלקה',c.department_name);row('צוות',c.team_name);
+    row('מגדר',s.gender==='F'?'נקבה':'זכר');row('פק״ל',s.pakal);row('תאריך גיוס',s.enlistment_date);
+    if(isAdmin()){row('שליש סוציומטרי',s.sociometric_third);row('הערת מפקד כללית',s.commander_note);}
+    head.appendChild(dl);
+    var msg=el('div',{id:'cardMsg',class:'msg',role:'status'});if(flash){setMsg(msg,flash,true);}
+    if(isAdmin()){var bar=el('div',{class:'bar'});var lock=archived();
+      if(s.record_status==='cancelled'){bar.appendChild(el('button',{id:'btnRestore',text:'שחזר',disabled:lock,onclick:function(){reasonBox('שחזור (סיבה אופציונלית)',false,function(reason,done){call('soldiers.restore',{id:id,reason:reason}).then(function(x){done(x,'שוחזר');});});}}));}
+      else{bar.appendChild(el('button',{id:'btnEdit',text:'עריכה',disabled:lock,onclick:function(){showForm(s);}}));
+        bar.appendChild(el('button',{id:'btnMove',class:'sec',text:'שינוי שיוך',disabled:lock,onclick:function(){showMove(s);}}));
+        bar.appendChild(el('button',{id:'btnAct',class:'sec',text:s.active?'סמן כלא פעיל':'סמן כפעיל',disabled:lock,onclick:function(){reasonBox(s.active?'סיבה לסימון כלא פעיל':'סיבה לסימון כפעיל',true,function(reason,done){call('soldiers.setActive',{id:id,active:!s.active,expected_updated_at:s.updated_at,reason:reason}).then(function(x){done(x,'הסטטוס עודכן');});});}}));
+        bar.appendChild(el('button',{id:'btnCancel',class:'danger',text:'בטל חייל',disabled:lock,onclick:function(){reasonBox('סיבת הביטול',true,function(reason,done){call('soldiers.cancel',{id:id,reason:reason}).then(function(x){done(x,'החייל בוטל');});});}}));}
+      head.appendChild(bar);head.appendChild(el('div',{id:'actBox'}));}
+    head.appendChild(msg);wrap.appendChild(head);
+    function reasonBox(label,required,send){var box=$('actBox');box.innerHTML='';var inp=el('input',{id:'reason',placeholder:label});var go=el('button',{id:'reasonGo',text:'אישור'});var m=el('div',{class:'msg',id:'reasonMsg'});
+      go.onclick=function(){if(required&&!inp.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}go.disabled=true;
+        send(inp.value,function(x,okText){go.disabled=false;if(x.ok)showCard(id,okText);else setMsg(m,x.message,false);});};
+      box.appendChild(el('div',{class:'bar'},[inp,go,el('button',{class:'sec',text:'ביטול',onclick:function(){box.innerHTML='';}})]));box.appendChild(m);inp.focus();}
+    // navigation (only if real data exists)
+    if(c.navigation&&c.navigation.count>0){var n=el('section',{class:'card',id:'secNav'},[el('h3',{text:'ניווט'}),el('p',{text:c.navigation.count+' מבחנים · ממוצע '+c.navigation.mean_display})]);
+      var t=el('table',{},[el('tbody',{},c.navigation.records.map(function(x){return el('tr',{},[el('td',{text:x.test_date}),el('td',{text:x.type_name}),el('td',{text:x.final_display})]);}))]);n.appendChild(t);wrap.appendChild(n);}
+    if(c.documents&&c.documents.length){var d=el('section',{class:'card',id:'secDocs'},[el('h3',{text:'מסמכים'}),el('p',{class:'muted',text:'פתיחה והורדה יתווספו בשלב המסמכים.'})]);
+      c.documents.forEach(function(x){d.appendChild(el('div',{text:x.document_type+' · הועלה ע״י '+x.uploaded_by+' · '+x.uploaded_at+(x.file_name?' · '+x.file_name:'')}));});wrap.appendChild(d);}
+    var h=el('section',{class:'card',id:'secHist'},[el('h3',{text:'היסטוריית שינויים'})]);
+    if(!c.history.length)h.appendChild(el('p',{class:'muted',text:'אין אירועים.'}));
+    c.history.forEach(function(x){var line=(ACTION[x.action]||x.action)+' · '+x.at+(x.actor?' · '+x.actor:'')+(x.reason?' · סיבה: '+x.reason:'');
+      var item=el('div',{style:'margin-bottom:8px'},[el('div',{text:line})]);
+      if(x.before||x.after)item.appendChild(el('div',{class:'muted',dir:'ltr',text:diffText(x.before,x.after)}));h.appendChild(item);});
+    wrap.appendChild(h);v.appendChild(wrap);
+  }).catch(function(e){v.appendChild(el('div',{class:'msg err',text:'שגיאת תקשורת. נסו שוב.'}));});
+}
+function diffText(b,a){var keys=Object.keys(Object.assign({},b||{},a||{}));return keys.map(function(k){return k+': '+JSON.stringify(b?b[k]:undefined)+' → '+JSON.stringify(a?a[k]:undefined);}).join(' | ');}
+
+/* ---------------- add / edit form ---------------- */
+function showForm(s){
+  var edit=!!s,v=$('view');v.innerHTML='';
+  var f=el('section',{class:'card'},[el('h3',{text:edit?'עריכת חייל':'הוספת חייל'})]);
+  var name=el('input',{id:'fName',value:edit?s.full_name:'',maxlength:'100'}),pn=el('input',{id:'fPn',dir:'ltr',inputmode:'numeric',maxlength:'12',value:edit?s.personal_number:''});
+  var gender=el('select',{id:'fGender'},[el('option',{value:'',text:'בחירה…'}),el('option',{value:'M',text:'זכר'}),el('option',{value:'F',text:'נקבה'})]);gender.value=edit?s.gender:'';
+  var pakal=el('input',{id:'fPakal',value:edit?s.pakal:'',maxlength:'50'}),enl=el('input',{id:'fEnl',type:'date',value:edit?s.enlistment_date:''});
+  var soc=el('input',{id:'fSoc',value:edit?s.sociometric_third:'',maxlength:'20'}),note=el('textarea',{id:'fNote',rows:'2',maxlength:'1000'});note.value=edit?s.commander_note:'';
+  var dep=selectOf(S.org.departments,'','בחירה…'),team=selectOf([],'','בחירה…');dep.id='fDep';team.id='fTeam';
+  dep.onchange=function(){team.innerHTML='';team.appendChild(el('option',{value:'',text:'בחירה…'}));teamsOf(dep.value).forEach(function(t){team.appendChild(el('option',{value:t.id,text:t.name}));});};
+  var reason=el('input',{id:'fReason',placeholder:'סיבת העריכה (חובה)'});
+  function L(t,i){return [el('label',{for:i.id,text:t}),i];}
+  f.appendChild(el('div',{class:'row'},[el('div',{},L('שם מלא',name)),el('div',{},L('מספר אישי (ספרות, עד 12)',pn))]));
+  f.appendChild(el('div',{class:'row'},[el('div',{},L('מגדר',gender)),el('div',{},L('פק״ל',pakal))]));
+  f.appendChild(el('div',{class:'row'},[el('div',{},L('תאריך גיוס',enl)),el('div',{},L('שליש סוציומטרי',soc))]));
+  if(!edit)f.appendChild(el('div',{class:'row'},[el('div',{},L('מחלקה',dep)),el('div',{},L('צוות',team))]));
+  else f.appendChild(el('p',{class:'muted',text:'שיוך למחלקה/צוות משתנה רק דרך "שינוי שיוך" בכרטיס.'}));
+  f.appendChild(el('div',{},L('הערת מפקד כללית',note)));if(edit)f.appendChild(el('div',{},L('סיבה',reason)));
+  var msg=el('div',{id:'fMsg',class:'msg',role:'status'}),save=el('button',{id:'fSave',text:'שמור'});
+  save.onclick=function(){save.disabled=true;var data={full_name:name.value,personal_number:pn.value,gender:gender.value,pakal:pakal.value,enlistment_date:enl.value,sociometric_third:soc.value,commander_note:note.value};
+    var p;if(edit){var patch={};['full_name','personal_number','gender','pakal','enlistment_date','sociometric_third','commander_note'].forEach(function(k){if(String(data[k])!==String(s[k]||''))patch[k]=data[k];});
+      p=call('soldiers.update',{id:s.id,patch:patch,expected_updated_at:s.updated_at,reason:reason.value});}
+    else{data.department_id=dep.value;data.team_id=team.value;p=call('soldiers.create',{courseId:S.courseId,data:data});}
+    p.then(function(r){save.disabled=false;if(r.ok)showCard(r.data.id,edit?'נשמר.':'החייל נוסף.');else setMsg(msg,r.message+(r.code==='CONFLICT'?' (חזרו לכרטיס לרענון)':''),false);}).catch(function(e){save.disabled=false;fail(e,msg);});};
+  f.appendChild(el('div',{class:'bar'},[save,el('button',{class:'sec',text:'ביטול',onclick:function(){edit?showCard(s.id):showList();}})]));f.appendChild(msg);v.appendChild(f);name.focus();
+}
+
+/* ---------------- reassignment ---------------- */
+function showMove(s){
+  var box=$('actBox');box.innerHTML='';
+  var dep=selectOf(S.org.departments,s.department_id),team=selectOf(teamsOf(s.department_id),s.team_id);dep.id='mDep';team.id='mTeam';
+  dep.onchange=function(){team.innerHTML='';teamsOf(dep.value).forEach(function(t){team.appendChild(el('option',{value:t.id,text:t.name}));});};
+  var reason=el('input',{id:'mReason',placeholder:'סיבת השינוי (חובה)'});
+  var exc=el('input',{type:'checkbox',id:'mExc'}),excRow=el('label',{id:'mExcRow',class:started()?'':'hide'},[exc,'חריג מאושר: הקורס כבר התחיל, מנהל המערכת מאשר את ההעברה']);
+  var msg=el('div',{id:'mMsg',class:'msg'}),go=el('button',{id:'mGo',text:'העבר'});
+  go.onclick=function(){go.disabled=true;call('soldiers.reassign',{id:s.id,target:{department_id:dep.value,team_id:team.value,approved_exception:exc.checked},expected_updated_at:s.updated_at,reason:reason.value}).then(function(r){go.disabled=false;
+    if(r.ok)showCard(s.id,'השיוך עודכן.');else{if(r.code==='REASSIGN_AFTER_START')excRow.classList.remove('hide');setMsg(msg,r.message,false);}}).catch(function(e){go.disabled=false;fail(e,msg);});};
+  box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{text:'מחלקה'}),dep]),el('div',{},[el('label',{text:'צוות'}),team])]));
+  box.appendChild(el('div',{},[el('label',{text:'סיבה'}),reason]));box.appendChild(excRow);
+  box.appendChild(el('div',{class:'bar'},[go,el('button',{class:'sec',text:'ביטול',onclick:function(){box.innerHTML='';}})]));box.appendChild(msg);
+}
+
+/* ---------------- tabs ---------------- */
+function afterOrg(){
+  Promise.all([call('assignments.mine',{courseId:S.courseId}),call('navtypes.list',{courseId:S.courseId})]).then(function(rs){
+    S.mine=rs[0].ok?rs[0].data:{course_wide:false,has_assignment:false,department_ids:[],team_ids:[]};S.types=rs[1].ok?rs[1].data:[];
+    var mm=$('mineMsg');if(!isAdmin()&&!S.mine.has_assignment){mm.textContent='אין לך שיוך פעיל בקורס זה — פנה למנהל המערכת כדי שישייך אותך למחלקה או לצוות.';mm.classList.remove('hide');}else mm.classList.add('hide');
+    var go=function(){renderTabs();showTab(S.tab);};
+    if(isAdmin())call('users.list').then(function(u){S.users=u.ok?u.data:[];go();});else go();
+  }).catch(function(e){fail(e,$('org'));});
+}
+function renderTabs(){var t=$('tabs');t.innerHTML='';
+  var defs=[['soldiers','חיילים','tabSoldiers'],['nav','ניווט','tabNav']];if(isAdmin())defs.push(['assign','שיוכי מפקדים','tabAssign']);
+  defs.forEach(function(d){t.appendChild(el('button',{id:d[2],class:'tab'+(S.tab===d[0]?' on':''),role:'tab','aria-selected':S.tab===d[0]?'true':'false',text:d[1],onclick:function(){showTab(d[0]);}}));});}
+function showTab(n){S.tab=n;renderTabs();if(n==='nav')showNav();else if(n==='assign')showAssign();else showList();}
+function stat(v){return v===null||v===undefined||v===''?'אין מספיק נתונים':v;}
+function reasonInline(box,label,required,send){box.innerHTML='';var inp=el('input',{placeholder:label,class:'reasonIn'}),go=el('button',{class:'reasonOk',text:'אישור'}),m=el('div',{class:'msg'});
+  go.onclick=function(){if(required&&!inp.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}go.disabled=true;send(inp.value,function(r,okText){go.disabled=false;if(r.ok)okText&&setMsg(m,okText,true);else setMsg(m,r.message,false);});};
+  box.appendChild(el('div',{class:'bar'},[inp,go,el('button',{class:'sec',text:'סגור',onclick:function(){box.innerHTML='';}})]));box.appendChild(m);inp.focus();}
+
+/* ---------------- navigation screen ---------------- */
+var FIELDS=[['nDate','תאריך','date'],['nDist','מרחק משוער (ק״מ, קפיצות 0.5)','number','0.5'],['nPlan','ציון תכנון (0–5)','number','0.5'],['nDeb','ציון תחקיר (0–5)','number','0.5'],['nDone','נקודות שנדקרו','number','1'],['nTotal','סך נקודות','number','1']];
+function newReq(){S.reqId=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random();}
+function showNav(){
+  var v=$('view');v.innerHTML='';newReq();var f=S.navF;
+  v.appendChild(el('section',{class:'card',id:'navEntry'}));
+  var fl=el('section',{class:'card',id:'navFilters'});
+  var dep=selectOf(depsAllowed(),f.departmentId,'כל המחלקות'),team=selectOf(teamsOf(f.departmentId),f.teamId,'כל הצוותים'),ty=selectOf(S.types,f.typeId,'כל הסוגים');dep.id='nfDep';team.id='nfTeam';ty.id='nfType';
+  var from=el('input',{type:'date',id:'nfFrom',value:f.from,'aria-label':'מתאריך'}),to=el('input',{type:'date',id:'nfTo',value:f.to,'aria-label':'עד תאריך'});
+  fl.appendChild(el('h3',{text:'סינון'}));
+  fl.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{text:'מחלקה'}),dep]),el('div',{},[el('label',{text:'צוות'}),team]),el('div',{},[el('label',{text:'סוג ניווט'}),ty]),el('div',{},[el('label',{text:'מתאריך'}),from])]));
+  fl.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{text:'עד תאריך'}),to])]));
+  if(isAdmin()){var cc=el('input',{type:'checkbox',id:'nfCan'});cc.checked=f.includeCancelled;cc.onchange=function(){f.includeCancelled=cc.checked;loadResults();};fl.appendChild(el('label',{},[cc,'הצג תוצאות מבוטלות (היסטוריה)']));}
+  dep.onchange=function(){f.departmentId=dep.value;f.teamId='';showNav();};team.onchange=function(){f.teamId=team.value;loadResults();};
+  ty.onchange=function(){f.typeId=ty.value;loadResults();loadSnap();};from.onchange=function(){f.from=from.value;loadResults();loadSnap();};to.onchange=function(){f.to=to.value;loadResults();loadSnap();};
+  v.appendChild(fl);
+  v.appendChild(el('section',{class:'card',id:'navSnap'}));v.appendChild(el('section',{class:'card',id:'navResults'}));v.appendChild(el('div',{id:'navDetail'}));
+  if(isAdmin()){v.appendChild(el('section',{class:'card',id:'navCorr'}));v.appendChild(el('section',{class:'card',id:'navTypes'}));}
+  buildEntry();loadSnap();loadResults();if(isAdmin()){loadCorr();buildTypes();}
+}
+function buildEntry(){
+  var box=$('navEntry');box.innerHTML='';box.appendChild(el('h3',{text:'הזנת תוצאת ניווט'}));
+  if(archived()){box.appendChild(el('p',{class:'muted',text:'הקורס בארכיון — הזנה חסומה.'}));return;}
+  var sel=el('select',{id:'nSoldier'}),tsel=el('select',{id:'nType'});
+  S.types.filter(function(t){return t.active;}).forEach(function(t){tsel.appendChild(el('option',{value:t.id,text:t.name}));});
+  var ins={};box.appendChild(el('div',{class:'row'},[el('div',{},[el('label',{for:'nSoldier',text:'חייל'}),sel]),el('div',{},[el('label',{for:'nType',text:'סוג ניווט'}),tsel])]));
+  var grid=el('div',{class:'row'});FIELDS.forEach(function(d){var i=el('input',{id:d[0],type:d[2],step:d[3]||null});ins[d[0]]=i;grid.appendChild(el('div',{},[el('label',{for:d[0],text:d[1]}),i]));});box.appendChild(grid);
+  var notes=el('textarea',{id:'nNotes',rows:'2'});box.appendChild(el('label',{for:'nNotes',text:'הערות'}));box.appendChild(notes);
+  var m=el('div',{id:'nMsg',class:'msg',role:'status'}),save=el('button',{id:'nSave',text:'שמור ניווט'});
+  if(!S.types.some(function(t){return t.active;}))m.textContent='אין סוגי ניווט פעילים'+(isAdmin()?' — הוסף למטה.':' — פנה למנהל.'),m.className='msg err';
+  call('soldiers.list',{courseId:S.courseId,opts:{active:true}}).then(function(r){S.soldiers=r.ok?r.data:[];if(!S.soldiers.length){sel.appendChild(el('option',{value:'',text:'אין חיילים בתחום האחריות שלך'}));save.disabled=true;}
+    S.soldiers.forEach(function(x){sel.appendChild(el('option',{value:x.id,text:x.full_name+' · '+x.personal_number}));});});
+  save.onclick=function(){var missing=[];FIELDS.forEach(function(d){var i=ins[d[0]];var bad=i.value===''&&d[0]!=='nNotes';i.setAttribute('aria-invalid',bad?'true':'false');i.style.borderColor=bad?'var(--bad)':'';if(bad)missing.push(d[1]);});
+    if(!sel.value)missing.push('חייל');if(!tsel.value)missing.push('סוג ניווט');if(missing.length){setMsg(m,'חסר או לא תקין: '+missing.join(' · '),false);return;}
+    save.disabled=true;var data={request_id:S.reqId,soldier_id:sel.value,test_date:ins.nDate.value,navigation_type_id:tsel.value,distance_km:ins.nDist.value,plan_score:ins.nPlan.value,debrief_score:ins.nDeb.value,points_completed:ins.nDone.value,points_total:ins.nTotal.value,notes:notes.value};
+    call('nav.create',{courseId:S.courseId,data:data}).then(function(r){save.disabled=false;if(r.ok){setMsg(m,(r.data.duplicate?'הרשומה כבר נשמרה. ':'נשמר. ')+'ציון סופי: '+(Math.round(r.data.record.final_score*10)/10),true);newReq();FIELDS.forEach(function(d){ins[d[0]].value='';});notes.value='';loadResults();loadSnap();}else setMsg(m,r.message,false);}).catch(function(){save.disabled=false;setMsg(m,'שגיאת תקשורת. נסו שוב.',false);});};
+  box.appendChild(el('div',{class:'bar'},[save]));box.appendChild(m);
+}
+function snapOpts(){var f=S.navF,o={};if(f.typeId)o.typeId=f.typeId;if(f.from)o.from=f.from;if(f.to)o.to=f.to;return o;}
+function loadSnap(){call('nav.groups',{courseId:S.courseId,opts:snapOpts()}).then(function(r){var b=$('navSnap');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'תמונת מצב נוכחית'}));
+  b.appendChild(el('p',{class:'muted',text:'כולל רק חיילים לא מבוטלים ותוצאות לא מבוטלות. היסטוריה מלאה — ברשימת התוצאות.'}));
+  if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}var g=r.data;if(g.scope_note)b.appendChild(el('p',{class:'warn',text:g.scope_note}));
+  var rows=[[g.course.name+' (כל הקורס)',g.course]].concat(g.departments.map(function(d){return ['מחלקה: '+d.name,d];})).concat(g.teams.map(function(t){return ['צוות: '+t.name,t];}));
+  var t=el('table',{id:'snapTable'},[el('thead',{},[el('tr',{},['קבוצה','חיילים','עם תוצאות','תוצאות','ממוצע'].map(function(h){return el('th',{text:h});}))])]);
+  var tb=el('tbody');rows.forEach(function(x){var q=x[1];tb.appendChild(el('tr',{class:q.soldiers_with_results<q.soldiers?'bad':''},[el('td',{text:x[0]}),el('td',{text:String(q.soldiers)}),el('td',{text:q.soldiers_with_results+' / '+q.soldiers}),el('td',{text:String(q.count)}),el('td',{text:stat(q.mean_display)})]));});
+  t.appendChild(tb);b.appendChild(t);
+  var miss=g.soldiers.filter(function(x){return x.count===0;});
+  var mm=el('p',{id:'missingRes',class:miss.length?'warn':'muted',text:miss.length?'חסרה תוצאה ל-'+miss.length+' חיילים: '+miss.map(function(x){return x.full_name;}).join(', '):'לכל החיילים בתחום יש תוצאה.'});b.appendChild(mm);}).catch(function(){});}
+function listOpts(){var f=S.navF,o={courseId:S.courseId};['departmentId','teamId','typeId','from','to'].forEach(function(k){if(f[k])o[k]=f[k];});if(f.includeCancelled)o.includeCancelled=true;return o;}
+function loadResults(){call('nav.list',listOpts()).then(function(r){var b=$('navResults');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'תוצאות קודמות'}));
+  if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}if(!r.data.length){b.appendChild(el('p',{class:'muted',id:'noResults',text:'אין תוצאות להצגה.'}));return;}
+  var t=el('table',{class:'resp',id:'resTable'},[el('thead',{},[el('tr',{},['תאריך','חייל','צוות','סוג','ציון סופי','הוזן ע״י'].map(function(h){return el('th',{text:h});}))])]);var tb=el('tbody');
+  r.data.forEach(function(x){var st=el('td',{'data-l':'חייל'});st.appendChild(document.createTextNode(x.soldier_name));if(x.record_status==='cancelled')st.appendChild(el('span',{class:'badge can',text:'מבוטלת'}));if(x.soldier_cancelled)st.appendChild(el('span',{class:'badge can',text:'חייל מבוטל'}));
+    tb.appendChild(el('tr',{class:'click',tabindex:'0',role:'button',onclick:function(){showResult(x);},onkeydown:function(e){if(e.key==='Enter')showResult(x);}},[el('td',{'data-l':'תאריך',text:x.test_date}),st,el('td',{'data-l':'צוות',text:x.team_name}),el('td',{'data-l':'סוג',text:x.type_name}),el('td',{'data-l':'ציון',text:x.final_display}),el('td',{'data-l':'הוזן ע״י',text:x.created_by_name})]));});
+  t.appendChild(tb);b.appendChild(t);}).catch(function(){});}
+function showResult(x){var d=$('navDetail');d.innerHTML='';var c=el('section',{class:'card',id:'resDetail'});
+  c.appendChild(el('h3',{text:'תוצאה: '+x.soldier_name+' · '+x.test_date}));
+  var dl=el('dl');function row(k,val){dl.appendChild(el('dt',{text:k}));dl.appendChild(el('dd',{text:String(val===''||val===null||val===undefined?'—':val)}));}
+  row('סוג ניווט',x.type_name);row('מרחק (ק״מ)',x.distance_km);row('ציון תכנון',x.plan_score);row('ציון תחקיר',x.debrief_score);row('נקודות',x.points_completed+' מתוך '+x.points_total);row('ציון נקודות',x.points_score_display);row('ציון סופי',x.final_display);row('הערות',x.notes);row('הוזן ע״י',x.created_by_name+(x.created_by?' ('+x.created_by+')':''));
+  c.appendChild(dl);var acts=el('div',{class:'bar'}),box=el('div',{id:'resBox'}),msg=el('div',{id:'resMsg',class:'msg'});
+  var lock=archived(),cancelled=x.record_status==='cancelled';
+  if(isAdmin()){if(cancelled)acts.appendChild(el('button',{id:'resRestore',text:'שחזר',disabled:lock,onclick:function(){reasonInline(box,'סיבה (אופציונלי)',false,function(rs,done){call('record.restore',{table:'NavigationTests',id:x.id}).then(function(r){done(r,'שוחזר');if(r.ok){loadResults();loadSnap();$('navDetail').innerHTML='';}});});}}));
+    else{acts.appendChild(el('button',{id:'resEdit',text:'עריכה',disabled:lock,onclick:function(){resultForm(x,box,true);}}));acts.appendChild(el('button',{id:'resCancel',class:'danger',text:'בטל תוצאה',disabled:lock,onclick:function(){reasonInline(box,'סיבת הביטול',true,function(rs,done){call('record.cancel',{table:'NavigationTests',id:x.id,reason:rs}).then(function(r){done(r,'בוטל');if(r.ok){loadResults();loadSnap();$('navDetail').innerHTML='';}});});}}));}}
+  else if(x.own&&!lock)acts.appendChild(el('button',{id:'resCorr',text:'בקשת תיקון',onclick:function(){resultForm(x,box,false);}}));
+  c.appendChild(acts);c.appendChild(box);c.appendChild(msg);
+  var h=el('div',{id:'resHist'},[el('h4',{text:'היסטוריית שינויים'})]);c.appendChild(h);d.appendChild(c);
+  call('record.history',{table:'NavigationTests',id:x.id}).then(function(r){if(!r.ok){h.appendChild(el('p',{class:'muted',text:r.message}));return;}if(!r.data.length)h.appendChild(el('p',{class:'muted',text:'אין אירועים.'}));
+    var AC={CREATE:'הוזן',EDIT:'עריכת מנהל',CANCEL:'ביטול',RESTORE:'שחזור',CORRECTION_REQUEST:'בקשת תיקון',CORRECTION_APPLIED:'תיקון הוחל',CORRECTION_APPROVED:'תיקון אושר',CORRECTION_REJECTED:'תיקון נדחה'};
+    r.data.forEach(function(e){var it=el('div',{style:'margin-bottom:6px'},[el('div',{text:(AC[e.action]||e.action)+' · '+e.at+(e.actor?' · '+e.actor:'')+(e.reason?' · סיבה: '+e.reason:'')})]);if(e.before||e.after)it.appendChild(el('div',{class:'muted',dir:'ltr',text:diffText(e.before,e.after)}));h.appendChild(it);});});
+  c.scrollIntoView&&c.scrollIntoView({block:'nearest'});}
+function resultForm(x,box,asAdmin){box.innerHTML='';var f=el('div',{class:'card'});var ins={},vals={nDate:x.test_date,nDist:x.distance_km,nPlan:x.plan_score,nDeb:x.debrief_score,nDone:x.points_completed,nTotal:x.points_total};
+  var key={nDate:'test_date',nDist:'distance_km',nPlan:'plan_score',nDeb:'debrief_score',nDone:'points_completed',nTotal:'points_total'};
+  var g=el('div',{class:'row'});FIELDS.forEach(function(d){var i=el('input',{id:'e'+d[0],type:d[2],step:d[3]||null,value:String(vals[d[0]])});ins[d[0]]=i;g.appendChild(el('div',{},[el('label',{for:'e'+d[0],text:d[1]}),i]));});f.appendChild(g);
+  var ty=selectOf(S.types.filter(function(t){return t.active||t.id===x.navigation_type_id;}),x.navigation_type_id);ty.id='eType';f.appendChild(el('label',{for:'eType',text:'סוג ניווט'}));f.appendChild(ty);
+  var notes=el('textarea',{id:'eNotes',rows:'2'});notes.value=x.notes||'';f.appendChild(el('label',{for:'eNotes',text:'הערות'}));f.appendChild(notes);
+  var reason=el('input',{id:'eReason',placeholder:asAdmin?'סיבת העריכה (חובה)':'סיבת בקשת התיקון (חובה)'});f.appendChild(el('label',{for:'eReason',text:'סיבה'}));f.appendChild(reason);
+  var m=el('div',{id:'eMsg',class:'msg'}),go=el('button',{id:'eGo',text:asAdmin?'שמור עריכה':'שלח בקשת תיקון'});
+  go.onclick=function(){var ch={};Object.keys(key).forEach(function(k){if(String(ins[k].value)!==String(vals[k]))ch[key[k]]=ins[k].value;});if(ty.value!==x.navigation_type_id)ch.navigation_type_id=ty.value;if(notes.value!==(x.notes||''))ch.notes=notes.value;
+    if(!Object.keys(ch).length){setMsg(m,'לא בוצע שינוי.',false);return;}if(!reason.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}go.disabled=true;
+    var p=asAdmin?call('record.edit',{table:'NavigationTests',id:x.id,patch:ch,reason:reason.value}):call('correction.request',{table:'NavigationTests',id:x.id,changes:ch,reason:reason.value});
+    p.then(function(r){go.disabled=false;if(r.ok){setMsg(m,asAdmin?'נשמר.':'הבקשה נשלחה לאישור מנהל.',true);loadResults();loadSnap();if(isAdmin())loadCorr();}else setMsg(m,r.message,false);}).catch(function(){go.disabled=false;setMsg(m,'שגיאת תקשורת. נסו שוב.',false);});};
+  f.appendChild(el('div',{class:'bar'},[go,el('button',{class:'sec',text:'סגור',onclick:function(){box.innerHTML='';}})]));f.appendChild(m);box.appendChild(f);}
+function loadCorr(){call('correction.list',{courseId:S.courseId,status:'pending'}).then(function(r){var b=$('navCorr');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'בקשות תיקון ממתינות'}));
+  if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}if(!r.data.length){b.appendChild(el('p',{class:'muted',id:'noCorr',text:'אין בקשות ממתינות.'}));return;}
+  r.data.forEach(function(q){var it=el('div',{class:'card','data-req':q.id});var ch={};try{ch=JSON.parse(q.changes_json);}catch(e){}
+    it.appendChild(el('div',{text:'מבקש: '+q.requested_by+' · '+q.requested_at}));it.appendChild(el('div',{class:'muted',dir:'ltr',text:diffText(null,ch)}));it.appendChild(el('div',{text:'סיבה: '+q.reason}));
+    var note=el('input',{placeholder:'הערת מנהל (אופציונלי)'}),m=el('div',{class:'msg'});
+    function dec(d){return function(){call('correction.review',{requestId:q.id,decision:d,note:note.value}).then(function(x){if(x.ok){loadCorr();loadResults();loadSnap();}else setMsg(m,x.message,false);});};}
+    it.appendChild(note);it.appendChild(el('div',{class:'bar'},[el('button',{class:'approve',text:'אשר',disabled:archived(),onclick:dec('approve')}),el('button',{class:'sec reject',text:'דחה',disabled:archived(),onclick:dec('reject')})]));it.appendChild(m);b.appendChild(it);});});}
+function buildTypes(){var b=$('navTypes');if(!b)return;b.innerHTML='';b.appendChild(el('h3',{text:'סוגי ניווט'}));var m=el('div',{id:'typeMsg',class:'msg'});
+  var refresh=function(){call('navtypes.list',{courseId:S.courseId}).then(function(r){if(r.ok){S.types=r.data;buildEntry();buildTypes();}});};
+  S.types.forEach(function(t){var row=el('div',{class:'bar','data-type':t.id},[el('span',{text:t.name+(t.active?'':' (לא פעיל)'),style:'flex:1'}),
+    el('button',{class:'sec tToggle',disabled:archived(),text:t.active?'השבת':'הפעל',onclick:function(){call('navtypes.setActive',{id:t.id,active:!t.active}).then(function(r){if(r.ok)refresh();else setMsg(m,r.message,false);});}}),
+    el('button',{class:'sec tRename',disabled:archived(),text:'שנה שם',onclick:function(){var nm=el('input',{value:t.name}),go=el('button',{text:'שמור',onclick:function(){call('navtypes.rename',{id:t.id,name:nm.value}).then(function(r){if(r.ok)refresh();else setMsg(m,r.message,false);});}});row.innerHTML='';row.appendChild(nm);row.appendChild(go);}})]);b.appendChild(row);});
+  var nn=el('input',{id:'newType',placeholder:'שם סוג ניווט חדש'});b.appendChild(el('div',{class:'bar'},[nn,el('button',{id:'addType',disabled:archived(),text:'הוסף סוג',onclick:function(){call('navtypes.create',{courseId:S.courseId,name:nn.value}).then(function(r){if(r.ok)refresh();else setMsg(m,r.message,false);});}})]));b.appendChild(m);}
+
+/* ---------------- commander assignments (admin) ---------------- */
+function showAssign(){
+  var v=$('view');v.innerHTML='';var box=el('section',{class:'card',id:'assignBox'});v.appendChild(box);
+  box.appendChild(el('h3',{text:'שיוכי מפקדים לתחומי אחריות'}));
+  box.appendChild(el('p',{class:'muted',text:'מפקד רואה רק חיילים שבתחום האחריות הפעיל שלו. שיוך למחלקה = שני הצוותים שלה; שיוך לצוות = אותו צוות בלבד; בלי שיוך פעיל — אין גישה לחיילים.'}));
+  var cmds=S.users.filter(function(u){return u.role==='commander'&&u.active!==false&&String(u.course_scope).split(',').map(function(x){return x.trim();}).indexOf(S.courseId)!==-1;});
+  var user=el('select',{id:'aUser'},cmds.map(function(u){return el('option',{value:u.email,text:u.display_name+' · '+u.email});})),type=el('select',{id:'aType'},[el('option',{value:'course',text:'כל הקורס'}),el('option',{value:'department',text:'מחלקה'}),el('option',{value:'team',text:'צוות'})]),target=el('select',{id:'aTarget'});
+  function fillTarget(){target.innerHTML='';if(type.value==='course'){target.appendChild(el('option',{value:S.courseId,text:course().name||'הקורס'}));}else if(type.value==='department'){S.org.departments.forEach(function(d){target.appendChild(el('option',{value:d.id,text:d.name}));});}else{S.org.teams.forEach(function(t){target.appendChild(el('option',{value:t.id,text:t.name+' ('+depName(t.department_id)+')'}));});}}
+  type.onchange=fillTarget;fillTarget();var m=el('div',{id:'aMsg',class:'msg',role:'status'});
+  var reasonIn=el('input',{id:'aReason',placeholder:'סיבת השיוך (חובה)'});
+  var add=el('button',{id:'aAdd',text:'הוסף שיוך',disabled:archived()||!cmds.length,onclick:function(){if(!reasonIn.value.trim()){setMsg(m,'חובה לציין סיבה.',false);return;}call('assignments.create',{data:{course_id:S.courseId,user_email:user.value,scope_type:type.value,scope_id:target.value,reason:reasonIn.value}}).then(function(r){if(r.ok){reasonIn.value='';setMsg(m,'השיוך נוסף.',true);loadAssign();}else setMsg(m,r.message,false);});}});
+  if(!cmds.length)m.textContent='אין מפקדים בקורס. הוסיפו מפקד (users.add) ושייכו אותו לקורס.',m.className='msg err';
+  box.appendChild(el('div',{class:'row3'},[el('div',{},[el('label',{text:'מפקד'}),user]),el('div',{},[el('label',{text:'רמת שיוך'}),type]),el('div',{},[el('label',{text:'יעד'}),target]),el('div',{},[el('label',{text:'סיבה'}),reasonIn])]));box.appendChild(el('div',{class:'bar'},[add]));box.appendChild(m);
+  box.appendChild(el('div',{id:'aList'}));box.appendChild(el('div',{id:'aAct'}));loadAssign();
+}
+function loadAssign(){call('assignments.list',{courseId:S.courseId}).then(function(r){var b=$('aList');if(!b)return;b.innerHTML='';if(!r.ok){b.appendChild(el('div',{class:'msg err',text:r.message}));return;}
+  if(!r.data.length){b.appendChild(el('p',{class:'muted',id:'noAssign',text:'אין שיוכים. מפקדים ללא שיוך פעיל אינם רואים חיילים.'}));return;}
+  var T={course:'כל הקורס',department:'מחלקה',team:'צוות'};var t=el('table',{class:'resp',id:'assignTable'},[el('thead',{},[el('tr',{},['מפקד','רמה','יעד','סטטוס',''].map(function(h){return el('th',{text:h});}))])]);var tb=el('tbody');
+  r.data.forEach(function(a){var act=el('td',{'data-l':'פעולות'});
+    act.appendChild(el('button',{class:'sec aToggle',disabled:archived(),text:a.active?'בטל שיוך':'שחזר',onclick:function(){reasonInline($('aAct'),a.active?'סיבת הביטול':'סיבת השחזור',true,function(rs,done){call('assignments.setActive',{id:a.id,active:!a.active,expected_updated_at:a.updated_at,reason:rs}).then(function(x){done(x,'עודכן');if(x.ok)loadAssign();});});}}));
+    act.appendChild(el('button',{class:'sec aEdit',disabled:archived()||!a.active,text:'ערוך',onclick:function(){editAssign(a);}}));
+    tb.appendChild(el('tr',{class:a.active?'':'bad','data-aid':a.id},[el('td',{'data-l':'מפקד',text:a.user_email}),el('td',{'data-l':'רמה',text:T[a.scope_type]}),el('td',{'data-l':'יעד',text:a.scope_name}),el('td',{'data-l':'סטטוס'},[el('span',{class:'badge'+(a.active?'':' off'),text:a.active?'פעיל':'מבוטל'})]),act]));});
+  t.appendChild(tb);b.appendChild(t);});}
+function editAssign(a){var b=$('aAct');b.innerHTML='';var type=el('select',{id:'eaType'},[el('option',{value:'course',text:'כל הקורס'}),el('option',{value:'department',text:'מחלקה'}),el('option',{value:'team',text:'צוות'})]);type.value=a.scope_type;var target=el('select',{id:'eaTarget'});
+  function fill(){target.innerHTML='';var items=type.value==='course'?[{id:S.courseId,name:course().name||'הקורס'}]:(type.value==='department'?S.org.departments:S.org.teams);items.forEach(function(i){target.appendChild(el('option',{value:i.id,text:i.name}));});if(type.value===a.scope_type)target.value=a.scope_id;}
+  type.onchange=fill;fill();var reason=el('input',{id:'eaReason',placeholder:'סיבת השינוי (חובה)'}),m=el('div',{id:'eaMsg',class:'msg'});
+  var go=el('button',{id:'eaGo',text:'שמור',onclick:function(){call('assignments.update',{id:a.id,patch:{scope_type:type.value,scope_id:target.value},expected_updated_at:a.updated_at,reason:reason.value}).then(function(r){if(r.ok){b.innerHTML='';loadAssign();}else setMsg(m,r.message,false);});}});
+  b.appendChild(el('div',{class:'card'},[el('div',{class:'row'},[el('div',{},[el('label',{text:'רמה'}),type]),el('div',{},[el('label',{text:'יעד'}),target])]),el('label',{text:'סיבה'}),reason,el('div',{class:'bar'},[go,el('button',{class:'sec',text:'סגור',onclick:function(){b.innerHTML='';}})]),m]));}
+
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-name: Source checks (deployment disabled)
+name: Source checks (no deployment)
 
 on:
   push:
@@ -9,38 +9,49 @@ permissions:
   contents: read
 
 jobs:
-  repository-hygiene:
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - name: Reject credential files anywhere in repository
+      - name: Check repository hygiene (no credentials / local bindings)
         shell: bash
         run: |
           set -euo pipefail
-          if git ls-files | grep -Ei '(^|/)(\.clasp\.json|\.clasprc\.json|\.env(\..*)?|credentials\.json|service-account[^/]*\.json|[^/]*\.(pem|p12|pfx|key))$'; then
-            echo 'Credential-like files must not be committed.' >&2
-            exit 1
-          fi
-      - name: Check source layout
-        shell: bash
-        run: |
-          if [ -f package.json ] && [ ! -d src ]; then
-            echo 'package.json exists but src/ is missing.' >&2
-            exit 1
-          fi
-
-  tests:
-    if: ${{ hashFiles('package-lock.json') != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+          for file in .clasp.json .clasprc.json .env credentials.json; do
+            if [ -e "$file" ]; then
+              echo "Forbidden local credential/binding file: $file" >&2
+              exit 1
+            fi
+          done
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:ci
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          # package-lock.json is intentionally NOT committed yet (it must come from npm on a networked machine, never hand-written).
+          # With a lock: reproducible `npm ci`. Without it: `npm install` against the exact pin in package.json (playwright 1.63.0) and
+          # the generated lock is uploaded as an artifact for the owner to review and commit.
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Upload generated lock file (only when none is committed)
+        if: hashFiles('package-lock.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-package-lock
+          path: package-lock.json
+          if-no-files-found: ignore
+      - name: Install browser dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Source identity + strict test run (Node + UI, 0 skips allowed)
+        run: npm run test:ci
+      - name: Upload synthetic app (downloadable artifact only; nothing is deployed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-app
+          path: synthetic_app/index.html
+          if-no-files-found: error
 
-# No deploy job. Google Apps Script deployment requires separately validated
-# credentials, source reconciliation and versioned deployment/rollback.
+# Deployment intentionally disabled until credentials, baseline reconciliation,
+# versioned /exec update and rollback are validated (see docs/DEPLOYMENT_PLAN.md).

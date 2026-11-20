@@ -1,0 +1,33 @@
+// v1.0.1 Drive-permission PREFLIGHT — Node simulation (fake Drive sharing state). The real Drive branch (Adapters.gas_.driveReport) is NOT verified.
+const { suite } = require('./tlib'); const { t, done, assert } = suite('v1_preflight.js'); const { setup } = require('./fixture');
+const st = (r, id) => r.checks.find(c => c.id === id) && r.checks.find(c => c.id === id).status;
+t('integration', 'healthy simulated Drive: Drive checks PASS, but the overall result is INCOMPLETE (never PASS) because deployment/OAuth/LockService/temp-export cannot be verified from a script', () => {
+  const S = setup(); const { X, admin, c1, S: sol } = S; X.Backup.create(admin, 'manual'); X.Documents.upload(admin, c1, { soldier_id: sol.a.id, document_type: 'תעודה', file_name: 'a.pdf', mime_type: 'application/pdf', content_base64: require('./fakes').PDF });
+  const r = X.Preflight.run(admin); assert.strictEqual(r.overall, 'INCOMPLETE'); assert.strictEqual(r.counts.FAIL, 0); ['drive.file.main_spreadsheet', 'drive.file.private_spreadsheet', 'drive.folder.backups', 'drive.folder.documents'].forEach(id => assert.strictEqual(st(r, id), 'PASS', id));
+  assert.ok(r.checks.some(c => c.id.startsWith('drive.file.backups/') && c.status === 'PASS'), 'files inside the backups folder are checked one by one'); assert.ok(r.checks.some(c => c.id.startsWith('drive.file.documents/') && c.status === 'PASS'));
+  ['deployment.access'].forEach(id => assert.strictEqual(st(r, id), 'BLOCKED')); ['oauth.scopes', 'lock.service', 'temp.exports'].forEach(id => assert.strictEqual(st(r, id), 'NOT_VERIFIED')); assert.strictEqual(st(r, 'trigger.daily'), 'PASS');
+  assert.strictEqual(X.Preflight.last(admin).summary.overall, 'INCOMPLETE'); assert.ok(X.Db.all('AuditLog').some(a => a.action === 'PREFLIGHT_RUN')); });
+t('hardening', 'every over-sharing shape is detected as FAIL on the exact object: public link, domain link, an extra viewer/editor, a COMMANDER with direct access, an over-shared file inside backups/documents — and nothing is changed by the preflight', () => {
+  const S = setup(); const { X, admin, c1, S: sol, fake } = S; X.Backup.create(admin, 'manual'); const doc = X.Documents.upload(admin, c1, { soldier_id: sol.a.id, document_type: 'ת', file_name: 'a.pdf', mime_type: 'application/pdf', content_base64: require('./fakes').PDF }); const d = fake.drive;
+  const cases = [['public main sheet', () => { d.main.access = 'ANYONE_WITH_LINK'; }, () => { d.main.access = 'PRIVATE'; }, 'drive.file.main_spreadsheet', /ציבורי/],
+    ['domain-shared private sheet', () => { d.private.access = 'DOMAIN_WITH_LINK'; }, () => { d.private.access = 'PRIVATE'; }, 'drive.file.private_spreadsheet', /דומיין/],
+    ['commander is editor of the private sheet', () => { d.private.editors.push('team@x.com'); }, () => { d.private.editors = []; }, 'drive.file.private_spreadsheet', /מפקד עם גישת editor/],
+    ['unknown viewer on backups folder', () => { d.folders.backups.viewers.push('stranger@gmail.com'); }, () => { d.folders.backups.viewers = []; }, 'drive.folder.backups', /לא מורשית/],
+    ['public documents folder', () => { d.folders.documents.access = 'ANYONE'; }, () => { d.folders.documents.access = 'PRIVATE'; }, 'drive.folder.documents', /ציבורי/]];
+  cases.forEach(([n, on, off, id, re]) => { on(); const r = X.Preflight.run(admin); assert.strictEqual(r.overall, 'FAIL', n); assert.strictEqual(st(r, id), 'FAIL', n); assert.ok(re.test(r.checks.find(c => c.id === id).detail), n + ': ' + r.checks.find(c => c.id === id).detail); off(); });
+  const bf = Object.keys(fake.files).find(k => fake.files[k].bucket === 'backups'), df = Object.keys(fake.files).find(k => fake.files[k].bucket === 'documents');
+  fake.files[bf].sharing.access = 'ANYONE'; let r = X.Preflight.run(admin); assert.ok(r.checks.some(c => c.id.startsWith('drive.file.backups/') && c.status === 'FAIL'), 'a single over-shared backup file'); fake.files[bf].sharing.access = 'PRIVATE';
+  fake.files[df].sharing.viewers.push('team@x.com'); r = X.Preflight.run(admin); assert.ok(r.checks.some(c => c.id.startsWith('drive.file.documents/') && c.status === 'FAIL' && /מפקד/.test(c.detail)), 'commander with direct access to a document'); fake.files[df].sharing.viewers = [];
+  assert.strictEqual(X.Preflight.run(admin).counts.FAIL, 0, 'restored to healthy'); assert.ok(d.main.access === 'PRIVATE' && fake.files[bf].sharing.access === 'PRIVATE', 'preflight itself changed nothing'); });
+t('hardening', 'what cannot be read is NOT_VERIFIED / BLOCKED — never PASS: permission read errors, missing triggers, a missing required spreadsheet (FAIL), a drive report that throws (BLOCKED), folder cap (NOT_VERIFIED)', () => {
+  const S = setup(); const { X, admin, fake } = S; X.Backup.create(admin, 'manual'); const d = fake.drive;
+  d.failFor.private_spreadsheet = true; let r = X.Preflight.run(admin); assert.strictEqual(st(r, 'drive.file.private_spreadsheet'), 'NOT_VERIFIED'); assert.notStrictEqual(r.overall, 'PASS'); d.failFor = {};
+  d.triggers = []; r = X.Preflight.run(admin); assert.strictEqual(st(r, 'trigger.daily'), 'FAIL'); assert.strictEqual(r.overall, 'FAIL'); d.triggers = ['dailyJob_'];
+  const keep = d.main; d.main = null; r = X.Preflight.run(admin); assert.strictEqual(st(r, 'drive.file.main_spreadsheet'), 'FAIL', 'required object missing'); d.main = keep;
+  const orig = fake.driveReport; fake.driveReport = () => { throw new Error('no Drive here'); }; r = X.Preflight.run(admin); assert.strictEqual(st(r, 'drive.report'), 'BLOCKED'); assert.notStrictEqual(r.overall, 'PASS'); assert.ok(!r.checks.some(c => c.status === 'PASS' && c.id.startsWith('drive.')), 'no Drive PASS without a Drive report'); fake.driveReport = orig;
+  X.Preflight.PER_FOLDER_CAP = 1; X.Backup.create(admin, 'manual'); r = X.Preflight.run(admin); assert.ok(r.checks.some(c => c.id === 'drive.cap.backups' && c.status === 'NOT_VERIFIED'), 'cap reported'); });
+t('hardening', 'preflight is admin-only on the server (commander / unauthenticated refused through api(); nothing logged), and the system stays usable when the Drive report is blocked', () => {
+  const S = setup(); const { X, admin, cT, code } = S; const n = X.Db.all('AuditLog').length;
+  assert.strictEqual(code(() => X.Preflight.run(cT)), 'FORBIDDEN'); assert.strictEqual(code(() => X.Preflight.last(cT)), 'FORBIDDEN'); ['preflight.run', 'preflight.last'].forEach(k => { assert.strictEqual(S.as(cT, k, {}).ok, false); X.Auth._emailProvider = () => ''; assert.strictEqual(X.api(k, {}).ok, false); });
+  assert.strictEqual(X.Db.all('AuditLog').length, n, 'refusals write nothing'); assert.strictEqual(X.Preflight.last(admin), null, 'never run'); X.Auth._emailProvider = () => 'admin@x.com'; assert.strictEqual(X.api('preflight.run', {}).ok, true); });
+done();
