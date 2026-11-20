@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
+const {makeUnifiedMobileHtml}=require('./unified_mobile_shell.cjs');
 
 const source = process.argv[2];
 if (!source) throw Error('Specify the pinned legacy source checkout');
@@ -49,7 +50,7 @@ Courses.org(admin, courseId).teams.forEach((team, index) => {
 
 window.google = { script: { get run() {
   let success, failure;
-  const run = operation => Promise.resolve().then(operation)
+  const run = operation => new Promise(resolve => setTimeout(resolve, 0)).then(operation)
     .then(result => success?.(structuredClone(result)), error => failure?.(error));
   return {
     withSuccessHandler(handler) { success = handler; return this; },
@@ -122,4 +123,5 @@ actionForm.addEventListener('submit', event => {
 </script>`);
 fs.writeFileSync('preview/course-engine.js', engine);
 fs.writeFileSync('preview/course.html', html);
+fs.writeFileSync('preview/index.html', makeUnifiedMobileHtml(original));
 console.log(`PASS: ${methods.length} actions match inventory; synthetic course read and write verified`);

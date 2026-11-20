@@ -12,7 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: c9bc782df72fe1ab91016c003b65f2e3d82a58e8
+          path: legacy-source
+          sparse-checkout: |
+            /src/
+            /tests/harness.js
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node scripts/build_course_preview.cjs legacy-source
+      - run: git diff --exit-code -- preview/index.html
       - run: node scripts/test_preview.cjs
