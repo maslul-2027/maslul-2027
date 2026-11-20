@@ -16,7 +16,14 @@ Home screen, top 62% of the page / bottom nav, share of pixels differing (>24/25
 | tasks.list / setStatus / indicators | yes | yes | list + KPI only; setStatus not yet in E2E | no | no |
 | alerts.counts / alerts.list | yes | counts on home; list screen (read) | counts yes; list not in E2E | no | no |
 | attendance.events | yes | read-only list | not in E2E | no | no |
-| The other ~150 of the 174 routes (fitness, exams, navigation, shooting, readiness, qualifications, reports, forms, admin, backup, import/OCR…) | yes (174 total, authz in `tests/d7_authz.js`) | **not yet** — shown in "עוד" as "בהכנה" | no | no | no |
+| attendance.create / events / acttypes.create+list | yes | yes (event + absentees, activity types) | yes (save + read-back) | no | no |
+| fitness.types / create / list | yes | yes (components follow the selected test type) | yes | no | no |
+| exams.defs / defCreate / attempt / attempts / meetings | yes | yes | yes | no | no |
+| navtypes.list+create, nav.create / list | yes | yes | yes | no | no |
+| mk.create / list, marches.create / list | yes | yes | yes | no | no |
+| readiness.assess / list, events.create / list, qual.define / list, notes.save | yes | yes | yes (notes: save only; no list screen) | no | no |
+| users.list / add, courses.list / create | yes | yes (admin) | yes | no | no |
+| The remaining routes (fitness versions/weights/approval, reports, forms, docs/OCR, import, backup, settings, alerts handling, meetings/tasks creation, analytics, corrections, audit…) | yes (174 total, authz in `tests/d7_authz.js`) | **not yet** — shown in "עוד" as "בהכנה" | no | no | no |
 
-The "עוד" screen lists every domain; unmigrated ones are visibly disabled, not hidden. Next P1 batch: attendance write, fitness, exams, navigation, shooting, readiness, qualifications; then reports/forms/admin/backup.
+The "עוד" screen lists every domain; unmigrated ones are visibly disabled, not hidden. Next batch: reports/forms/docs/OCR/import/backup/settings/meetings/corrections/analytics.
 Writes show success only after the backend result; every write carries an idempotency key and the buttons are disabled while saving.

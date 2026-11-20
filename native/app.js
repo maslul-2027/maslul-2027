@@ -183,9 +183,9 @@
 
   /* ---------- MORE ---------- */
   var DOMAINS = [
-    ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבים ומשימות', 'מעקבים אישיים, משימות מישיבות', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'alerts', true], ['🏃', 'כשירות גופנית', 'רכיבים, גרסאות וציונים', null, false], ['🧭', 'ניווט', 'מבחני ניווט', null, false], ['🎯', 'קליעה', 'תוצאות קליעה', null, false], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', null, false], ['🥾', 'מסעות', 'מסעות ותוצאות', null, false], ['🎖', 'הסמכות וכשירות מבצעית', 'הסמכות, מועדים ופטורים', null, false], ['🗒', 'הערות והערכות', 'הערות מפקד והערכות', null, false]]],
+    ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבים ומשימות', 'מעקבים אישיים, משימות מישיבות', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'alerts', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
     ['דוחות ונתונים', [['📊', 'תמונת מצב קבוצתית', 'מדדים ברמת קבוצה בלבד', null, false], ['📄', 'דוחות וייצוא', 'תצוגה מקדימה וייצוא למנהל', null, false], ['📎', 'מסמכים וראיות', 'העלאה, קישור ואישור', null, false], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', null, false]]],
-    ['ניהול', [['🏫', 'קורסים', 'יצירה, ארכוב, פתיחה מחדש', null, false], ['🧩', 'מחלקות, צוותים ושיוך מפקדים', 'מבנה ארגוני והרשאות', null, false], ['🔐', 'משתמשים', 'הוספה, תפקידים והרשאות', null, false], ['⚙', 'הגדרות', 'פרמטרים מקצועיים והיסטוריה', null, false], ['💾', 'גיבוי ושחזור', 'גיבוי, אימות ושחזור', null, false], ['📥', 'ייבוא ו-OCR', 'ייבוא קבצים וטיוטות OCR', null, false]]]
+    ['ניהול', [['🏫', 'קורסים', 'יצירה, ארכוב, פתיחה מחדש', null, false], ['🔐', 'משתמשים וקורסים', 'משתמשים, תפקידים וקורס חדש', 'd/admin', true], ['🧩', 'מחלקות, צוותים ושיוך מפקדים', 'מבנה ארגוני והרשאות', null, false], ['⚙', 'הגדרות', 'פרמטרים מקצועיים והיסטוריה', null, false], ['💾', 'גיבוי ושחזור', 'גיבוי, אימות ושחזור', null, false], ['📥', 'ייבוא ו-OCR', 'ייבוא קבצים וטיוטות OCR', null, false]]]
   ];
   function More() {
     var nodes = [sectionHead('עוד', null)], q = h('input', { class: 'search', type: 'search', placeholder: 'חיפוש תחום…', 'aria-label': 'חיפוש תחום', autocomplete: 'off' }), out = h('div', { 'aria-live': 'polite' });
@@ -222,12 +222,13 @@
     });
   }
 
+/*DOMAINS*/
   /* ---------- router ---------- */
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
   function render() {
     var r = (location.hash || '#/home').replace(/^#\//, ''), top = $('#ctx'); if (top) top.textContent = ctxLine();
     if (!S.course) { mount('home', [h('div', { class: 'empty', text: 'אין קורס. יש ליצור קורס במסך הניהול.' })]); return; }
-    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); (ROUTES[r] || Home)();
+    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
   document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.go); }); });
   window.addEventListener('hashchange', render);
