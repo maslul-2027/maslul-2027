@@ -29,6 +29,19 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 .b7t th{background:#f4f7f8;font-weight:700;position:sticky;top:0}
 .chip{min-height:44px;display:inline-flex;align-items:center}
 
+/* Issue #65: persistent quick-add + and meeting-editor task rows */
+.fab{position:fixed;inset-inline-start:16px;bottom:calc(88px + env(safe-area-inset-bottom));width:56px;height:56px;min-height:56px;border-radius:50%;background:var(--teal);color:#fff;border:0;font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 6px 18px #0003;z-index:4;padding:0;transition:transform .15s ease,box-shadow .15s ease}
+.fab[hidden]{display:none}.fab:active{transform:scale(.93)}.fab:focus-visible{outline:3px solid #009fa4;outline-offset:3px}
+.has-fab{padding-bottom:104px}
+dialog.sheet{max-height:92vh;overflow:auto}
+.taskrow{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0;min-inline-size:0}.taskrow legend{font-weight:700;font-size:13px;padding:0 6px}.taskrow.err{border-color:var(--red)}
+.trow2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}.trow2 select:first-child{grid-column:1/-1}.trow3{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.btn.ic,button.ic{min-width:44px;padding:0 12px}
+.stickybar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));z-index:3;background:linear-gradient(#fff0,#fff 30%);padding:10px 0 4px}.stickybar button{width:100%}
+@media (prefers-reduced-motion:reduce){.fab{transition:none}}
+.taskrow input,.taskrow select{width:100%;border:1px solid #dce3e6;background:#fff;border-radius:13px;min-height:48px;padding:12px;font:inherit;color:inherit}.taskrow input:focus-visible,.taskrow select:focus-visible{outline:3px solid #009fa4;outline-offset:1px}.taskrow.err input{border-color:var(--red)}
+.taskrow .errmsg{color:var(--red);font-size:13px;margin-top:6px}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="tasks"><i>☑</i>מעקבים</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
@@ -254,8 +267,14 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
     function setSeg(v) { S.seg = v; seg.replaceChildren.apply(seg, segBtns()); load(); }
     function segBtns() { return [['tasks', 'משימות מישיבות'], ['follow', 'מעקבים אישיים']].map(function (p) { return h('button', { type: 'button', 'aria-pressed': S.seg === p[0] ? 'true' : 'false', text: p[1], onclick: function () { setSeg(p[0]); } }); }); }
     seg.replaceChildren.apply(seg, segBtns());
-    mount('tasks', [sectionHead('מעקבים', 'נתונים סינתטיים'), seg, body], 'מעקבים');
+    var flt = h('div', { class: 'seg', role: 'group', 'aria-label': 'סינון משימות' }), FL = S.tfilter || 'all';
+    function fltBtns() { return [['all', 'הכול'], ['mine', 'שלי'], ['overdue', 'באיחור']].map(function (p) { return h('button', { type: 'button', 'aria-pressed': FL === p[0] ? 'true' : 'false', text: p[1], onclick: function () { FL = S.tfilter = p[0]; flt.replaceChildren.apply(flt, fltBtns()); load(); } }); }); }
+    flt.replaceChildren.apply(flt, fltBtns());
+    var fab = canCreateTasks() ? h('button', { class: 'fab', type: 'button', id: 'taskFab', 'aria-label': 'הוספת משימה חדשה', 'aria-haspopup': 'dialog', text: '+', onclick: function (e) { openQuickTask(e.currentTarget); } }) : null;
+    mount('tasks', [sectionHead('מעקבים', 'נתונים סינתטיים'), seg, body].concat(fab ? [fab] : []), 'מעקבים'); S.reloadTasks = function () { if (S.seg !== 'follow') load(); };
     function load() {
+      if (fab) fab.hidden = S.seg === 'follow';
+      document.getElementById('view').classList.toggle('has-fab', !!fab && S.seg !== 'follow');
       body.replaceChildren(skeleton(3));
       if (S.seg === 'follow') {
         Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), cache.soldiers ? Promise.resolve({ ok: true, data: cache.soldiers }) : api('soldiers.list', { courseId: S.course.id, opts: {} })]).then(function (r) {
@@ -269,9 +288,10 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
       } else {
         api('tasks.list', { courseId: S.course.id, opts: {} }).then(function (r) {
           if (!r.ok) { body.replaceChildren(errBox(r, load)); return; } var rows = r.data.tasks || []; body.replaceChildren();
-          body.append(h('p', { class: 'muted', text: 'פתוחות ' + r.data.counts.open + ' · בטיפול ' + r.data.counts.in_progress + ' · באיחור ' + r.data.counts.overdue }));
-          if (!rows.length) { body.append(emptyBox('אין משימות. משימות נוצרות בסיכום ישיבה.')); return; }
-          rows.forEach(function (t) { body.append(card(t.title, (t.assignee_name || t.assignee_email || '') + (t.due_date ? ' · ' + t.due_date : ''), status(taskLabel(t.status), t.status === 'open' || t.overdue), function () { TaskStatus(t); })); });
+          body.append(h('p', { class: 'muted', text: 'פתוחות ' + r.data.counts.open + ' · בטיפול ' + r.data.counts.in_progress + ' · באיחור ' + r.data.counts.overdue }), flt);
+          var me = String((S.who || {}).email || '').toLowerCase(), all = rows; rows = rows.filter(function (t) { return FL === 'mine' ? String(t.assignee_email).toLowerCase() === me : FL === 'overdue' ? t.overdue : true; });
+          if (!rows.length) { body.append(emptyBox(all.length ? 'אין משימות בסינון הזה.' : 'אין משימות עדיין. הוסיפו משימה עם כפתור ה־+ או בסיכום ישיבה.')); return; }
+          rows.forEach(function (t) { body.append(card(t.title, (t.assignee_name || t.assignee_email || '') + (t.due_date ? ' · ' + t.due_date : '') + (t.meeting_subject ? ' · ' + t.meeting_subject : ''), status(taskLabel(t.status), t.status === 'open' || t.overdue), function () { TaskStatus(t); })); });
         });
       }
     }
@@ -281,6 +301,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
   function TaskStatus(t) {
     var sel = h('select', { id: 'tsel' }, ['open', 'in_progress', 'waiting', 'completed', 'cancelled'].map(function (v) { return h('option', { value: v, text: taskLabel(v) }); })); sel.value = t.status; var note = h('textarea', { id: 'tnote' });
     var det = h('div', { 'aria-live': 'polite' }); api('tasks.get', { id: t.id }).then(function (r) { if (!r.ok) return; var d = r.data || {}; det.append(h('p', { class: 'muted', text: (d.assignee_email || t.assignee_email || '') + (d.due_date ? ' · עד ' + String(d.due_date).slice(0, 10) : '') + (d.notes ? ' · ' + d.notes : '') })); (d.history || []).slice(0, 5).forEach(function (e) { det.append(h('p', { class: 'muted', text: (e.at ? String(e.at).slice(0, 10) + ' · ' : '') + (e.to_status || e.status || '') + (e.note ? ' — ' + e.note : '') })); }); });
+    if (t.meeting_id && D.meetings) det.append(h('button', { class: 'secondary', type: 'button', id: 'taskMeeting', text: 'פתיחת סיכום הישיבה' + (t.meeting_subject ? ': ' + t.meeting_subject : ''), onclick: function () { document.querySelectorAll('dialog').forEach(function (x) { x.close(); }); D.meetings.lists[0].click({ id: t.meeting_id, subject: t.meeting_subject || 'סיכום', meeting_at: '' }); } }));
     dialog(t.title, [det, field('סטטוס', sel), field('הערה', note)], function (msg) { return api('tasks.setStatus', { id: t.id, status: sel.value, note: note.value, expected_version: t.version }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('הסטטוס עודכן'); Tasks(); }); }, 'עדכון');
   }
   function FollowForm() {
@@ -379,8 +400,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
     lists: [{ h: 'התראות', m: 'alerts.list', a: function () { return { courseId: S.course.id, opts: {} }; }, empty: 'אין התראות. אפשר לרענן.', row: function (a) { return [(a.soldier_name ? a.soldier_name + ' · ' : '') + (ALERT_TOPIC[a.topic] || 'התראה'), (a.reason || '') + (a.due_date ? ' · עד ' + fmtD(a.due_date) : ''), status((ALERT_ST[a.status] || a.status) + ((a.urgency === 'high' || a.urgency === 'red') && a.status === 'open' ? ' · דחופה' : ''), a.status === 'open')]; },
       click: function (a, reload) { if (!isAdmin()) { toast('טיפול בהתראה — למנהל בלבד', 'err'); return; } var sel = h('select', { id: 'alTo' }, ['handled', 'archived', 'open'].map(function (v) { return h('option', { value: v, text: ALERT_ST[v] }); })), note = h('textarea', { id: 'alNote' }); dialog((ALERT_TOPIC[a.topic] || 'התראה') + (a.soldier_name ? ' · ' + a.soldier_name : ''), [h('p', { text: a.reason || '' }), field('סטטוס חדש', sel), field('הערה (חובה לטיפול)', note)], function (msg) { return api('alerts.handle', { id: a.id, to: sel.value, note: note.value }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('ההתראה עודכנה'); reload(); }); }, 'עדכון'); } }] };
   D.meetings = { title: 'ישיבות ומשימות', lists: [{ h: 'סיכומי ישיבות', m: 'meetings.list', a: CID, row: function (m) { return [m.subject, fmtD(m.meeting_at) + (m.tasks_open !== undefined ? ' · משימות פתוחות ' + m.tasks_open : '')]; } }],
-    forms: [{ t: 'סיכום ישיבה חדש', m: 'meetings.save', pre: ['meetings.options'], fields: function (P) { var o = P['meetings.options'] || {}; return [{ n: 'subject', l: 'נושא הישיבה', req: 1 }, { n: 'meeting_at', l: 'תאריך ושעה', t: 'datetime', req: 1 }, { n: 'participants', l: 'משתתפים' }, { n: 'summary', l: 'סיכום', t: 'textarea' }, { n: 'decisions', l: 'החלטות', t: 'textarea' }, { n: 'task_title', l: 'משימה (כותרת)' }, { n: 'task_assignee', l: 'אחראי למשימה', t: 'select', o: (o.assignees || []).map(function (a) { return [a.email, a.name || a.email]; }) }, { n: 'task_due', l: 'תאריך יעד למשימה', t: 'date' }]; },
-      build: function (x) { var d = { request_id: rid(), subject: x.subject, meeting_at: x.meeting_at, participants: x.participants || '', summary: x.summary || '', decisions: x.decisions || '', tasks: [] }; if (x.task_title) d.tasks.push({ client_key: 'k1', title: x.task_title, assignee_email: x.task_assignee, due_date: x.task_due, due_time: '', priority: 'normal', notes: '' }); return d; } }] };
+    forms: [{ t: 'סיכום ישיבה חדש', m: 'meetings.save', screen: function () { MeetingEditor(); } }] };
   D.settings = { title: 'הגדרות מקצועיות', forms: [], lists: [{ h: 'פרמטרים (שינוי נרשם עם נימוק ותאריך תחילה)', m: 'settings.list', a: CID, row: function (st) { return [st.label, 'ערך נוכחי: ' + st.value + (st.history && st.history.length ? ' · ' + st.history.length + ' שינויים' : ''), null]; },
     click: function (st, reload) { if (!isAdmin()) { toast('שינוי הגדרות — למנהל בלבד', 'err'); return; } var v = h('input', { id: 'sv', value: st.value }), ef = h('input', { id: 'se', type: 'date' }), rs = h('input', { id: 'sr' }); dialog(st.label, [field('ערך חדש', v), field('בתוקף מתאריך', ef), field('נימוק (חובה)', rs)], function (msg) { if (!rs.value.trim()) { msg.textContent = 'יש לציין נימוק.'; msg.className = 'msg err'; return false; } return api('settings.set', { courseId: S.course.id, key: st.key, value: st.type === 'number' || st.type === 'int' ? Number(v.value) : v.value, effective_from: ef.value || undefined, reason: rs.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('ההגדרה נשמרה'); reload(); }); }, 'שמירה'); } }] };
   D.reports = { title: 'דוחות וייצוא', forms: [], actions: [{ t: 'ייצוא מלא (מנהל)', admin: 1, ok: 'הייצוא נוצר', run: function () { return api('reports.fullExport', { courseId: S.course.id, include_private: false }); } }, { t: 'יצירת קובץ PDF/Excel', admin: 1, ok: 'הקובץ נוצר', run: function () { return api('reports.generate', { courseId: S.course.id, spec: {}, format: 'xlsx' }); } }],
@@ -451,6 +471,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
   }
   function DomainForm(id, idx) {
     var d = D[id], spec = d && d.forms[idx]; if (!spec) return More();
+    if (spec.screen) return spec.screen(spec);
     var f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' }), holder = h('div', {}, skeleton(2));
     mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/' + id); }, text: '→ חזרה' }), h('h1', { class: 'page', text: spec.t }), holder], spec.t);
     var P = {}; Promise.all([ensureSoldiers()].concat((spec.pre || []).map(function (m) { return api(m, CID()).then(function (r) { P[m] = r.ok ? r.data : []; }); }))).then(function () {
@@ -661,7 +682,7 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
     box.append(bAct('השוואה', 'primary', 'cmpGo', function () { var ids = checks.filter(function (x) { return x.checked; }).map(function (x) { return x.dataset.id; }); out.replaceChildren(skeleton(1)); api('dash.compareCourses', { courseIds: ids }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(errBox(r)); return; } r.data.forEach(function (c) { out.append(c.suppressed || c.small_group ? card(c.name || 'קורס', 'מוסתר — קבוצה קטנה מ-5 חיילים', null) : card(c.name, 'חניכים ' + num(c.soldiers) + ' · ניווט ' + pctTxt(c.navigation) + ' · קליעה ' + pctTxt(c.marksmanship) + ' · נוכחות ' + pctTxt(c.attendance), null)); }); }); }), out); } });
   /* per-soldier trends (dash.trends) are intentionally NOT exposed in analytics: owner charter 2026-11-20 allows group-level analytics only. The server route is kept for an owner-approved disposition. */
   /* --- meetings: detail (meetings.get), tasks detail (tasks.get), integrity + audit repair --- */
-  D.meetings.lists[0].click = function (m) { var out = h('div', { 'aria-live': 'polite' }, [skeleton(2)]); dialog(m.subject, [out], function () { }, 'סגירה'); api('meetings.get', { id: m.id }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(errBox(r)); return; } var d = r.data || {}; out.append(h('p', { class: 'muted', text: fmtD(d.meeting_at || m.meeting_at) + (d.participants ? ' · ' + d.participants : '') }), h('h3', { text: 'סיכום' }), h('p', { text: d.summary || '—' }), h('h3', { text: 'החלטות' }), h('p', { text: d.decisions || '—' }), h('h3', { text: 'משימות (' + (d.tasks || []).length + ')' })); (d.tasks || []).forEach(function (t) { out.append(h('p', { text: t.title + (t.assignee_email ? ' · ' + t.assignee_email : '') + (t.due_date ? ' · עד ' + fmtD(t.due_date) : '') })); }); }); };
+  D.meetings.lists[0].click = function (m) { var out = h('div', { 'aria-live': 'polite' }, [skeleton(2)]); dialog(m.subject, [out], function () { }, 'סגירה'); api('meetings.get', { id: m.id }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(errBox(r)); return; } var d = r.data || {}; out.append(h('p', { class: 'muted', text: fmtD(d.meeting_at || m.meeting_at) + (d.participants ? ' · ' + d.participants : '') }), h('h3', { text: 'סיכום' }), h('p', { text: d.summary || '—' }), h('h3', { text: 'החלטות' }), h('p', { text: d.decisions || '—' }), h('h3', { text: 'משימות (' + (d.tasks || []).length + ')' })); (d.tasks || []).forEach(function (t) { out.append(h('p', { text: t.title + (t.assignee_email ? ' · ' + t.assignee_email : '') + (t.due_date ? ' · עד ' + fmtD(t.due_date) : '') + (t.status && t.status !== 'open' ? ' · ' + taskLabel(t.status) : '') })); }); if (d.can_edit && canCreateTasks()) out.append(h('button', { class: 'secondary', type: 'button', id: 'mtEdit', text: 'עריכת הסיכום והמשימות', onclick: function () { S.meetingEdit = d.id; document.querySelectorAll('dialog').forEach(function (x) { x.close(); }); go('d/meetings/0'); } })); }); };
   D.meetings.lists.push({ h: 'שלמות סיכומים (מנהל)', m: 'meetings.integrity', a: CID, view: function (d, box) { kv(box, [['פערי audit', d.audit_gap_count], ['יתומים', d.orphan_count]]); if (!(d.audit_gaps || []).length) { box.append(h('p', { class: 'muted', text: 'אין פערי ביקורת.' })); return; } (d.audit_gaps || []).forEach(function (g) { var gid = g.id || g.meeting_id, rev = g.rev || g.revision || 1; box.append(card('סיכום ' + (g.subject || gid) + ' · גרסה ' + rev, 'חסר רישום ביקורת', null)); if (isAdmin()) box.append(bAct('תיקון פער ביקורת', 'secondary', 'mrFix_' + gid, function () { var rr = h('input', { id: 'mrR' }); dialog('תיקון פער ביקורת', [field('סיבה (חובה)', rr)], function (msg) { if (!rr.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } return api('meetings.auditRepair', { courseId: S.course.id, id: gid, rev: rev, reason: rr.value.trim() }).then(function (x) { if (!x.ok) return errAt(msg, x); toast('הפער תוקן'); Domain('meetings'); }); }, 'תיקון'); })); }); } });
   /* --- admin: emergency-contact orphan reconciliation (preview first, explicit cleanup, no contact values) --- */
   D.admin.lists.push({ h: 'התאוששות אנשי קשר לחירום יתומים (מנהל)', m: 'emergency.orphans', a: CID, role: 'admin', view: function (d, box) {
@@ -856,6 +877,113 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
       click: function (u, reload) { dialog('ניהול משתמש: ' + u.name, [h('p', { class: 'muted', text: (ROLE_HE[u.role] || u.role) + ' · קורסים: ' + ((u.courseIds || []).join(', ') || '—') })], function (msg) { return api('gw:set-active', { targetUserId: u.id, active: !u.active }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast(u.active ? 'המשתמש הושבת' : 'המשתמש הופעל'); reload(); }); }, u.active ? 'השבתת משתמש' : 'הפעלת משתמש', u.active); } }
   ] };
   if (C.mode === 'server') DOMAINS[2][1].push(['🔑', 'משתמשים ואישורי גישה', 'אישור בקשות, תפקידים והשבתה', 'd/access', true]);
+
+  /* ============ Issue #65: quick task add (persistent +) and repeatable task rows in the meeting editor ============ */
+  /* The server (src/Meetings.gs) already accepts up to 50 tasks per save with idempotency (client_key / request_id), optimistic version and scope checks; this is UX only. Tasks always live under a REAL, visible
+     meeting. A quick add without a chosen meeting goes to the honest, visible summary "משימות שוטפות" of the signed-in user (created on first use through the normal meetings.save, listed in the meetings list). */
+  var ONGOING = 'משימות שוטפות', MAX_TASKS_UI = 50, PRI = [['normal', 'רגילה'], ['low', 'נמוכה'], ['high', 'גבוהה'], ['urgent', 'דחופה']];
+  function canCreateTasks() { return !(S.who && S.who.role === 'viewer'); }
+  function newKey() { return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function plusDays(n) { var d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function ongoingKey() { return 'ongoing-' + String((S.who && S.who.email) || 'me').replace(/[^A-Za-z0-9_-]/g, '-').slice(0, 50); }
+  function metaOf(m) { return { subject: m.subject, meeting_at: String(m.meeting_at).slice(0, 16), participants: m.participants || '', summary: m.summary || '', decisions: m.decisions || '' }; }
+  function assigneeSelect(id, opts, pre) { var sel = h('select', { id: id }, (opts.assignees || []).map(function (a) { return h('option', { value: a.email, text: a.name || a.email }); })); var me = S.who && S.who.email; sel.value = pre || ((opts.assignees || []).some(function (a) { return a.email === me; }) ? me : ((opts.assignees || [])[0] || {}).email) || ''; return sel; }
+  /** Save ONE task through the existing meetings.save. Returns {ok, data|message}. Idempotent: a retry with the same client_key never creates a second task. One automatic retry on CONFLICT (fresh version). */
+  function quickSaveTask(task, meetingId, opts) {
+    function attempt(retry) {
+      var pm = meetingId ? Promise.resolve({ ok: true, data: { id: meetingId } }) : api('meetings.list', CID()).then(function (r) { if (!r.ok) return r; var mine = (r.data || []).filter(function (m) { return m.subject === ONGOING && String(m.author_email).toLowerCase() === String(S.who.email).toLowerCase(); })[0]; return { ok: true, data: mine ? { id: mine.id } : null }; });
+      return pm.then(function (p) {
+        if (!p.ok) return p;
+        if (!p.data) return api('meetings.save', { courseId: S.course.id, data: { request_id: ongoingKey(), subject: ONGOING, meeting_at: opts.now_local, participants: '', summary: 'סיכום אוטומטי להוספה מהירה של משימות שוטפות — נראה ברשימת הישיבות.', decisions: '', tasks: [task] } });
+        return api('meetings.get', { id: p.data.id }).then(function (g) {
+          if (!g.ok) return g; if (!g.data.can_edit) return { ok: false, message: 'אין הרשאה להוסיף משימה לסיכום הזה (רק כותב הסיכום או מנהל).' };
+          var d = Object.assign({ id: g.data.id, expected_version: g.data.version, tasks: [task] }, metaOf(g.data));
+          return api('meetings.save', { courseId: S.course.id, data: d }).then(function (r) { return !r.ok && r.code === 'CONFLICT' && !retry ? attempt(true) : r; });
+        });
+      });
+    }
+    return attempt(false);
+  }
+  function openQuickTask(opener) {
+    if (!canCreateTasks()) { toast('צפייה בלבד — אי אפשר להוסיף משימה', 'err'); return; }
+    var dlg = h('dialog', { 'aria-labelledby': 'qtT', class: 'sheet' }), f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' }), added = h('p', { class: 'muted', 'aria-live': 'polite' }), count = 0, key = newKey(), lastTitle = '', ctxTxt = h('p', { class: 'muted', id: 'qtCtxTxt' });
+    var title = h('input', { id: 'qtTitle', maxlength: '300', autocomplete: 'off', enterkeyhint: 'done' }), due = h('input', { id: 'qtDue', type: 'date', value: plusDays(7) }), pri = h('select', { id: 'qtPri' }, PRI.map(function (p) { return h('option', { value: p[0], text: p[1] }); })), who = h('select', { id: 'qtWho' }), ctx = h('select', { id: 'qtCtx' });
+    var fT = field('כותרת המשימה *', title), fW = field('אחראי', who), fD = field('תאריך יעד (נדרש בשרת — ברירת מחדל שבוע)', due), fP = field('עדיפות', pri), fC = field('שיוך לסיכום ישיבה', ctx), opts = null;
+    var save = h('button', { class: 'primary', type: 'submit', id: 'qtSave', text: 'שמירה' }), more = h('button', { class: 'secondary', type: 'button', id: 'qtMore', text: 'שמירה והוספת עוד' }), cancel = h('button', { class: 'secondary', type: 'button', text: 'סגירה', onclick: function () { dlg.close(); } });
+    f.append(h('h2', { id: 'qtT', text: 'משימה חדשה' }), fT, fW, fD, fP, fC, ctxTxt, added, msg, h('div', { class: 'btns' }, [save, more, cancel])); dlg.append(f); document.body.append(dlg);
+    function setCtxTxt() { ctxTxt.textContent = ctx.value ? 'המשימה תישמר בסיכום הנבחר.' : 'המשימה תישמר תחת הסיכום "' + ONGOING + '" שלך (נוצר אוטומטית בפעם הראשונה ונראה ברשימת הישיבות).'; }
+    Promise.all([api('meetings.options', CID()), api('meetings.list', CID())]).then(function (r) {
+      if (!r[0].ok) { msg.textContent = msgOf(r[0]); msg.className = 'msg err'; return; } opts = r[0].data;
+      var tmp = assigneeSelect('x', opts), tv = tmp.value; who.replaceChildren.apply(who, [].slice.call(tmp.children)); who.value = tv;
+      ctx.replaceChildren(h('option', { value: '', text: ONGOING + ' (ברירת מחדל)' })); (r[1].ok ? r[1].data : []).filter(function (m) { return String(m.author_email).toLowerCase() === String((S.who || {}).email).toLowerCase() && m.subject !== ONGOING; }).slice(0, 20).forEach(function (m) { ctx.append(h('option', { value: m.id, text: m.subject + ' · ' + fmtD(m.meeting_at) })); }); setCtxTxt();
+    });
+    ctx.addEventListener('change', setCtxTxt);
+    function submit(addMore) {
+      clearErr(f); msg.textContent = ''; msg.className = ''; var t = title.value.trim(); if (!t) { fieldErr(fT, 'יש להזין כותרת.'); title.focus(); return; } if (!opts) { msg.textContent = 'הנתונים עדיין נטענים — נסו שוב.'; msg.className = 'msg err'; return; }
+      if (!due.value) { fieldErr(fD, 'יש לבחור תאריך יעד.'); return; } if (t !== lastTitle) { key = newKey(); lastTitle = t; }     // same draft retried (e.g. after an error) keeps its key: the server never creates a second task
+      busy(save, true, 'שמירה'); more.disabled = true;
+      quickSaveTask({ client_key: key, title: t, assignee_email: who.value, due_date: due.value, due_time: '', priority: pri.value, notes: '' }, ctx.value || '', opts).then(function (r) {
+        busy(save, false, 'שמירה'); more.disabled = false;
+        if (!r.ok) { msg.textContent = msgOf(r) + ' הטיוטה נשמרה — אפשר לנסות שוב.'; msg.className = 'msg err'; return; }     // nothing is shown as saved until the server confirmed it
+        count++; key = newKey(); lastTitle = ''; if (S.reloadTasks) S.reloadTasks();
+        if (addMore) { title.value = ''; added.textContent = 'נשמרו ' + count + ' משימות. אפשר להוסיף עוד.'; title.focus(); toast('המשימה נשמרה'); } else { dlg.close(); toast(count > 1 ? 'נשמרו ' + count + ' משימות' : 'המשימה נשמרה'); }
+      });
+    }
+    f.addEventListener('submit', function (e) { e.preventDefault(); submit(false); }); more.addEventListener('click', function () { submit(true); });
+    dlg.addEventListener('close', function () { dlg.remove(); if (opener && opener.focus && document.contains(opener)) opener.focus(); }); dlg.showModal(); title.focus();
+  }
+
+  /* ---- meeting editor (new + edit): summary fields + repeatable task rows with a sticky "+ הוסף משימה" ---- */
+  function MeetingEditor() {
+    var editId = S.meetingEdit || null; S.meetingEdit = null; var holder = h('div', {}, skeleton(2)), reqId = rid();
+    mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/meetings'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: editId ? 'עריכת סיכום ישיבה' : 'סיכום ישיבה חדש' }), holder], 'סיכום ישיבה');
+    Promise.all([api('meetings.options', CID()), editId ? api('meetings.get', { id: editId }) : Promise.resolve({ ok: true, data: null })]).then(function (r) {
+      if (!r[0].ok || !r[1].ok) { holder.replaceChildren(errBox(r[0].ok ? r[1] : r[0], function () { MeetingEditor(); })); return; } build(r[0].data, r[1].data);
+    });
+    function build(o, ex) {
+      var version = ex ? ex.version : null, rows = [], f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' });
+      var subj = h('input', { id: 'mtSubject', value: ex ? ex.subject : '' }), at = h('input', { id: 'mtAt', type: 'datetime-local', value: ex ? String(ex.meeting_at).slice(0, 16) : o.now_local }), part = h('input', { id: 'mtParts', value: ex ? ex.participants || '' : '' }), sum = h('textarea', { id: 'mtSummary' }), dec = h('textarea', { id: 'mtDec' }); sum.value = ex ? ex.summary || '' : ''; dec.value = ex ? ex.decisions || '' : '';
+      var fS = field('נושא הישיבה *', subj), fA = field('תאריך ושעה *', at), list = h('div', { id: 'mtTasks', role: 'list' }), head = h('h2', { id: 'mtH', text: 'משימות' }), hint = h('p', { class: 'muted', text: 'לחיצה על Enter בכותרת משימה מוסיפה משימה נוספת. עד ' + MAX_TASKS_UI + ' משימות; משימה חדשה ללא כותרת לא תישמר.' });
+      var add = h('button', { class: 'primary', type: 'button', id: 'mtAdd', text: '+ הוסף משימה', onclick: function () { addRow(null, true); } }), bar = h('div', { class: 'stickybar' }, [add]);
+      var save = h('button', { class: 'primary', type: 'submit', id: 'mtSave', text: 'שמירת סיכום' });
+      f.append(fS, fA, field('משתתפים', part), field('סיכום', sum), field('החלטות', dec), head, hint, list, bar, msg, h('div', { class: 'btns' }, [save, h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { go('d/meetings'); } })])); holder.replaceChildren(f);
+      function visible() { return rows.filter(function (x) { return !x.removed; }); }
+      function renumber() { var v = visible(); head.textContent = 'משימות (' + v.length + ')'; v.forEach(function (x, i) { x.legend.textContent = 'משימה ' + (i + 1); x.up.setAttribute('aria-label', 'העברת משימה ' + (i + 1) + ' למעלה'); x.down.setAttribute('aria-label', 'העברת משימה ' + (i + 1) + ' למטה'); x.rm.setAttribute('aria-label', 'הסרת משימה ' + (i + 1)); x.up.disabled = i === 0; x.down.disabled = i === v.length - 1; }); add.disabled = v.length >= MAX_TASKS_UI; }
+      function addRow(ex2, focus, after) {
+        if (visible().length >= MAX_TASKS_UI) { toast('מקסימום ' + MAX_TASKS_UI + ' משימות בסיכום', 'err'); return; }
+        var n = rows.length, locked = ex2 && !(ex2.can && ex2.can.edit), x = { ex: ex2, key: ex2 ? '' : newKey(), removed: false }, legend = h('legend', { text: 'משימה' });
+        var ti = h('input', { id: 'mtT' + n, class: 'mtTitle', maxlength: '300', value: ex2 ? ex2.title : '', 'aria-label': 'כותרת משימה', placeholder: 'כותרת המשימה', autocomplete: 'off', disabled: locked ? '' : null, enterkeyhint: 'next' }), as = assigneeSelect('mtW' + n, o, ex2 ? ex2.assignee_email : null), du = h('input', { id: 'mtD' + n, type: 'date', value: ex2 ? ex2.due_date : plusDays(7), 'aria-label': 'תאריך יעד' }), pr = h('select', { id: 'mtP' + n, 'aria-label': 'עדיפות' }, PRI.map(function (p) { return h('option', { value: p[0], text: p[1] }); })); pr.value = ex2 ? ex2.priority : 'normal';
+        if (locked) { as.disabled = du.disabled = pr.disabled = true; }
+        if (ex2 && as.value !== ex2.assignee_email) as.append(h('option', { value: ex2.assignee_email, text: ex2.assignee_name || ex2.assignee_email })), as.value = ex2.assignee_email;
+        var up = h('button', { type: 'button', class: 'secondary ic', text: '↑', onclick: function () { move(x, -1); } }), down = h('button', { type: 'button', class: 'secondary ic', text: '↓', onclick: function () { move(x, 1); } }), rm = h('button', { type: 'button', class: 'secondary ic', text: '✕', onclick: function () { x.removed = true; x.el.hidden = true; renumber(); add.focus(); } });
+        if (locked) { up.hidden = down.hidden = rm.hidden = true; }
+        var el = h('fieldset', { class: 'taskrow', role: 'listitem' }, [legend, ti, h('div', { class: 'trow2' }, [as, du, pr]), h('div', { class: 'trow3' }, [up, down, rm]), locked ? h('p', { class: 'muted', text: 'משימה ' + (ex2.status_label || '') + ' — לא ניתנת לעריכה כאן.' }) : null]);
+        Object.assign(x, { el: el, legend: legend, ti: ti, as: as, du: du, pr: pr, up: up, down: down, rm: rm, locked: locked }); rows.splice(after ? rows.indexOf(after) + 1 : rows.length, 0, x);
+        if (after) after.el.after(el); else list.append(el); renumber();
+        ti.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addRow(null, true, x); } });
+        if (focus) { ti.focus(); el.scrollIntoView({ block: 'center' }); }
+      }
+      function move(x, dir) { var v = visible(), i = v.indexOf(x), y = v[i + dir]; if (!y) return; if (dir < 0) y.el.before(x.el); else y.el.after(x.el); var a = rows.indexOf(x), b = rows.indexOf(y); rows[a] = y; rows[b] = x; renumber(); (dir < 0 ? x.up : x.down).focus(); }
+      if (ex) ex.tasks.filter(function (t) { return t.status !== 'cancelled'; }).forEach(function (t) { addRow(t, false); }); else addRow(null, false); renumber();
+      f.addEventListener('submit', function (e) { e.preventDefault(); clearErr(f); msg.textContent = ''; msg.className = ''; var bad = false;
+        if (!subj.value.trim()) { fieldErr(fS, 'יש להזין נושא.'); bad = true; } if (!at.value) { fieldErr(fA, 'יש לבחור תאריך ושעה.'); bad = true; }
+        var tasks = [], dropped = 0; rows.forEach(function (x) {
+          if (x.removed) { if (x.ex) tasks.push({ id: x.ex.id, remove: true }); return; } if (x.locked) return;
+          var t = x.ti.value.trim(); if (!x.ex && !t) { dropped++; return; }
+          if (!t) { fieldErr(x.el, 'יש להזין כותרת למשימה.'); bad = true; return; } if (!x.du.value) { fieldErr(x.el, 'יש לבחור תאריך יעד.'); bad = true; return; }
+          var tk = { title: t, assignee_email: x.as.value, due_date: x.du.value, due_time: x.ex ? x.ex.due_time || '' : '', priority: x.pr.value, notes: x.ex ? x.ex.notes || '' : '' }; if (x.ex) tk.id = x.ex.id; else tk.client_key = x.key; tasks.push(tk); });
+        if (bad) { var first = f.querySelector('.field.err input,.field.err textarea,.field.err select,fieldset.err input'); if (first) first.focus(); return; }
+        var data = { subject: subj.value.trim(), meeting_at: at.value, participants: part.value.trim(), summary: sum.value, decisions: dec.value, tasks: tasks }; if (ex) { data.id = ex.id; data.expected_version = version; } else data.request_id = reqId;
+        busy(save, true, 'שמירת סיכום'); add.disabled = true;
+        api('meetings.save', { courseId: S.course.id, data: data }).then(function (r) {
+          busy(save, false, 'שמירת סיכום'); renumber();
+          if (!r.ok) {   // nothing is claimed as saved; every entered row stays on screen
+            if (r.code === 'CONFLICT' && ex) { msg.className = 'msg err'; msg.textContent = 'הסיכום עודכן בינתיים על ידי משתמש אחר. הטיוטה שלכם נשמרה במסך. '; msg.append(h('button', { type: 'button', class: 'secondary', id: 'mtReload', text: 'טעינת הגרסה העדכנית (הטיוטה נשמרת)', onclick: function () { api('meetings.get', { id: ex.id }).then(function (g) { if (!g.ok) return; version = g.data.version; msg.className = 'msg'; msg.textContent = 'נטענה גרסה עדכנית — בדקו את הנתונים ושמרו שוב.'; }); } })); return; }
+            msg.textContent = msgOf(r) + ' הטיוטה נשמרה — אפשר לנסות שוב.'; msg.className = 'msg err'; return; }
+          toast((r.data && r.data.replayed) ? 'הסיכום כבר נשמר' : 'הסיכום נשמר' + (tasks.filter(function (t) { return !t.remove; }).length ? ' · ' + tasks.filter(function (t) { return !t.remove; }).length + ' משימות' : '')); go('d/meetings'); });
+      });
+    }
+  }
 
   /* ---------- router ---------- */
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
