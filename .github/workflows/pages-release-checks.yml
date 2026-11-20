@@ -1,0 +1,36 @@
+name: Pages release gates (pre-merge)
+# Runs the privacy scan, its negative tests and the release-gate tests BEFORE merge, so the public-preview pipeline is proven by PR CI, not only after deploy.
+on:
+  pull_request:
+    paths: ['preview/**', 'native/**', 'scripts/build_native_app.js', 'scripts/lib/**', 'scripts/scan_pages_artifact.js', 'scripts/test_pages_scan.js', 'scripts/stage_pages_site.js', 'scripts/assert_main_ancestor.sh', 'scripts/test_pages_release.sh', '.github/workflows/preview-pages.yml', '.github/workflows/pages-release-checks.yml']
+  push:
+    branches: [main]
+    paths: ['scripts/scan_pages_artifact.js', 'scripts/stage_pages_site.js', 'scripts/assert_main_ancestor.sh', '.github/workflows/pages-release-checks.yml']
+permissions:
+  contents: read
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: git fetch -q origin main
+      - name: Committed preview is reproducible
+        run: |
+          node scripts/build_native_app.js
+          git diff --exit-code -- preview/index.html preview/engine.js
+      - name: Scan negative tests (12) + real preview scan
+        run: |
+          node scripts/test_pages_scan.js
+          node scripts/stage_pages_site.js preview site "$(git rev-parse HEAD)" pr
+          node scripts/scan_pages_artifact.js site
+      - name: Release gate tests (main-ancestry rollback guard, allow-list staging)
+        run: bash scripts/test_pages_release.sh
+      - name: A PR head is NOT publishable (it is not in main's history)
+        if: github.event_name == 'pull_request'
+        run: |
+          if bash scripts/assert_main_ancestor.sh "${{ github.event.pull_request.head.sha }}" origin/main; then echo "unexpected: PR head accepted"; exit 1; else echo "PR head correctly rejected"; fi
