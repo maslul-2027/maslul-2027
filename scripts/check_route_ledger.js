@@ -1,0 +1,26 @@
+'use strict';
+// QA gate: a synthetic browser API call alone cannot stand in for a native screen.
+const fs = require('fs'), path = require('path');
+const file = process.argv[2] || path.join(__dirname, '..', 'docs', 'route-evidence-ledger.json');
+const x = JSON.parse(fs.readFileSync(file, 'utf8'));
+const rows = x.rows || [], total = rows.length;
+const counts = {};
+rows.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
+const violations = [];
+if (total !== 174 || x.summary.total !== 174) violations.push('route inventory must be exactly 174');
+for (const r of rows) {
+  if (r.status === 'PASS_SYNTH_E2E' && r.native_screen !== 'yes')
+    violations.push(r.route + ': API success without native UI');
+  if (r.status === 'NOT_IMPLEMENTED' && r.native_screen === 'yes')
+    violations.push(r.route + ': native reference unexpectedly marked not implemented');
+  if (r.secured_test_e2e === 'PASS' || r.deployed === 'YES')
+    violations.push(r.route + ': unsupported secure/deployment assertion in public synthetic QA');
+}
+for (const key of ['PASS_SYNTH_E2E','IMPLEMENTED_NOT_E2E','BLOCKED_NOT_CONNECTED','NOT_IMPLEMENTED']) {
+  if ((x.summary[key] || 0) !== (counts[key] || 0))
+    violations.push(key + ': summary does not match rows');
+}
+const directOnly = rows.filter(r => r.native_screen === 'no' && r.e2e_ok_calls > 0);
+console.log('ROUTE QA', JSON.stringify(x.summary), 'direct API success without native screen:', directOnly.map(r => r.route).join(', ') || 'none');
+if (violations.length) { console.error('ROUTE QA FAILURE\n' + violations.join('\n')); process.exit(1); }
+console.log('ROUTE QA PASS — caution: native-code presence + API success does NOT prove a click-driven UI journey');
