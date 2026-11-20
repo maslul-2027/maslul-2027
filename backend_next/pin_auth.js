@@ -68,8 +68,10 @@ function create(opts) {
     authorize(ctx, action, res) {
       if (!ctx) throw new AuthError('UNAUTHENTICATED', 'נדרשת התחברות.'); const write = action === 'write';
       if (write && ctx.role === 'viewer') { log('deny_viewer_write', { user: ctx.userId }); throw new AuthError('FORBIDDEN', 'חשבון צפייה בלבד.'); }
-      if (ctx.role === 'admin') return true; if (res && res.courseId && !ctx.courseIds.includes(res.courseId)) throw new AuthError('FORBIDDEN', 'אין הרשאה לקורס זה.');
-      if (res && res.unitId && ctx.unitIds.length && !ctx.unitIds.includes(res.unitId)) throw new AuthError('FORBIDDEN', 'אין הרשאה ליחידה זו.');
+      if (ctx.role === 'admin') return true;
+      // FAIL CLOSED: a non-admin request whose course (or, for unit-scoped users, unit) cannot be established is refused — never "no scope given => allowed".
+      if (!res || !res.courseId || !ctx.courseIds.includes(res.courseId)) { log('deny_scope', { user: ctx.userId }); throw new AuthError('FORBIDDEN', 'אין הרשאה לקורס זה.'); }
+      if (ctx.unitIds.length && (!res.unitId || !ctx.unitIds.includes(res.unitId))) { log('deny_scope', { user: ctx.userId }); throw new AuthError('FORBIDDEN', 'אין הרשאה ליחידה זו.'); }
       if (write && ctx.role === 'user' && res && res.privileged) throw new AuthError('FORBIDDEN', 'פעולה למפקד/מנהל.'); return true;
     },
     db, audit, cfg,
