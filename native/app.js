@@ -50,6 +50,89 @@
   function ctxLine() { return 'פיילוט מסלול 2027 · סביבת תצוגה בלבד'; }
   function depName(id) { var d = (S.org.departments || []).filter(function (x) { return x.id === id; })[0]; return d ? d.name.replace(/\s*\(זמני\)/, '') : ''; }
 
+  /* Course insight feed: only backend-authorized, aggregate results, never local soldier-level calculations. */
+  function homeInsightDestination(item) {
+    var id = String(item.id || '');
+    if (id === 'attendance') return 'd/attendance';
+    if (id.indexOf('fitness') !== -1) return 'd/fitness';
+    if (id.indexOf('navigation') !== -1) return 'd/nav';
+    if (id.indexOf('marksmanship') !== -1) return 'd/mk';
+    if (id.indexOf('exams') !== -1) return 'd/exams';
+    if (id === 'coverage') return 'more';
+    return 'more';
+  }
+  function HomeInsights(courseId) {
+    var holder = $('#home-insights');
+    if (!holder) return;
+    api('analytics.insights', { courseId: courseId, f: {} }).then(function (r) {
+      if (!$('#home-insights') || !S.course || S.course.id !== courseId) return;
+      var d = r && r.ok ? r.data : null;
+      if (!d || d.small_group) {
+        holder.replaceChildren(h('div', { class: 'msg', text: d && d.notice ? d.notice : 'כרגע אין תובנות זמינות. אפשר להמשיך לעבוד בכל שאר מסכי הקורס.' }));
+        $('#home-brief').textContent = 'אין כרגע מספיק נתונים קבוצתיים מאושרים לסיכום פיקודי.';
+        return;
+      }
+      var items = Array.isArray(d.items) ? d.items.slice() : [];
+      var priority = { coverage: 0, attendance: 1 };
+      items.sort(function (a, b) {
+        var av = Object.prototype.hasOwnProperty.call(priority, a.id) ? priority[a.id] : (a.kind === 'trend' ? 2 : 3);
+        var bv = Object.prototype.hasOwnProperty.call(priority, b.id) ? priority[b.id] : (b.kind === 'trend' ? 2 : 3);
+        return av - bv;
+      });
+      var intro = $('#home-brief');
+      intro.textContent = items.length ? 'נמצאו ' + items.length + ' תובנות קבוצתיות על סמך המדידות הקיימות. הנה הממצאים הראשונים; הם אינם קובעים סיבות או מסקנות על חניך מסוים.' : 'לא נצפתה עדיין מגמה קבוצתית שמגובה בכמות נתונים מספקת. אפשר להמשיך בדיווחים ולבדוק שוב.';
+      if (!items.length) {
+        holder.replaceChildren(h('div', { class: 'msg', text: d.notice || 'אין עדיין מספיק נתונים למסקנות קבוצתיות.' }));
+        return;
+      }
+      var selected = items.slice(0, 3);
+      holder.replaceChildren.apply(holder, selected.map(function (it) {
+        var evidence = [
+          it.n === null || it.n === undefined ? '' : 'מספר תצפיות: ' + it.n,
+          it.window && (it.window.from || it.window.to) ? 'טווח: ' + (it.window.from || '?') + ' עד ' + (it.window.to || '?') : '',
+          it.formula ? 'חישוב: ' + it.formula : '',
+          it.source && it.source.length ? 'מקורות: ' + it.source.join(', ') : '',
+          it.caveat ? 'מגבלה: ' + it.caveat : '',
+          it.generated_at ? 'עודכן: ' + String(it.generated_at).slice(0, 16).replace('T', ' ') : ''
+        ].filter(Boolean);
+        return h('div', { class: 'home-insight-card' }, [
+          h('h3', { text: it.title || 'תובנה קבוצתית' }),
+          h('p', { text: it.text || 'לא הועבר פירוט עבור מדד זה.' }),
+          h('details', {}, [h('summary', { text: 'איך חושב הנתון?' }),
+            h('p', { class: 'home-insight-evidence', text: evidence.join(' · ') })]),
+          h('button', { class: 'secondary', type: 'button', onclick: function () { go(homeInsightDestination(it)); }, text: 'למסך הרלוונטי' })
+        ]);
+      }));
+      if (items.length > 3) holder.append(h('details', { class: 'home-insights-more' }, [
+        h('summary', { text: 'עוד ' + (items.length - 3) + ' תובנות' }),
+        h('div', {}, items.slice(3).map(function (it) {
+          return h('div', { class: 'home-insight-card' }, [
+            h('h3', { text: it.title || 'תובנה קבוצתית' }), h('p', { text: it.text || '' })
+          ]);
+        }))
+      ]));
+    });
+  }
+  function HomeQuestion(courseId, question) {
+    var out = $('#home-answer');
+    if (!out) return;
+    out.textContent = 'בודק נתונים מורשים…';
+    out.setAttribute('aria-busy', 'true');
+    api('ai.ask', { courseId: courseId, question: question, include_private: false }).then(function (r) {
+      if (!$('#home-answer') || !S.course || S.course.id !== courseId) return;
+      out.removeAttribute('aria-busy');
+      if (!r || !r.ok || !r.data) { out.textContent = r && r.message ? r.message : 'לא ניתן לקבל תשובה כרגע.'; return; }
+      var d = r.data;
+      var facts = (Array.isArray(d.facts) ? d.facts : []).filter(function (x) { return x && x.private !== true; })
+        .map(function (x) { return String(x.text || ''); }).filter(Boolean);
+      var missing = (Array.isArray(d.missing) ? d.missing : []).map(String);
+      out.replaceChildren(
+        h('p', { text: facts.length ? facts.join(' ') : 'לא נמצאו מספיק עובדות קבוצתיות לתשובה.' }),
+        missing.length ? h('p', { class: 'muted', text: 'נתונים חסרים: ' + missing.slice(0, 2).join(' · ') }) : null,
+        h('small', { class: 'muted', text: 'מקורות: ' + (Array.isArray(d.sources) ? d.sources.join(', ') : 'המערכת') + ' · תשובה מבוססת כללים ונתונים, לא מודל AI גנרטיבי.' })
+      );
+    });
+  }
   /* ---------- HOME ---------- */
   function Home() {
     var kp = [h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k1' }), h('small', { text: 'חניכים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k2' }), h('small', { text: 'מעקבים פתוחים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k3' }), h('small', { text: 'התראות פתוחות' })])];
@@ -59,9 +142,20 @@
       sectionHead('גישה מהירה', 'הכי שימושי'),
       card('חיפוש חניך', 'מוצאים אדם בשניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldiers'); }),
       card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('tasks'); }),
-      card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
+      card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); }),
+      sectionHead('מה כדאי לדעת היום', 'תובנות מהקורס'),
+      h('div', { id: 'home-insights', class: 'home-insights', 'aria-live': 'polite' }, [skeleton(1)]),
+      sectionHead('תמונת מצב פיקודית', 'קבוצתי בלבד'),
+      h('div', { class: 'home-brief', id: 'home-brief', text: 'טוען נתונים מאושרים…' }),
+      sectionHead('שאל את המערכת', 'עוזר מבוסס נתונים'),
+      h('div', { class: 'home-questions' }, [
+        h('button', { type: 'button', class: 'secondary', text: 'מה מצב הנוכחות?', onclick: function () { HomeQuestion(S.course.id, 'מה מצב הנוכחות בקורס?'); } }),
+        h('button', { type: 'button', class: 'secondary', text: 'כמה התראות פתוחות?', onclick: function () { HomeQuestion(S.course.id, 'כמה התראות פתוחות בקורס?'); } })
+      ]),
+      h('div', { id: 'home-answer', class: 'home-answer', role: 'status', 'aria-live': 'polite', text: 'בחרו שאלה כדי לקבל תשובה המבוססת על נתוני הקורס.' })
     ], 'בית');
     if (!S.course) return;
+    HomeInsights(S.course.id);
     api('soldiers.list', { courseId: S.course.id, opts: { active: true } }).then(function (r) { $('#k1').textContent = r.ok ? String(r.data.length) : '—'; });
     Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), api('tasks.indicators', { courseId: S.course.id })]).then(function (r) {
       var f = r[0].ok ? r[0].data.filter(function (x) { return x.status === 'open'; }).length : 0, t = r[1].ok ? (r[1].data.my_open || 0) : 0; $('#k2').textContent = (r[0].ok || r[1].ok) ? String(f + t) : '—';
