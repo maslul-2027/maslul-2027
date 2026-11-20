@@ -9,6 +9,7 @@ on:
       - 'scripts/e2e_native.js'
       - 'scripts/e2e_native_domains.js'
       - 'scripts/e2e_native_roles.js'
+      - 'scripts/e2e_home_insights.js'
       - 'scripts/build_route_ledger.js'
       - 'scripts/native_screenshots.js'
       - '.github/workflows/mobile-browser-e2e.yml'
@@ -42,6 +43,7 @@ jobs:
       - run: E2E_CALLS_OUT=artifacts/calls_native.json node scripts/e2e_native.js preview
       - run: E2E_CALLS_OUT=artifacts/calls_native_domains.json node scripts/e2e_native_domains.js preview
       - run: E2E_CALLS_OUT=artifacts/calls_native_roles.json node scripts/e2e_native_roles.js preview
+      - run: E2E_CALLS_OUT=artifacts/calls_home_insights.json node scripts/e2e_home_insights.js preview
       - name: 174-route evidence ledger (generated from the browser runs)
         run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Design parity screenshots (original PR #10 vs native)
