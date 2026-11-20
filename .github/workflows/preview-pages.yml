@@ -1,16 +1,17 @@
 name: Deploy synthetic PWA preview to GitHub Pages
-# PUBLIC, synthetic-only static preview. It is NOT the shared-data application: no backend, no real data, no secrets, no CI screenshots.
-# Rollback: run this workflow manually (Actions → Run workflow) with `ref` = the last good commit SHA; the live /build-info.json then shows that SHA.
+# PUBLIC, synthetic-only static preview. It is NOT the shared-data application: no backend, no server_public/, no real data, no secrets, no CI screenshots.
+# Needs (admin, one-time): repository Settings → Pages → Build and deployment → Source = "GitHub Actions". Without it the deploy job fails visibly (no false "live" claim).
+# Rollback: run this workflow from `main` (Actions → Run workflow) with `ref` = a commit SHA that is ALREADY in main's history. Anything else is rejected before building.
 on:
   push:
     branches: [main]
-    paths: ['preview/**', 'native/**', 'scripts/build_native_app.js', 'scripts/lib/**', 'scripts/scan_pages_artifact.js', 'src/**', '.github/workflows/preview-pages.yml']
+    paths: ['preview/**', 'native/**', 'scripts/build_native_app.js', 'scripts/lib/**', 'scripts/scan_pages_artifact.js', 'scripts/stage_pages_site.js', 'scripts/assert_main_ancestor.sh', 'src/**', '.github/workflows/preview-pages.yml']
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Commit SHA / branch to publish (rollback = a previous good SHA)'
+        description: 'Commit SHA already merged into main (rollback = previous good SHA); default = main tip'
         required: false
-        default: 'main'
+        default: ''
 permissions:
   contents: read
   pages: write
@@ -20,26 +21,39 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       sha: ${{ steps.meta.outputs.sha }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout tooling (the reviewed workflow commit on main)
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.ref || github.sha }}
+          path: tool
+          fetch-depth: 0
       - id: meta
-        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: Build is reproducible (committed preview == fresh build)
+        name: Resolve target commit and REQUIRE it to be in main's history
+        working-directory: tool
+        env:
+          REF_INPUT: ${{ github.event.inputs.ref }}
+        run: |
+          set -euo pipefail
+          git fetch -q origin main
+          if [ -z "${REF_INPUT:-}" ]; then sha="$(git rev-parse origin/main)"; else sha="$(git rev-parse --verify "${REF_INPUT}^{commit}")"; fi
+          bash scripts/assert_main_ancestor.sh "$sha" origin/main
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+      - name: Check out the target commit's committed preview
+        run: git -C tool worktree add --detach ../src "${{ steps.meta.outputs.sha }}"
+      - name: Build is reproducible for the target (committed preview == fresh build)
+        working-directory: src
         run: |
           node scripts/build_native_app.js
           git diff --exit-code -- preview/index.html preview/engine.js
-      - name: Privacy/secret scan tests + stage the public site (allow-listed files + build-info)
+      - name: Privacy/secret scan tests, stage ONLY the allow-list, scan the staged site
         run: |
-          node scripts/test_pages_scan.js
-          rm -rf site && mkdir site
-          cp preview/index.html preview/engine.js preview/sw.js preview/manifest.webmanifest preview/icon.svg preview/capabilities.json site/
-          printf '{"sha":"%s","run":"%s","built_at":"%s","kind":"synthetic-preview-only"}\n' "${{ steps.meta.outputs.sha }}" "${{ github.run_id }}" "$(date -u +%FT%TZ)" > site/build-info.json
-          node scripts/scan_pages_artifact.js site
+          node tool/scripts/test_pages_scan.js
+          node tool/scripts/stage_pages_site.js src/preview site "${{ steps.meta.outputs.sha }}" "${{ github.run_id }}"
+          node tool/scripts/scan_pages_artifact.js site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -59,11 +73,15 @@ jobs:
         with:
           artifact_name: github-pages-${{ github.run_attempt }}
       - name: Live check — the public URL serves exactly the tested SHA (retries; fails visibly if not)
+        env:
+          URL: ${{ steps.deployment.outputs.page_url }}
+          SHA: ${{ needs.build.outputs.sha }}
         run: |
-          url="${{ steps.deployment.outputs.page_url }}"
-          for i in 1 2 3 4 5 6 7 8; do
-            body="$(curl -fsS --max-time 20 "${url}build-info.json?cb=$RANDOM" || true)"
-            echo "$body" | grep -q "${{ needs.build.outputs.sha }}" && { echo "LIVE OK: $url serves ${{ needs.build.outputs.sha }}"; curl -fsS --max-time 20 "$url" | grep -q "MASLUL" && exit 0; }
+          for i in $(seq 1 12); do
+            body="$(curl -fsS --max-time 20 "${URL}build-info.json?cb=$RANDOM" || true)"
+            if echo "$body" | grep -q "$SHA"; then
+              curl -fsS --max-time 20 "$URL" | grep -q "MASLUL" && { echo "LIVE OK: $URL serves $SHA"; exit 0; }
+            fi
             sleep 10
           done
-          echo "LIVE CHECK FAILED: $url did not serve ${{ needs.build.outputs.sha }}"; exit 1
+          echo "LIVE CHECK FAILED: $URL did not serve $SHA"; exit 1
