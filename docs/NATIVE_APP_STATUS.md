@@ -65,3 +65,23 @@ Result (corrected after QA review of PR #59): PASS_SYNTH_E2E **142** (= routes w
 **Engine bug found and fixed:** the persisted-store id counter regex lost its backslash in the generated engine, so after a reload new records could reuse an existing `id-N` (a new course collided with the demo course and a commander gained access to it). Fixed in `scripts/build_native_app.js`; regression covered by the foreign-course test.
 
 **Not in this batch:** the 20 NOT_IMPLEMENTED routes (reports.build, import.*, docs.*, ocr.*, ai.*, backup.plan, migration.run) = Batch 7 (#56); the 11 adapter-blocked routes stay BLOCKED_NOT_CONNECTED.
+
+## Batch 7 (Issue #56) — reports, import, documents, OCR review, rule-based drafts, backup plan, migration
+Synthetic data only. Everything below is inside the original PR #10 four-tab shell (More → tiles), RTL, 320–414 px, 44 px targets, original palette. **No real data, no external provider, no deployment.**
+
+**Result (regenerated 174-route ledger):** PASS_SYNTH_E2E **160** (UI-origin API success; includes automatic render calls — not click proof) · **interaction_verified 159** (successful UI-origin call ≤1.5 s after a trusted browser input event; machine-correlated, not semantic) · POLICY_BLOCKED 1 (`dash.trends`) · BLOCKED_NOT_CONNECTED **13** (the previous 11 + `backup.plan` + `migration.run`) · NOT_IMPLEMENTED **0** · API_ONLY 0 · IMPLEMENTED_NOT_E2E 0 (sum 174). `ocr.start` stays BLOCKED even though the synthetic call returns `no_provider` successfully (forced in the ledger: a result with no extraction is not completion).
+
+| Workflow (tile) | Routes | Behaviour |
+|---|---|---|
+| Reports (דוחות וייצוא) | `reports.build` | pick sections/dates (+ inactive soldiers for admin); report is rendered on screen only (accessible tables); no private (מ״פ) content; export stays BLOCKED (reports.generate) |
+| Import (ייבוא ומסמכים, admin) | `import.start/preview/decide/commit/cancel` | CSV paste/file read **in the browser** → column mapping → server dry-run (nothing written) → counts + per-row issues, 100-row pager → per-row decision for conflicts → explicit confirm checkbox → commit; cancel needs a reason; re-import = duplicates (idempotent); xlsx not supported (honest note) |
+| Documents (מסמכים וקישורים) | `docs.requestLink/reviewLink/pendingLinks` (+ blocked `docs.upload/download`) | commander/admin request a link to a record of the same soldier; admin approves, or rejects with a note; Drive ids never rendered |
+| Qualification evidence (inside הסמכות assignment dialog) | `docs.attachEvidence/docs.evidence` | attach an own/admin document of the same soldier; duplicate refused server-side |
+| OCR (OCR לבדיקה, admin) | `ocr.rows/editRow/approveRow/rejectRow` (+ blocked `ocr.start`) | start shows BLOCKED with the exact action; extracted rows are drafts: unknown identity needs a chosen soldier, uncertain fields need explicit confirm (only fields the reviewer changed are sent, so untouched uncertain fields stay uncertain), approve creates a record once, reject needs a reason |
+| Drafts (עוזר וטיוטות סיכום) | `ai.draft/drafts/reviewDraft` | rule-based template over system facts only (no external model; the E2E asserts zero external network requests); a draft is **not official** until an authorized explicit admin approval; commander sees only own drafts, cannot approve |
+| Backup / migration (גיבוי ובדיקות מערכת, admin) | `backup.plan`, `migration.run` | plan is read-only and BLOCKED without the private backup file; migration is confirm-gated and refuses to start without private backup storage; both show the exact remedial action |
+
+**Synthetic fixtures (honest disclosure):** file upload and OCR providers are not connected, so the E2E injects `Documents`, `OCRJobs/OCRExtractedRows`, `AuditLog(OCR_START)` and `BackupJobs` rows into the browser store (the same technique as Batch 6). This proves the review/link/approval logic and role/scope behaviour, **not** a real file, OCR or Drive pipeline.
+**Bugs found while building:** reconstructed OCR edit would have cleared "uncertain" flags for untouched fields (fixed: send only changed fields); raw enums (`committed`, `soldiers`, field keys) leaked into lists (localized).
+**Open items:** `migration.run` has no dry-run route in the server contract (it refuses to run without a successful pre-migration backup); a true dry-run/plan route needs an owner/security-approved server change. No backend changes were made in this batch (`src/` manifest unchanged).
+Tests: `scripts/e2e_native_batch7.js` (23 click-driven checks: roles, cross-role denial, double-submit, cancel/retry, reload persistence, keyboard, 320/360/390/414 RTL, privacy storage/network).

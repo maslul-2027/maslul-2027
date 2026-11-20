@@ -1,5 +1,5 @@
 {
- "when": "2026-11-20T15:25:08.447Z",
+ "when": "2026-11-20T16:45:37.332Z",
  "node": "v22.23.4",
  "flags": {
   "ui": true,
@@ -687,7 +687,7 @@
    "s": "ui_synthetic_app",
    "types": null,
    "state": "PASS",
-   "pass": 146,
+   "pass": 169,
    "fail": 0,
    "why": ""
   }
@@ -697,7 +697,7 @@
    "node_unit": 95,
    "node_integration": 294,
    "node_hardening": 234,
-   "browser": 380,
+   "browser": 403,
    "unclassified": 52
   },
   "node_total": 675,
@@ -705,8 +705,8 @@
   "PASS": 65,
   "FAIL": 0,
   "SKIP": 0,
-  "tests_run": 1055,
-  "passed": 1055,
+  "tests_run": 1078,
+  "passed": 1078,
   "failed": 0
  },
  "result": "COMPLETE_PASS"
