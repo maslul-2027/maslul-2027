@@ -15,3 +15,4 @@ h1.page{font-size:22px;margin:6px 0 4px}.vh{position:absolute;width:1px;height:1
 .app>.scr{animation:none}.mode{font-size:11px;color:#68747a}.toast{max-width:90%}
 @media(min-width:821px){.nav{border-radius:16px 16px 0 0}}
 [tabindex="-1"]:focus{outline:none}
+#askbox .chip{min-height:44px;padding:10px 14px}
