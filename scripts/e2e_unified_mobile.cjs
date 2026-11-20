@@ -8,7 +8,7 @@ const {chromium}=require('playwright');
   const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:8787/',{waitUntil:'domcontentloaded'});
-  await page.locator('#course option').first().waitFor({timeout:20000});
+  await page.locator('#course option').first().waitFor({state:'attached',timeout:20000});
   await page.waitForFunction(()=>window.S&&S.courseId&&S.ctx,{timeout:20000});
   assert.equal(await page.locator('iframe').count(),0);
   assert.equal(await page.locator('#mobile-navigation button').count(),4);
