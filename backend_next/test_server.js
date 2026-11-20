@@ -4,7 +4,7 @@
 // Local-test secrets (pepper, store key, bootstrap token) are generated into MASLUL_TEST_DIR (git-ignored, 0600). That is NOT a secret store — see docs/PRIVATE_TEST_SERVER.md.
 // NOT approved for real data: no verified phone ownership, single-process file store, no independent security review, no owner go-live approval.
 const fs = require('fs'), path = require('path'), https = require('https'), crypto = require('crypto'), cp = require('child_process');
-const { gateway, toHttp } = require('./gateway'), store = require('./store'), engineHost = require('./engine_host'), routeTable = require('./route_table');
+const { gateway, toHttp } = require('./gateway'), store = require('./store'), engineHost = require('./engine_host'), routeTable = require('./route_table'), privateNet = require('./private_net');
 const root = path.join(__dirname, '..');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.json': 'application/json' };
 function secretsIn(dir) {
@@ -21,8 +21,14 @@ function certIn(dir, o) {
 /** @returns {Promise<{server, port, origin, gw, close()}>} */
 async function start(o) {
   o = o || {}; const dir = path.resolve(o.dir || process.env.MASLUL_TEST_DIR || path.join(root, '.test-server')), sec = secretsIn(dir), port = Number(o.port != null ? o.port : (process.env.PORT || 8443));
-  const bindHost = o.host || process.env.BIND_HOST || '127.0.0.1';   // default loopback. A non-loopback bind is only for an approved PRIVATE network and REQUIRES ORIGIN (https://<name>) + a certificate the phones trust
-  if (bindHost !== '127.0.0.1' && bindHost !== '::1' && bindHost !== 'localhost' && !(o.origin || process.env.ORIGIN)) throw new Error('BIND_HOST outside loopback requires ORIGIN=https://<private-name> (exact origin used for CSRF)');
+  const bindHost = o.host || process.env.BIND_HOST || '127.0.0.1';   // default loopback. A non-loopback bind is ONLY for an approved PRIVATE network: RFC1918 / ULA literal, never public, never wildcard, never a DNS name
+  const isLoop = privateNet.classify(bindHost) === 'loopback';
+  if (!isLoop) {
+    const b = privateNet.checkBind(bindHost); if (!b.ok) throw new Error('BIND REFUSED: ' + b.reason);
+    if (!(o.origin || process.env.ORIGIN)) throw new Error('BIND_HOST outside loopback requires ORIGIN=https://<private-name-or-ip> (exact origin used for CSRF)');
+    if (!(o.certFile || process.env.TLS_CERT_FILE)) throw new Error('A non-loopback bind requires a real certificate (TLS_CERT_FILE/TLS_KEY_FILE); the throw-away local certificate is loopback-only');
+    const og = privateNet.checkOrigin(o.origin || process.env.ORIGIN, null); if (!og.ok) throw new Error('ORIGIN REFUSED: ' + og.reason);
+  }
   const origin = o.origin || process.env.ORIGIN || 'https://localhost:' + port, publicDir = path.resolve(o.publicDir || path.join(root, 'server_public'));
   const st = store.open({ file: path.join(dir, 'state.bin'), key: Buffer.from(sec.storeKey, 'hex') });
   let host = null, gwRef = null;
