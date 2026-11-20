@@ -34,3 +34,6 @@ Batch 2 added native screens for alerts (handle), meetings+tasks (create), setti
 
 ## Batch 3 (Issue #49)
 Native: course archive/reopen, org rename, user active+course scope, commander assignments (list/mine/create/update/setActive with expected_updated_at + reason), nav/activity type rename+active. Ledger before→after: PASS_SYNTH_E2E 62→75, IMPLEMENTED_NOT_E2E 8→8, BLOCKED_NOT_CONNECTED 10→10, NOT_IMPLEMENTED 94→81 (sum 174). `users.set` supports only `active` and `course_ids` on the server (role is not changeable by design — no self-escalation).
+
+## Batch 4 (soldier card)
+Native on the trainee card: reassign (reason, optional approved exception, expected_updated_at), active/inactive, favourites, private notes, commander assessments, emergency contact (admin). Policy as implemented server-side: private notes/favourites/emergency are admin-only (hidden for commanders, FORBIDDEN at the API); commanders keep assessments for their own scope. Ledger 75→84 PASS_SYNTH_E2E, NOT_IMPLEMENTED 81→72 (stacked on batch 3).
