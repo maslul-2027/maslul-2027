@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
+const {makeUnifiedMobileHtml}=require('./unified_mobile_shell.cjs');
 
 const source = process.argv[2];
 if (!source) throw Error('Specify the pinned legacy source checkout');
@@ -122,4 +123,5 @@ actionForm.addEventListener('submit', event => {
 </script>`);
 fs.writeFileSync('preview/course-engine.js', engine);
 fs.writeFileSync('preview/course.html', html);
+fs.writeFileSync('preview/index.html', makeUnifiedMobileHtml(original));
 console.log(`PASS: ${methods.length} actions match inventory; synthetic course read and write verified`);
