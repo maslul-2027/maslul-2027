@@ -1,8 +1,8 @@
 {
- "when": "2026-11-20T22:38:14.216Z",
+ "when": "2026-11-20T16:45:37.332Z",
  "node": "v22.23.4",
  "flags": {
-  "ui": false,
+  "ui": true,
   "strict": false
  },
  "env_ok": true,
@@ -20,14 +20,6 @@
    "types": null,
    "state": "PASS",
    "pass": 10,
-   "fail": 0,
-   "why": ""
-  },
-  {
-   "s": "auth_gateway",
-   "types": null,
-   "state": "PASS",
-   "pass": 14,
    "fail": 0,
    "why": ""
   },
@@ -288,10 +280,10 @@
    "types": {
     "unit": 0,
     "integration": 2,
-    "hardening": 2
+    "hardening": 1
    },
    "state": "PASS",
-   "pass": 4,
+   "pass": 3,
    "fail": 0,
    "why": ""
   },
@@ -589,119 +581,133 @@
   },
   {
    "s": "ui_staging_smoke",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 17,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_smoke",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_v1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 9,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_form",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 5,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_fitness",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 20,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_b7b8",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_r3",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 10,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 21,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd2",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 11,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd6_meetings",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 20,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd6_qa",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 18,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_uxqa",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 43,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_ux_sprint1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 8,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_synthetic_app",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 169,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   }
  ],
  "totals": {
   "breakdown": {
    "node_unit": 95,
    "node_integration": 294,
-   "node_hardening": 235,
-   "browser": 0,
-   "unclassified": 66
+   "node_hardening": 234,
+   "browser": 403,
+   "unclassified": 52
   },
-  "node_total": 690,
-  "suites": 66,
-  "PASS": 52,
+  "node_total": 675,
+  "suites": 65,
+  "PASS": 65,
   "FAIL": 0,
-  "SKIP": 14,
-  "tests_run": 690,
-  "passed": 690,
+  "SKIP": 0,
+  "tests_run": 1078,
+  "passed": 1078,
   "failed": 0
  },
- "result": "INCOMPLETE"
+ "result": "COMPLETE_PASS"
 }
