@@ -23,7 +23,7 @@ const CASES=[
 await p.goto(base+'/');await p.waitForSelector('#k1');let pass=0,fail=0;
 for(const c of CASES){const name=c.d+'#'+c.i;try{await p.evaluate(h=>{location.hash=h},'#/d/'+c.d+'/'+c.i);await p.waitForSelector('form',{timeout:8000});
  for(const[k,v] of Object.entries(c.fill)){const sel='#'+k;if(v&&v.i!==undefined)await p.selectOption(sel,{index:v.i});else if((await p.getAttribute(sel,'type'))==='date'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='INPUT'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='TEXTAREA')await p.fill(sel,v);else await p.selectOption(sel,v);}
- if(c.tick){const bx=await p.$(c.tick);assert.ok(bx.length, 'missing-trainee checkbox must be visible');await bx[0].check();if(c.d==='marches')assert.match(await p.textContent('#view'), /חסרים 1 מתוך/);}
+ if(c.tick){const bx=await p.$(c.tick);if(!bx.length){const diag=await p.evaluate(()=>({group:document.querySelector('#x_absent')?.outerHTML.slice(0,420),soldierSelect:document.querySelector('#x_soldier_id')?.options.length,form:document.querySelector('form')?.outerHTML.slice(0,430),view:document.getElementById('view')?.textContent.slice(0,450)}));throw new Error('missing-trainee checkbox absent: '+JSON.stringify(diag));}await bx[0].check();if(c.d==='marches')assert.match(await p.textContent('#view'), /חסרים 1 מתוך/);}
  await p.click('button[type=submit]');await p.waitForFunction(()=>/#\/d\/[a-z]+$/.test(location.hash)||document.querySelector('.msg.err'),null,{timeout:8000});
  const err=await p.$('.msg.err');if(err)throw new Error('backend: '+(await err.textContent()));
  await p.waitForSelector('.section',{timeout:5000});await p.waitForTimeout(400);
