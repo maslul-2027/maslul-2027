@@ -12,16 +12,18 @@ function open(o) {
   const bdir = id => { if (!ID.test(String(id))) throw err('NOT_FOUND', 'bad backup id'); return path.join(root, id); };
   const atomic = (target, data) => { const tmp = target + '.tmp-' + crypto.randomBytes(4).toString('hex'); fs.writeFileSync(tmp, data, { mode: 0o600, flag: 'wx' }); fs.renameSync(tmp, target); };
   const manifestMac = m => files.mac(JSON.stringify({ v: m.v, count: m.count, bytes: m.bytes, entries: m.entries, skipped_corrupt: m.skipped_corrupt || [] }));
-  function snapshot(backupId) {
+  function snapshot(backupId, sopts) {
+    const partialOk = !!(sopts && sopts.allowPartial);       // ONLY the automatic pre_restore safety net may be partial (a restore exists to repair damaged files); the skipped list is MAC-protected and shown by verify/plan
     const dir = bdir(backupId); fs.rmSync(dir, { recursive: true, force: true }); fs.mkdirSync(dir, { mode: 0o700 }); const entries = [], skipped = []; let bytes = 0;
     try {
       for (const id of files.list()) {
-        const raw = fs.readFileSync(files.rawPath(id)); let meta; try { meta = files.decryptRaw(id, raw).meta; } catch (e) { skipped.push(id); continue; }      // a live file that fails authentication is NOT copied (a corrupt copy must never look like a good backup); it is listed so the gap is visible and a restore can repair it from an older backup
+        const raw = fs.readFileSync(files.rawPath(id)); let meta; try { meta = files.decryptRaw(id, raw).meta; } catch (e) { skipped.push(id); continue; }      // collected: ANY live file that fails authentication makes the whole snapshot fail (below) — never a partial "full" backup from an older backup
         if (meta.bucket === 'backups') continue;          // backup JSON blobs are not part of a snapshot of the data
         if (entries.length >= MF || (bytes += raw.length) > MB) throw err('TOO_LARGE', 'the snapshot would exceed the backup size bound');
         fs.writeFileSync(path.join(dir, id + '.enc'), raw, { mode: 0o600 }); entries.push({ id, size: raw.length, sha256: sha(raw) });
       }
-      const m = { v: 1, created: new Date().toISOString(), count: entries.length, bytes, entries, skipped_corrupt: skipped }; m.mac = manifestMac(m); atomic(path.join(dir, 'manifest.json'), JSON.stringify(m)); return { count: entries.length, bytes, skipped_corrupt: skipped.length };
+      if (skipped.length && !partialOk) throw err('CORRUPT_FILE', skipped.length + ' stored file(s) failed authentication; no snapshot was written');
+      const m = { v: 1, created: new Date().toISOString(), count: entries.length, bytes, entries, skipped_corrupt: skipped }; m.mac = manifestMac(m); atomic(path.join(dir, 'manifest.json'), JSON.stringify(m)); return { count: entries.length, bytes, skipped_corrupt: skipped.length, ids: entries.map(e => e.id) };
     } catch (e) { fs.rmSync(dir, { recursive: true, force: true }); throw e; }
   }
   function verify(backupId) {

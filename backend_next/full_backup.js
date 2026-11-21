@@ -16,9 +16,10 @@ function open(o) {
     const entries = [], blobs = []; let bytes = 0;
     const add = (name, buf) => { if (entries.length > MF || (bytes += buf.length) > MB) throw err('TOO_LARGE', 'backup would exceed the size bound'); entries.push({ name, size: buf.length, sha256: sha(buf) }); blobs.push(buf); };
     add('state.bin', fs.readFileSync(state));                                   // state FIRST, files after: a report created in between is in the files but its row is not in the state — never the other way round
-    let skipped = 0; for (const id of FS.list()) { const raw = fs.readFileSync(FS.rawPath(id)); let meta; try { meta = FS.decryptRaw(id, raw).meta; } catch (e) { skipped++; continue; } if (meta.bucket === 'backups') continue; add(id + '.enc', raw); }
+    const bad = []; for (const id of FS.list()) { const raw = fs.readFileSync(FS.rawPath(id)); let meta; try { meta = FS.decryptRaw(id, raw).meta; } catch (e) { bad.push(id); continue; } if (meta.bucket === 'backups') continue; add(id + '.enc', raw); }
+    if (bad.length) throw err('CORRUPT_FILE', bad.length + ' stored file(s) failed authentication (' + bad.slice(0, 3).map(x => x.slice(0, 8)).join(', ') + '); no backup was written — a partial "full" backup would silently lose content. Restore the last verified backup or contact the administrator.');
     const h = { v: 1, created: new Date().toISOString(), entries }; h.mac = macOf(h); const hb = Buffer.from(JSON.stringify(h)), lb = Buffer.alloc(4); lb.writeUInt32BE(hb.length);
-    atomic(dest, Buffer.concat([Buffer.from('MBK1'), lb, hb].concat(blobs))); return { files: entries.length - 1, bytes, skipped_corrupt: skipped, sha: sha(fs.readFileSync(dest)) };
+    atomic(dest, Buffer.concat([Buffer.from('MBK1'), lb, hb].concat(blobs))); return { files: entries.length - 1, bytes, skipped_corrupt: 0, sha: sha(fs.readFileSync(dest)) };
   }
   /** Parse + fully verify a container WITHOUT touching the data folder. Returns {header, blobs:Map(name->Buffer), state}. Throws {code:'CORRUPT'} on anything wrong. */
   function read(src) {
@@ -35,19 +36,35 @@ function open(o) {
     for (const [n, b] of blobs) if (n !== 'state.bin') { try { FS.decryptRaw(n.slice(0, -4), b); } catch (e) { throw err('CORRUPT', 'file not authentic: ' + n.slice(0, 8) + '…'); } }
     return { header: h, blobs, state: st };
   }
+  const RB_RE = /^restore-rollback-\d{1,16}$/, ST_RE = /^\.restore-staging-\d{1,16}$/, FILE_RE = /^f_[0-9a-f]{32}\.enc$/, SHA_RE = /^[0-9a-f]{64}$/;
+  /** A marker / undo file is just JSON on disk: nothing in it is trusted. Names must match what THIS app creates, resolve to a direct child of the data dir and must not be symlinks — otherwise recovery refuses (fail closed, nothing is deleted or copied). */
+  function safeChild(name, re, what) {
+    if (typeof name !== 'string' || !re.test(name)) throw err('BAD_MARKER', 'recovery marker rejected (' + what + ' is not a name this app creates); nothing was changed');
+    const p = path.join(dir, name); if (path.dirname(path.resolve(p)) !== dir) throw err('BAD_MARKER', 'recovery marker rejected (' + what + ' escapes the data folder); nothing was changed');
+    try { if (fs.lstatSync(p).isSymbolicLink()) throw err('BAD_MARKER', 'recovery marker rejected (' + what + ' is a symbolic link); nothing was changed'); } catch (e) { if (e.code === 'BAD_MARKER') throw e; /* not there: handled by the caller */ }
+    return p;
+  }
+  function readUndo(rb) {
+    const m = JSON.parse(fs.readFileSync(path.join(rb, 'undo.json'), 'utf8')); if (!m || !Array.isArray(m.added) || !Array.isArray(m.replaced) || ![].concat(m.added, m.replaced).every(x => typeof x === 'string' && FILE_RE.test(x))) throw err('BAD_MARKER', 'rollback record rejected (unexpected file names); nothing was changed');
+    for (const sub of ['undo.json', 'state.bin', 'replaced']) { try { if (fs.lstatSync(path.join(rb, sub)).isSymbolicLink()) throw err('BAD_MARKER', 'rollback record rejected (symbolic link); nothing was changed'); } catch (e) { if (e.code === 'BAD_MARKER') throw e; } }
+    return m;
+  }
   function rollbackFrom(rb) {
-    const m = JSON.parse(fs.readFileSync(path.join(rb, 'undo.json'), 'utf8'));
+    const m = readUndo(rb);
     for (const id of m.added) { try { fs.unlinkSync(FS.rawPath(id.slice(0, -4))); } catch (e) { /* not placed */ } }
-    for (const id of m.replaced) { const src = path.join(rb, 'replaced', id); if (fs.existsSync(src)) fs.copyFileSync(src, FS.rawPath(id.slice(0, -4))); }
+    for (const id of m.replaced) { const src = path.join(rb, 'replaced', id); if (fs.existsSync(src) && !fs.lstatSync(src).isSymbolicLink()) fs.copyFileSync(src, FS.rawPath(id.slice(0, -4))); }
     fs.copyFileSync(path.join(rb, 'state.bin'), state); return m;
   }
-  /** Finish or undo a restore that was interrupted (crash / power loss). Safe to call at any start. */
+  /** Finish or undo a restore that was interrupted (crash / power loss). Safe to call at any start. A malformed / tampered marker throws BAD_MARKER and touches NOTHING. */
   function recover() {
     if (!fs.existsSync(marker)) return { action: 'none' };
-    let mk; try { mk = JSON.parse(fs.readFileSync(marker, 'utf8')); } catch (e) { return { action: 'unreadable-marker' }; }
-    const rb = path.join(dir, mk.rollback); if (!fs.existsSync(path.join(rb, 'undo.json'))) { fs.unlinkSync(marker); return { action: 'cleared' }; }
+    let mk; try { mk = JSON.parse(fs.readFileSync(marker, 'utf8')); } catch (e) { throw err('BAD_MARKER', 'the restore marker is unreadable; nothing was changed — keep the data folder and ask the administrator'); }
+    if (!mk || typeof mk !== 'object') throw err('BAD_MARKER', 'the restore marker is malformed; nothing was changed');
+    const rb = safeChild(mk.rollback, RB_RE, 'rollback'), stg = safeChild(mk.staging, ST_RE, 'staging'); if (!SHA_RE.test(String(mk.newStateSha || ''))) throw err('BAD_MARKER', 'the restore marker is malformed (state checksum); nothing was changed');
+    if (!fs.existsSync(path.join(rb, 'undo.json'))) { fs.unlinkSync(marker); return { action: 'cleared' }; }
+    readUndo(rb);          // validate BEFORE anything is deleted or copied
     const done = fs.existsSync(state) && sha(fs.readFileSync(state)) === mk.newStateSha;
-    if (!done) rollbackFrom(rb); fs.rmSync(path.join(dir, mk.staging), { recursive: true, force: true }); fs.unlinkSync(marker); return { action: done ? 'completed' : 'rolled-back' };
+    if (!done) rollbackFrom(rb); fs.rmSync(stg, { recursive: true, force: true }); fs.unlinkSync(marker); return { action: done ? 'completed' : 'rolled-back' };
   }
   function restore(src, opts) {
     opts = opts || {}; const pre = recover(); const { header, blobs, state: st } = read(src);
