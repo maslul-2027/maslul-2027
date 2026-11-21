@@ -28,7 +28,21 @@ for(const c of CASES){const name=c.d+'#'+c.i;try{await p.evaluate(h=>{location.h
  const err=await p.$('.msg.err');if(err)throw new Error('backend: '+(await err.textContent()));
  await p.waitForSelector('.section',{timeout:5000});await p.waitForTimeout(400);
  if(c.read){await p.waitForFunction(t=>document.getElementById('view').textContent.includes(t),c.read,{timeout:6000}).catch(async()=>{throw new Error('read-back missing: '+c.read+' | view='+(await p.textContent('#view')).slice(0,300))});}
- if(c.d==='marches'){const z=await p.evaluate(async()=>appClient.api('marches.list',{courseId:window.__app.state.course.id}));assert.ok(z.ok,'marches.list');const m=z.data.find(x=>x.location==='מסע בדיקה');assert.ok(m && m.total>0 && m.total-m.participants===1,'exactly one missing trainee persisted for new march');}
+ if(c.d==='marches'){
+   const z=await p.evaluate(async()=>appClient.api('marches.list',{courseId:window.__app.state.course.id}));assert.ok(z.ok,'marches.list');
+   const m=z.data.find(x=>x.location==='מסע בדיקה');assert.ok(m && m.total>0,'march persisted');
+   const roll=await p.evaluate(async id=>appClient.api('marches.list',{courseId:window.__app.state.course.id,opts:{marchId:id,includeRoster:true}}),m.id);
+   assert.ok(roll.ok && roll.data.length===1 && roll.data[0].roster.filter(x=>!x.present).length===1,'one missing trainee saved in scoped operational roster');
+   await p.click('#view button.card:has-text("מסע בדיקה")');await p.waitForSelector('#participantRoster .card');
+   const absentCard=p.locator('#participantRoster .card').filter({hasText:'חסר'}).first();
+   await absentCard.getByRole('button',{name:'שינוי נוכחות'}).click();
+   await p.selectOption('#rosterPresent','true');await p.fill('#rosterReason','תיקון בדיקה סינתטית');
+   await p.getByRole('button',{name:'שמירת שינוי'}).click();
+   await p.waitForFunction(()=>document.querySelector('#participantRoster')?.textContent.includes('חסרים 0'),null,{timeout:7000});
+   const newRoll=await p.evaluate(async id=>appClient.api('marches.list',{courseId:window.__app.state.course.id,opts:{marchId:id,includeRoster:true}}),m.id);
+   assert.equal(newRoll.data[0].roster.filter(x=>!x.present).length,0,'saved roster edit persists without new march');
+   await p.locator('dialog[open]').getByRole('button',{name:'סגירה'}).click();
+ }
  if(c.d==='attendance' && c.i===0){const z=await p.evaluate(async()=>appClient.api('attendance.events',{courseId:window.__app.state.course.id}));assert.ok(z.ok);const e=z.data.find(x=>x.event_date==='2026-11-15');assert.ok(e,'attendance event created');const v=await p.evaluate(async eventId=>appClient.api('attendance.roll',{courseId:window.__app.state.course.id,eventId}),e.id);assert.ok(v.ok && v.data.some(x=>!x.present),'one absent attendee persisted');}
  pass++;console.log('PASS',name);}catch(e){fail++;console.log('FAIL',name,String(e.message).split('\n')[0]);}}
 try{await p.evaluate(()=>{location.hash='#/attendance'});await p.waitForSelector('button:has-text("+ אירוע נוכחות חדש")',{timeout:6000});pass++;console.log('PASS attendance main entry opens canonical event creation');}catch(e){fail++;console.log('FAIL attendance main entry',String(e.message).split('\n')[0]);}
