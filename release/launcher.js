@@ -20,6 +20,20 @@ function preflight(port) {
   try { fs.mkdirSync(dataDir, { recursive: true }); const t = path.join(dataDir, '.w' + process.pid); fs.writeFileSync(t, 'x'); fs.unlinkSync(t); } catch (e) { out.push('Cannot write to the data folder ' + dataDir + ' (' + e.code + '). Move the package to a normal folder such as Documents (not Program Files / a read-only drive / a synced OneDrive "Files On-Demand" folder).'); }
   return out;
 }
+/** Environment checks (pure + injectable so CI can prove them on any OS). Problems block the start; warnings are printed and never bypass anything. Read-only. */
+function environmentChecks(env) {
+  const e = Object.assign({ platform: process.platform, release: require('os').release(), root, dataDir, freeBytes: null }, env || {}), problems = [], warnings = [], norm = x => String(x).replace(/\//g, '\\');
+  if (e.platform === 'win32') {
+    const m = /^(\d+)\.(\d+)\.(\d+)/.exec(e.release || ''); if (m && (Number(m[1]) < 10)) problems.push('Windows 10 or 11 is required (this is Windows NT ' + m[1] + '.' + m[2] + '). Use a newer computer for the TEST.');
+    const r = norm(e.root).toLowerCase();
+    if (/\\appdata\\local\\temp\\/.test(r) && /(\.zip|rar\$|7zo)/.test(r)) problems.push('The package is being run from inside a ZIP preview (a temporary folder). Right-click the ZIP → Extract All…, then open START-MASLUL-TEST.cmd from the extracted folder.');
+    if (norm(e.root).length > 150 || norm(e.dataDir).length > 180) problems.push('The folder path is too long for Windows (' + Math.max(norm(e.root).length, norm(e.dataDir).length) + ' characters). Extract the ZIP to a short folder such as C:\\MASLUL-TEST.');
+    if (/\\(onedrive|dropbox|google drive|icloud)[^\\]*\\/i.test(norm(e.dataDir) + '\\')) warnings.push('The data folder is inside a cloud-synced folder. The synthetic data and its local key would then be copied to that cloud account. Prefer a folder outside OneDrive/Dropbox/Drive (for example C:\\MASLUL-TEST\\data).');
+  }
+  if (typeof e.freeBytes === 'number' && e.freeBytes < 300 * 1024 * 1024) problems.push('Less than 300 MB free on the data drive (' + Math.floor(e.freeBytes / 1048576) + ' MB). Free some space or use --data on another drive.');
+  return { problems, warnings };
+}
+const freeBytesOf = d => { try { const s = fs.statfsSync(d); return Number(s.bavail) * Number(s.bsize); } catch (e) { return null; } };
 const freePort = p => new Promise(r => { const s = net.createServer(); s.once('error', () => r(false)); s.listen(p, '127.0.0.1', () => s.close(() => r(true))); });
 async function pickPort(start, tries) { for (let i = 0; i < tries; i++) if (await freePort(start + i)) return start + i; return 0; }
 const randomPin = () => { const { weakPin } = require(path.join(root, 'backend_next', 'pin_auth.js')); for (;;) { const p = Array.from(crypto.randomBytes(4), b => b % 10).join(''); if (new Set(p).size === 4 && !weakPin(p)) return p; } };   // the app's PIN is 4 digits by design (loopback synthetic test; real phone-OTP is an open gate)
@@ -83,6 +97,7 @@ async function main() {
   if (flag('backup')) return backup();
   if (flag('restore')) return restore(arg('restore'));
   problems.push(...preflight());
+  { const env = environmentChecks({ freeBytes: freeBytesOf(fs.existsSync(dataDir) ? dataDir : path.dirname(dataDir)) }); problems.push(...env.problems); env.warnings.forEach(w => say('Warning: ' + w)); }
   { const v = verifyPackage(); if (!v.ok) problems.push('Integrity check failed (the package is incomplete, modified or has extra files): ' + v.lines.slice(0, 5).join('; ') + '. Download the ZIP again from the approved source and compare its SHA-256 with the published digest.'); else if (v.package) say(v.lines[0]); }
   const want = Number(arg('port', 8443)), port = problems.length ? 0 : await pickPort(want, 20);
   if (!problems.length && !port) problems.push('No free local port between ' + want + ' and ' + (want + 19) + '. Close the other program that uses them, or run with --port <number>.');
@@ -107,5 +122,5 @@ async function main() {
   process.on('SIGINT', stop); process.on('SIGTERM', stop); process.on('exit', () => { try { fs.unlinkSync(lockFile()); } catch (e) { /* ignore */ } });
   return null;   // keep serving
 }
-module.exports = { preflight, randomPin };
+module.exports = { preflight, randomPin, environmentChecks, REQUIRED };
 if (require.main === module) main().then(c => { if (c !== null) process.exit(c); }).catch(e => { console.error('Unexpected error: ' + e.message); process.exit(1); });

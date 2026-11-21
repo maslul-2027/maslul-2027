@@ -38,3 +38,5 @@ WHAT IT DOES NOT DO
 
 IF IT DOES NOT START
   The window lists exactly what is missing (Node version, incomplete extraction, unwritable folder, busy port). Nothing is changed in that case.
+
+PREFLIGHT (double-click CHECK-ONLY.cmd first; it changes nothing): it checks Windows 10/11, that the ZIP was really extracted (not run from the ZIP preview), a short folder path, 300 MB free space, a free local port and that the data folder is writable. If the data folder is inside OneDrive/Dropbox/Google Drive it WARNS that the synthetic data and its local key would sync to that account; choose a folder outside it. It never asks you to turn off SmartScreen/Defender and never needs administrator rights.
