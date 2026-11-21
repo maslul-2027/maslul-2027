@@ -1,0 +1,92 @@
+name: release-package
+# Builds the single-computer TEST package (SYNTHETIC DATA ONLY) from the exact REVIEWED commit (never the PR test-merge ref), then proves it on a real Windows runner.
+# A Windows CI runner is NOT a clean user PC: owner acceptance on a real Windows PC stays NOT_RUN until done by hand.
+on:
+  pull_request:
+    paths: ['release/**', 'scripts/build_release_package.js', 'scripts/e2e_release_package.js', 'backend_next/**', 'native/**', 'src/**', 'scripts/build_native_app.js', '.github/workflows/release-package.yml']
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-package-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      sha: ${{ steps.src.outputs.sha }}
+      short: ${{ steps.src.outputs.short }}
+    steps:
+      - id: src
+        run: |
+          SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"; echo "short=${SHA:0:7}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.src.outputs.sha }}   # the reviewed commit, not refs/pull/N/merge
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build deterministic ZIP from the reviewed commit
+        run: |
+          EXPECT_SHA="${{ steps.src.outputs.sha }}" node scripts/build_release_package.js --out dist --require-clean | tee build.json
+          cd dist && ls -l *.zip *.sha256 && cat *.sha256
+          python3 - <<'PY'
+          import json,glob,zipfile
+          z=glob.glob('MASLUL-TEST-*-windows.zip')[0]
+          m=json.loads(zipfile.ZipFile(z).read('MANIFEST.json'))
+          assert m['source_commit']=="${{ steps.src.outputs.sha }}", (m['source_commit'],"${{ steps.src.outputs.sha }}")
+          print("manifest source_commit == reviewed commit:", m['source_commit'])
+          PY
+      - name: Rebuild and compare (determinism)
+        run: |
+          cp dist/*.sha256 first.sha256
+          EXPECT_SHA="${{ steps.src.outputs.sha }}" node scripts/build_release_package.js --out dist2 --require-clean > /dev/null
+          diff <(cut -d' ' -f1 first.sha256) <(cut -d' ' -f1 dist2/*.sha256) && echo "deterministic: identical SHA-256"
+      - name: Publish digest in the run summary
+        run: |
+          { echo "### MASLUL TEST package (synthetic only, UNSIGNED)"; echo; echo "Source commit: \`${{ steps.src.outputs.sha }}\`"; echo; echo "ZIP SHA-256 (compare before extracting):"; echo '```'; cat dist/*.sha256; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MASLUL-TEST-${{ steps.src.outputs.short }}-windows
+          path: |
+            dist/MASLUL-TEST-*-windows.zip
+            dist/MASLUL-TEST-*-windows.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+  windows:
+    needs: build
+    runs-on: windows-2022
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build.outputs.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: MASLUL-TEST-${{ needs.build.outputs.short }}-windows
+          path: pkg
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install chromium
+      - name: Real Windows run - extract the built ZIP (path with spaces), CHECK-ONLY.cmd, VERIFY-FILES.cmd, START-MASLUL-TEST.cmd, HTTPS + login + 4 tabs + writes + permissions + restart + backup/restore + fail-closed integrity
+        shell: pwsh
+        env:
+          E2E_LAUNCH: cmd
+        run: |
+          $zip = (Get-ChildItem pkg -Filter *.zip | Select-Object -First 1).FullName
+          Write-Host "ZIP: $zip"; Get-Content "$zip.sha256"
+          Write-Host ("Get-FileHash: " + (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower())
+          $env:E2E_PKG_ZIP = $zip
+          node scripts/e2e_release_package.js artifacts/windows_screens
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-package-screens-${{ needs.build.outputs.short }}
+          path: artifacts/windows_screens
+          if-no-files-found: ignore
