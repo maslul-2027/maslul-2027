@@ -4,7 +4,7 @@
 // Local-test secrets (pepper, store key, bootstrap token) are generated into MASLUL_TEST_DIR (git-ignored, 0600). That is NOT a secret store — see docs/PRIVATE_TEST_SERVER.md.
 // NOT approved for real data: no verified phone ownership, single-process file store, no independent security review, no owner go-live approval.
 const fs = require('fs'), path = require('path'), https = require('https'), crypto = require('crypto'), cp = require('child_process');
-const { gateway, toHttp } = require('./gateway'), store = require('./store'), engineHost = require('./engine_host'), routeTable = require('./route_table');
+const { gateway, toHttp } = require('./gateway'), store = require('./store'), engineHost = require('./engine_host'), routeTable = require('./route_table'), privateNet = require('./private_net');
 const root = path.join(__dirname, '..');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.webmanifest': 'application/manifest+json', '.json': 'application/json' };
 function secretsIn(dir) {
@@ -21,8 +21,17 @@ function certIn(dir, o) {
 /** @returns {Promise<{server, port, origin, gw, close()}>} */
 async function start(o) {
   o = o || {}; const dir = path.resolve(o.dir || process.env.MASLUL_TEST_DIR || path.join(root, '.test-server')), sec = secretsIn(dir), port = Number(o.port != null ? o.port : (process.env.PORT || 8443));
-  const bindHost = o.host || process.env.BIND_HOST || '127.0.0.1';   // default loopback. A non-loopback bind is only for an approved PRIVATE network and REQUIRES ORIGIN (https://<name>) + a certificate the phones trust
-  if (bindHost !== '127.0.0.1' && bindHost !== '::1' && bindHost !== 'localhost' && !(o.origin || process.env.ORIGIN)) throw new Error('BIND_HOST outside loopback requires ORIGIN=https://<private-name> (exact origin used for CSRF)');
+  const bindHost = o.host || process.env.BIND_HOST || '127.0.0.1';   // default loopback. A non-loopback bind is ONLY for an approved PRIVATE network: RFC1918 / ULA literal, never public, never wildcard, never a DNS name
+  const isLoop = privateNet.classify(bindHost) === 'loopback';
+  if (!isLoop) {
+    const b = privateNet.checkBind(bindHost); if (!b.ok) throw new Error('BIND REFUSED: ' + b.reason);
+    if (!(o.origin || process.env.ORIGIN)) throw new Error('BIND_HOST outside loopback requires ORIGIN=https://<private-name-or-ip> (exact origin used for CSRF)');
+    if (!(o.certFile || process.env.TLS_CERT_FILE)) throw new Error('A non-loopback bind requires a real certificate (TLS_CERT_FILE/TLS_KEY_FILE); the throw-away local certificate is loopback-only');
+    const og = privateNet.checkOrigin(o.origin || process.env.ORIGIN, bindHost); if (!og.ok) throw new Error('ORIGIN REFUSED: ' + og.reason);   // an IP origin must EQUAL the bind address (same rule as private_test_launch)
+    const ou = new URL(o.origin || process.env.ORIGIN); if (Number(ou.port || 443) !== port) throw new Error('ORIGIN REFUSED: ORIGIN port ' + (ou.port || '443') + ' must equal the listening port ' + port);
+    try { privateNet.checkCertFiles({ certFile: o.certFile || process.env.TLS_CERT_FILE, keyFile: o.keyFile || process.env.TLS_KEY_FILE, name: og.host }); } catch (e) { throw new Error('TLS REFUSED: ' + e.message); }   // SAN for the origin host, currently valid, key matches — no direct-start bypass
+    if (!(o.keyFile || process.env.TLS_KEY_FILE)) throw new Error('TLS REFUSED: TLS_KEY_FILE missing');
+  }
   const origin = o.origin || process.env.ORIGIN || 'https://localhost:' + port, publicDir = path.resolve(o.publicDir || path.join(root, 'server_public'));
   const st = store.open({ file: path.join(dir, 'state.bin'), key: Buffer.from(sec.storeKey, 'hex') });
   let host = null, gwRef = null;
@@ -74,7 +83,7 @@ async function start(o) {
     } catch (e) { try { send(rs, 500, 'error'); } catch (e2) { /* socket already gone */ } }
   });
   server.on('clientError', (e, sock) => { try { sock.end('HTTP/1.1 400 Bad Request\r\n\r\n'); } catch (x) { /* ignore */ } });
-  await new Promise(r => server.listen(port, bindHost, r));
+  await new Promise((r, j) => { server.once('error', j); server.listen(port, bindHost, () => { server.removeListener('error', j); r(); }); });   // a failed bind (address not owned, port taken) is a clean rejection, not an uncaught event
   return { server, store: st, port: server.address().port, origin, gw, dir, bootstrap: sec.bootstrap, close: () => new Promise(r => { server.close(r); if (server.closeAllConnections) server.closeAllConnections(); }) };
 }
 module.exports = { start };

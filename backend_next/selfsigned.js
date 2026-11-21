@@ -13,7 +13,7 @@ function create(opts) {
   opts = opts || {}; const days = opts.days || 30, cn = opts.cn || 'localhost';
   const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
   const name = seq(set(seq(oid('2.5.4.3'), utf8(cn))));
-  const san = seq(tlv(0x82, Buffer.from('localhost')), tlv(0x87, Buffer.from([127, 0, 0, 1])));
+  const san = seq(...(opts.dns || ['localhost']).map(d => tlv(0x82, Buffer.from(d))), ...(opts.ips || ['127.0.0.1']).map(i => tlv(0x87, Buffer.from(i.split('.').map(Number)))));   // opts.dns/opts.ips are for TEST FIXTURES (negative/positive validation tests); the launcher always uses the loopback defaults
   const ext = seq(
     seq(oid('2.5.29.19'), tlv(0x01, Buffer.from([0xff])), tlv(0x04, seq(tlv(0x01, Buffer.from([0]))))),            // basicConstraints: CA:FALSE (critical)
     seq(oid('2.5.29.15'), tlv(0x01, Buffer.from([0xff])), tlv(0x04, tlv(0x03, Buffer.from([0x05, 0xa0])))),         // keyUsage: digitalSignature, keyEncipherment (critical)

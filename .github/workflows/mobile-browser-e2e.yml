@@ -10,6 +10,9 @@ on:
       - 'backend_next/**'
       - 'tests/secure_test_server.js'
       - 'tests/route_table.js'
+      - 'tests/private_net.js'
+      - 'tests/private_test_launch.js'
+      - 'scripts/private_test_probe.js'
       - 'scripts/e2e_secure_browser.js'
       - 'scripts/e2e_native.js'
       - 'scripts/e2e_native_domains.js'
@@ -81,6 +84,8 @@ jobs:
           node scripts/build_native_app.js --server
           node tests/route_table.js
           node tests/secure_test_server.js
+          node tests/private_net.js
+          node tests/private_test_launch.js
       - name: Private TEST server — browser E2E over real TLS, admin/commander/viewer at 320/360/390/414 (Issue #43)
         run: |
           node scripts/build_native_app.js --server
