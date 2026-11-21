@@ -16,7 +16,7 @@ let n = 0; const ok = m => console.log('ok', ++n, m), errs = [];
     assert.equal(got, want, 'ZIP digest must equal the separately published .sha256'); b = { zip: z, sha256: got }; ok('ZIP SHA-256 matches the separately published digest ' + got.slice(0, 16) + '…');
   } else b = JSON.parse(cp.execFileSync(process.execPath, [path.join(root, 'scripts', 'build_release_package.js'), '--out', path.join(tmp, 'dist')]).toString().trim().split('\n').pop());
   fs.mkdirSync(ext, { recursive: true });
-  if (IS_WIN) cp.execFileSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Expand-Archive -LiteralPath $env:PKG_ZIP -DestinationPath $env:PKG_DST -Force'], { env: { ...process.env, PKG_ZIP: b.zip, PKG_DST: ext } }); else cp.execFileSync('unzip', ['-q', b.zip, '-d', ext]);
+  if (IS_WIN) cp.execFileSync(path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe'), ['-xf', b.zip, '-C', ext]); else cp.execFileSync('unzip', ['-q', b.zip, '-d', ext]);   // Windows 10/11 + Server 2022 ship bsdtar, which reads ZIP (same files Explorer's "Extract All" produces)
   const L = path.join(ext, 'app', 'release', 'launcher.js'), data = path.join(ext, 'data');
   assert.ok(!fs.existsSync(path.join(ext, 'node_modules')) && fs.readdirSync(path.join(ext, 'app', 'tests')).join() === 'harness.js', 'package has no node_modules and only the engine load-order file from tests/');
   const CMDENV = { ...process.env, MASLUL_NO_PAUSE: '1', MASLUL_NO_BROWSER: '1' };
