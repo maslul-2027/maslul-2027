@@ -30,6 +30,7 @@ on:
       - 'scripts/e2e_native_batch6.js'
       - 'scripts/e2e_native_batch7.js'
       - 'scripts/e2e_native_marches.js'
+      - 'scripts/e2e_native_acceptance.js'
       - 'scripts/e2e_native_flows.js'
       - 'scripts/e2e_native_fitness.js'
       - 'scripts/build_release_package.js'
@@ -83,6 +84,8 @@ jobs:
         run: E2E_CALLS_OUT=artifacts/calls_native_flows.json node scripts/e2e_native_flows.js preview artifacts/flows_screens
       - name: March roster + scope (#79) — Home → new march → missing → persisted roster; scoped commander
         run: E2E_CALLS_OUT=artifacts/calls_native_marches.json node scripts/e2e_native_marches.js preview
+      - name: Owner-acceptance regression (event edit-after-save, double submit, refresh persistence, commander/approval, foreign scope, offline, RTL 320-414, 200% zoom, keyboard, reduced motion)
+        run: node scripts/e2e_native_acceptance.js preview
       - name: Fitness regular-only entry, live preview, scoring reference (Issue #66)
         run: |
           node tests/fitness_regular.js
