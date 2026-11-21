@@ -15,7 +15,7 @@ function secretsIn(dir) {
 function certIn(dir, o) {
   if (o && o.certFile && o.keyFile) return { cert: fs.readFileSync(o.certFile), key: fs.readFileSync(o.keyFile) };   // real certificate supplied by the operator (e.g. private CA / ACME)
   const c = path.join(dir, 'cert.pem'), k = path.join(dir, 'key.pem');
-  if (!fs.existsSync(c) || !fs.existsSync(k)) cp.execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', k, '-out', c, '-days', '30', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'], { stdio: 'ignore' });
+  if (!fs.existsSync(c) || !fs.existsSync(k)) { try { cp.execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', k, '-out', c, '-days', '30', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost,IP:127.0.0.1'], { stdio: 'ignore' }); } catch (e) { const g = require('./selfsigned').create({ days: 30 }); fs.writeFileSync(c, g.cert); fs.writeFileSync(k, g.key, { mode: 0o600 }); } }   // no openssl (stock Windows): pure-Node loopback certificate
   fs.chmodSync(k, 0o600); return { cert: fs.readFileSync(c), key: fs.readFileSync(k) };
 }
 /** @returns {Promise<{server, port, origin, gw, close()}>} */
