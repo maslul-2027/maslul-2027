@@ -1,5 +1,5 @@
 {
- "when": "2026-11-21T11:03:17.948Z",
+ "when": "2026-11-21T12:23:22.654Z",
  "node": "v22.23.4",
  "flags": {
   "ui": true,
@@ -34,8 +34,24 @@
   {
    "s": "report_export",
    "types": null,
+   "state": "FAIL",
+   "pass": 15,
+   "fail": 1,
+   "why": "failed tests"
+  },
+  {
+   "s": "backup_restore",
+   "types": null,
    "state": "PASS",
-   "pass": 16,
+   "pass": 23,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "full_backup",
+   "types": null,
+   "state": "PASS",
+   "pass": 13,
    "fail": 0,
    "why": ""
   },
@@ -722,16 +738,16 @@
    "node_integration": 294,
    "node_hardening": 235,
    "browser": 402,
-   "unclassified": 87
+   "unclassified": 122
   },
-  "node_total": 711,
-  "suites": 68,
-  "PASS": 68,
-  "FAIL": 0,
+  "node_total": 746,
+  "suites": 70,
+  "PASS": 69,
+  "FAIL": 1,
   "SKIP": 0,
-  "tests_run": 1113,
-  "passed": 1113,
-  "failed": 0
+  "tests_run": 1149,
+  "passed": 1148,
+  "failed": 1
  },
- "result": "COMPLETE_PASS"
+ "result": "FAILED"
 }

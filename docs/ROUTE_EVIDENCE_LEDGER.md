@@ -2,7 +2,7 @@
 
 Source: `scripts/build_route_ledger.js` from `src/Code.gs` API_ map, `tests/route_classes.json`, native sources and the calls recorded by the browser E2E (`E2E_CALLS_OUT`). Synthetic data only. **secured TEST E2E = NOT_RUN and deployed = NO for every row** (no secured backend exists yet).
 
-**Summary:** {"total":176,"PASS_SYNTH_E2E":158,"API_ONLY_NOT_UI":0,"POLICY_BLOCKED":5,"interaction_verified":158,"IMPLEMENTED_NOT_E2E":0,"BLOCKED_NOT_CONNECTED":13,"NOT_IMPLEMENTED":0,"native_screen":165}
+**Summary:** {"total":176,"PASS_SYNTH_E2E":158,"API_ONLY_NOT_UI":0,"POLICY_BLOCKED":5,"interaction_verified":158,"IMPLEMENTED_NOT_E2E":0,"BLOCKED_NOT_CONNECTED":13,"NOT_IMPLEMENTED":0,"native_screen":169}
 
 Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the application UI code (`ui_origin_api_ok`, includes calls made automatically when a screen renders) — it is NOT by itself proof that a person (or Playwright) operated a control · **interaction_verified** (separate column/count) = at least one successful UI-origin call that started within 1.5 s after a *trusted* input event (real click/type/select/submit/keypress dispatched by the browser input pipeline) — a machine-correlated gesture, not a semantic proof of the intended action; the E2E scripts also read state back to check results · API_ONLY_NOT_UI = only the test hook (`window.__app.api`) succeeded · IMPLEMENTED_NOT_E2E = native code references the API but no successful browser call observed · BLOCKED_NOT_CONNECTED = missing external adapter, shown honestly · POLICY_BLOCKED = backend route exists but is intentionally not exposed natively (owner charter) and is NOT counted as completed · NOT_IMPLEMENTED = no native workflow. Cell format of `calls`: ui-origin/gesture-correlated/direct.
 
@@ -18,7 +18,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 7 | `users.list` | users | A | yes | PASS_SYNTH_E2E | 12/7/1 | yes | yes |  |
 | 8 | `users.add` | users | A | yes | PASS_SYNTH_E2E | 1/1/1 | yes | yes |  |
 | 9 | `users.set` | users | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 246/87/18 | yes | yes |  |
+| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 247/88/18 | yes | yes |  |
 | 11 | `soldiers.card` | soldiers | O | yes | PASS_SYNTH_E2E | 22/19/3 | yes | no |  |
 | 12 | `soldiers.private` | soldiers | P | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 13 | `emergency.get` | emergency | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
@@ -64,7 +64,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 53 | `fitness.addTable` | fitness | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 54 | `fitness.approve` | fitness | A | yes | PASS_SYNTH_E2E | 2/2/3 | yes | no |  |
 | 55 | `fitness.create` | fitness | O | yes | PASS_SYNTH_E2E | 2/2/7 | yes | no |  |
-| 56 | `fitness.preview` | fitness | N | yes | PASS_SYNTH_E2E | 11/11/4 | yes | no |  |
+| 56 | `fitness.preview` | fitness | N | yes | PASS_SYNTH_E2E | 12/12/4 | yes | no |  |
 | 57 | `fitness.reference` | fitness | N | yes | PASS_SYNTH_E2E | 3/3/1 | yes | no |  |
 | 58 | `fitness.list` | fitness | O | yes | PASS_SYNTH_E2E | 5/5/3 | yes | yes |  |
 | 59 | `fitness.summary` | fitness | G | yes | PASS_SYNTH_E2E | 3/1/1 | yes | no |  |
@@ -134,7 +134,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 123 | `dash.compareCourses` | dash | G | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 124 | `dash.trends` | dash | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: owner charter 2026-11-20 (docs/OWNER_CURRENT_CHARTER_2026-11-20.md) allows group-level analytics only — no per-soldier trends. Backend route preserved for an owner-approved disposition; no native screen calls it. |
 | 125 | `dash.strengthsGaps` | dash | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 126 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 186/80/0 | yes | no |  |
+| 126 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 187/81/0 | yes | no |  |
 | 127 | `reports.build` | reports | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: returns per-soldier rows (names, personal numbers, individual scores); owner charter 2026-11-20 allows group-level reporting only (N>=5). The group-safe report is reports.preview. Not counted as completed. |
 | 128 | `reports.preview` | reports | G | yes | PASS_SYNTH_E2E | 6/2/1 | yes | no |  |
 | 129 | `reports.generate` | reports | O | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real PDF/XLSX, encrypted at rest): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md |
@@ -164,15 +164,15 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 153 | `ai.draft` | ai | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: generates an individual per-soldier assessment, excluded from analytics by the owner charter 2026-11-20. Group-only insights stay in analytics.insights. Not counted as completed. |
 | 154 | `ai.drafts` | ai | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: lists per-soldier generated assessments (owner charter 2026-11-20). Not counted as completed. |
 | 155 | `ai.reviewDraft` | ai | A | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: would make an individual generated assessment official (owner charter 2026-11-20). Not counted as completed. |
-| 156 | `backup.create` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | needs Drive/Spreadsheet adapter |
+| 156 | `backup.create` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
 | 157 | `backup.list` | backup | A | yes | PASS_SYNTH_E2E | 11/4/1 | yes | no |  |
-| 158 | `backup.verify` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
-| 159 | `backup.plan` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | needs the private backup file (Drive adapter) — plan is read-only once storage is connected |
-| 160 | `backup.restore` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
-| 161 | `backup.recover` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
+| 158 | `backup.verify` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
+| 159 | `backup.plan` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
+| 160 | `backup.restore` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
+| 161 | `backup.recover` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
 | 162 | `preflight.run` | preflight | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 163 | `preflight.last` | preflight | A | yes | PASS_SYNTH_E2E | 11/4/0 | yes | yes |  |
-| 164 | `backup.prune` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
+| 164 | `backup.prune` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
 | 165 | `migration.run` | migration | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | mutating schema migration is NOT exposed from the UI in this release (manager gate: plan/dry-run only): needs an approved private server and a separately reviewed migration plan; the UI makes zero migration.run calls |
 | 166 | `meetings.list` | meetings | N | yes | PASS_SYNTH_E2E | 18/15/6 | yes | no |  |
 | 167 | `meetings.get` | meetings | N | yes | PASS_SYNTH_E2E | 9/9/3 | yes | no |  |

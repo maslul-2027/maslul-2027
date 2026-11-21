@@ -44,6 +44,9 @@ function open(opts) {
       const st = Object.assign(EMPTY(), JSON.parse(b.payload)); chainAudit(st.audit); st.sessions.forEach(s => { s.revoked = true; });
       st.audit.push({ at: new Date().toISOString(), ev: 'restore', from: path.basename(src) }); chainAudit(st.audit); return st;
     },
+    /** Offline helpers for the full-bundle restore (launcher): authenticate + parse a raw sealed state / produce sealed bytes. Fail closed (StoreError CORRUPT). */
+    parseSealed(buf) { const st = Object.assign(EMPTY(), JSON.parse(unseal(key, buf))); chainAudit(st.audit); return st; },
+    sealState(state) { chainAudit(state.audit); return seal(key, JSON.stringify(state)); },
     serial,
   };
   return S;
