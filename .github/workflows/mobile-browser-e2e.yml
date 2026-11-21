@@ -14,6 +14,7 @@ on:
       - 'tests/private_test_launch.js'
       - 'scripts/private_test_probe.js'
       - 'scripts/e2e_secure_browser.js'
+      - 'scripts/e2e_report_export_browser.js'
       - 'scripts/e2e_native.js'
       - 'scripts/e2e_native_domains.js'
       - 'scripts/e2e_native_roles.js'
@@ -90,6 +91,10 @@ jobs:
         run: |
           node scripts/build_native_app.js --server
           SHOTS_DIR=artifacts/secure_screens node scripts/e2e_secure_browser.js
+      - name: Real report export (Issue #72 part 1) — admin clicks the native UI, the browser performs a REAL PDF/XLSX download; commander/viewer get nothing
+        run: |
+          node scripts/build_native_app.js --server
+          DL_DIR=artifacts/report_downloads SHOTS_DIR=artifacts/report_screens E2E_CALLS_OUT=artifacts/secure_calls_reports.json node scripts/e2e_report_export_browser.js
       - run: node scripts/e2e_native_ux.js preview artifacts/ux_screens
       - run: node scripts/e2e_native_motion.js preview
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
@@ -120,6 +125,9 @@ jobs:
             artifacts/fitness_screens
             artifacts/tasks_screens
             artifacts/secure_screens
+            artifacts/report_screens
+            artifacts/report_downloads
+            artifacts/secure_calls_reports.json
             artifacts/ux_screens
             artifacts/package_screens
             artifacts/ledger

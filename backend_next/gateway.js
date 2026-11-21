@@ -74,6 +74,18 @@ function gateway(opts) {
       skipSave = !opts.api.dirty && !write;   // persist whenever the engine actually changed state, whatever the method is called
       return { status: 200, body: body2 };
     }
+    // ----- real file download (generated report). Session-authenticated GET; the ENGINE decides access (course/team scope, owner-or-admin, viewer denied) via reports.download. Binary response, never JSON-wrapped. -----
+    let dm;
+    if (m === 'GET' && (dm = /^\/api\/download\/report\/([A-Za-z0-9-]{3,64})$/.exec(p))) {
+      if (!opts.api || opts.api.classify('reports.download') !== 'read') throw new AuthError('NOT_FOUND', 'לא נמצא.');
+      const u = state.users.find(x => x.id === ctx.userId), at = new Date((opts.now || Date.now)()).toISOString();
+      const r = opts.api.call({ userId: ctx.userId, role: ctx.role === 'user' ? 'commander' : ctx.role, name: u ? u.name : '', courseIds: ctx.courseIds }, 'reports.download', { id: dm[1] });
+      if (!r || !r.ok || !r.data || (r.data.format !== 'pdf' && r.data.format !== 'xlsx')) { auth.audit.push({ at, ev: 'report_download_denied', user: ctx.userId, report: dm[1], code: r && r.code }); const c = r && r.code; return { status: c === 'FORBIDDEN' ? 403 : c === 'NOT_CONNECTED' ? 501 : 404, body: { ok: false, code: c || 'NOT_FOUND', message: c === 'NOT_CONNECTED' ? 'ייצוא קבצים אינו מחובר בסביבה זו.' : 'הדוח לא נמצא.' } }; }
+      const buf = Buffer.from(r.data.content_base64, 'base64'), pdf = r.data.format === 'pdf';
+      auth.audit.push({ at, ev: 'report_download', user: ctx.userId, report: dm[1], bytes: buf.length });
+      const fname = 'maslul-report-' + dm[1].slice(0, 8) + (pdf ? '.pdf' : '.xlsx');      // fixed ASCII name from a validated id: no user text ever reaches a header
+      return { status: 200, binary: buf, headers: { 'content-type': pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'content-disposition': 'attachment; filename="' + fname + '"; filename*=UTF-8\'\'' + fname, 'content-length': String(buf.length) } };
+    }
     // ----- admin console -----
     if (p.startsWith('/admin/')) {
       if (m === 'GET' && p === '/admin/pending') return ok({ pending: auth.listPending(ctx) });
@@ -110,6 +122,7 @@ function toHttp(gw) {
   return (rq, rs) => { let raw = ''; rq.on('data', c => { raw += c; if (raw.length > 2e6) rq.destroy(); }); rq.on('end', async () => {
     let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { rs.statusCode = 400; return rs.end('{"ok":false,"code":"INVALID"}'); }
     const r = await gw.handle({ method: rq.method, path: rq.url, headers: rq.headers, body, remoteAddr: rq.socket.remoteAddress, proto: rq.socket && rq.socket.encrypted ? 'https' : 'http' });
+    if (r.binary) { rs.statusCode = r.status; rs.setHeader('cache-control', 'no-store'); rs.setHeader('x-content-type-options', 'nosniff'); Object.keys(r.headers || {}).forEach(k => rs.setHeader(k, r.headers[k])); return rs.end(r.binary); }
     rs.statusCode = r.status; rs.setHeader('content-type', 'application/json; charset=utf-8'); rs.setHeader('cache-control', 'no-store'); rs.setHeader('x-content-type-options', 'nosniff'); Object.keys(r.headers || {}).forEach(k => rs.setHeader(k, r.headers[k])); rs.end(JSON.stringify(r.body)); }); };
 }
 module.exports = { gateway, toHttp, COOKIE, csrfOf, clientIp };

@@ -1,9 +1,9 @@
 {
- "when": "2026-11-20T16:45:37.332Z",
+ "when": "2026-11-21T11:03:17.948Z",
  "node": "v22.23.4",
  "flags": {
   "ui": true,
-  "strict": false
+  "strict": true
  },
  "env_ok": true,
  "suites": [
@@ -20,6 +20,30 @@
    "types": null,
    "state": "PASS",
    "pass": 10,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "selfsigned",
+   "types": null,
+   "state": "PASS",
+   "pass": 5,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "report_export",
+   "types": null,
+   "state": "PASS",
+   "pass": 16,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "auth_gateway",
+   "types": null,
+   "state": "PASS",
+   "pass": 14,
    "fail": 0,
    "why": ""
   },
@@ -280,10 +304,10 @@
    "types": {
     "unit": 0,
     "integration": 2,
-    "hardening": 1
+    "hardening": 2
    },
    "state": "PASS",
-   "pass": 3,
+   "pass": 4,
    "fail": 0,
    "why": ""
   },
@@ -687,7 +711,7 @@
    "s": "ui_synthetic_app",
    "types": null,
    "state": "PASS",
-   "pass": 169,
+   "pass": 168,
    "fail": 0,
    "why": ""
   }
@@ -696,17 +720,17 @@
   "breakdown": {
    "node_unit": 95,
    "node_integration": 294,
-   "node_hardening": 234,
-   "browser": 403,
-   "unclassified": 52
+   "node_hardening": 235,
+   "browser": 402,
+   "unclassified": 87
   },
-  "node_total": 675,
-  "suites": 65,
-  "PASS": 65,
+  "node_total": 711,
+  "suites": 68,
+  "PASS": 68,
   "FAIL": 0,
   "SKIP": 0,
-  "tests_run": 1078,
-  "passed": 1078,
+  "tests_run": 1113,
+  "passed": 1113,
   "failed": 0
  },
  "result": "COMPLETE_PASS"
