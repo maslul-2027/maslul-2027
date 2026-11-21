@@ -9,8 +9,8 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | # | Route | Group | Authz class | Native | Status | calls | interaction_verified | Negative authz seen | Note |
 |---|---|---|---|---|---|---|---|---|---|
 
-| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 92/14/4 | yes | no |  |
-| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 77/6/7 | yes | no |  |
+| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 93/14/4 | yes | no |  |
+| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 78/6/7 | yes | no |  |
 | 3 | `courses.create` | courses | A | yes | PASS_SYNTH_E2E | 1/1/7 | yes | no |  |
 | 4 | `courses.archive` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 5 | `courses.reopen` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
@@ -18,7 +18,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 7 | `users.list` | users | A | yes | PASS_SYNTH_E2E | 12/7/1 | yes | yes |  |
 | 8 | `users.add` | users | A | yes | PASS_SYNTH_E2E | 1/1/1 | yes | yes |  |
 | 9 | `users.set` | users | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 254/93/18 | yes | yes |  |
+| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 261/98/18 | yes | yes |  |
 | 11 | `soldiers.card` | soldiers | O | yes | PASS_SYNTH_E2E | 22/19/3 | yes | no |  |
 | 12 | `soldiers.private` | soldiers | P | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 13 | `emergency.get` | emergency | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
@@ -38,7 +38,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 27 | `navtypes.rename` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 28 | `navtypes.setActive` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 29 | `assignments.list` | assignments | A | yes | PASS_SYNTH_E2E | 14/7/9 | yes | yes |  |
-| 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 72/4/2 | yes | yes |  |
+| 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 73/4/2 | yes | yes |  |
 | 31 | `assignments.create` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 32 | `assignments.update` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 33 | `assignments.setActive` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/3 | yes | yes |  |
@@ -81,17 +81,17 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 70 | `exams.attempts` | exams | O | yes | PASS_SYNTH_E2E | 7/3/0 | yes | no |  |
 | 71 | `exams.meetings` | exams | O | yes | PASS_SYNTH_E2E | 7/3/0 | yes | no |  |
 | 72 | `exams.summary` | exams | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 73 | `acttypes.list` | acttypes | N | yes | PASS_SYNTH_E2E | 11/7/2 | yes | no |  |
+| 73 | `acttypes.list` | acttypes | N | yes | PASS_SYNTH_E2E | 13/9/2 | yes | no |  |
 | 74 | `acttypes.create` | acttypes | A | yes | PASS_SYNTH_E2E | 1/1/2 | yes | no |  |
 | 75 | `acttypes.rename` | acttypes | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 76 | `acttypes.setActive` | acttypes | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 77 | `attendance.create` | attendance | O | yes | PASS_SYNTH_E2E | 1/1/3 | yes | no |  |
-| 78 | `attendance.events` | attendance | G | yes | PASS_SYNTH_E2E | 9/5/1 | yes | yes |  |
-| 79 | `attendance.roll` | attendance | O | yes | PASS_SYNTH_E2E | 2/2/1 | yes | no |  |
+| 77 | `attendance.create` | attendance | O | yes | PASS_SYNTH_E2E | 2/2/3 | yes | no |  |
+| 78 | `attendance.events` | attendance | G | yes | PASS_SYNTH_E2E | 205/93/3 | yes | yes |  |
+| 79 | `attendance.roll` | attendance | O | yes | PASS_SYNTH_E2E | 4/4/1 | yes | no |  |
 | 80 | `attendance.summary` | attendance | G | yes | PASS_SYNTH_E2E | 3/1/3 | yes | yes |  |
-| 81 | `marches.create` | marches | O | yes | PASS_SYNTH_E2E | 6/6/4 | yes | yes |  |
-| 82 | `marches.list` | marches | O | yes | PASS_SYNTH_E2E | 20/16/11 | yes | yes |  |
-| 83 | `marches.roll` | marches | O | yes | PASS_SYNTH_E2E | 7/7/4 | yes | no |  |
+| 81 | `marches.create` | marches | O | yes | PASS_SYNTH_E2E | 7/7/4 | yes | yes |  |
+| 82 | `marches.list` | marches | O | yes | PASS_SYNTH_E2E | 217/105/13 | yes | yes |  |
+| 83 | `marches.roll` | marches | O | yes | PASS_SYNTH_E2E | 8/8/4 | yes | no |  |
 | 84 | `marches.summary` | marches | G | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
 | 85 | `readiness.assess` | readiness | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 86 | `readiness.list` | readiness | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
@@ -114,17 +114,17 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 103 | `notes.save` | notes | P | yes | PASS_SYNTH_E2E | 2/2/0 | yes | yes |  |
 | 104 | `notes.list` | notes | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
 | 105 | `followups.create` | followups | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 106 | `followups.update` | followups | O | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
-| 107 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 180/87/0 | yes | yes |  |
+| 106 | `followups.update` | followups | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
+| 107 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 186/91/0 | yes | yes |  |
 | 108 | `favorites.toggle` | favorites | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 109 | `favorites.list` | favorites | O | yes | PASS_SYNTH_E2E | 21/19/0 | yes | no |  |
 | 110 | `snote.add` | snote | O | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
-| 111 | `snote.list` | snote | O | yes | PASS_SYNTH_E2E | 10/10/0 | yes | no |  |
+| 111 | `snote.list` | snote | O | yes | PASS_SYNTH_E2E | 12/12/0 | yes | no |  |
 | 112 | `snote.cancel` | snote | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 113 | `alerts.refresh` | alerts | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
 | 114 | `alerts.list` | alerts | O | yes | PASS_SYNTH_E2E | 9/6/1 | yes | no |  |
 | 115 | `alerts.handle` | alerts | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 116 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 189/83/0 | yes | no |  |
+| 116 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 195/87/0 | yes | no |  |
 | 117 | `forms.generalLink` | forms | N | yes | PASS_SYNTH_E2E | 3/2/0 | yes | no |  |
 | 118 | `forms.createLink` | forms | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 119 | `forms.list` | forms | O | yes | PASS_SYNTH_E2E | 4/3/1 | yes | no |  |
@@ -135,7 +135,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 124 | `dash.compareCourses` | dash | G | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 125 | `dash.trends` | dash | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: owner charter 2026-11-20 (docs/OWNER_CURRENT_CHARTER_2026-11-20.md) allows group-level analytics only — no per-soldier trends. Backend route preserved for an owner-approved disposition; no native screen calls it. |
 | 126 | `dash.strengthsGaps` | dash | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 127 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 193/85/0 | yes | no |  |
+| 127 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 199/89/0 | yes | no |  |
 | 128 | `reports.build` | reports | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: returns per-soldier rows (names, personal numbers, individual scores); owner charter 2026-11-20 allows group-level reporting only (N>=5). The group-safe report is reports.preview. Not counted as completed. |
 | 129 | `reports.preview` | reports | G | yes | PASS_SYNTH_E2E | 6/2/1 | yes | no |  |
 | 130 | `reports.generate` | reports | O | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real PDF/XLSX, encrypted at rest): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md |
@@ -182,7 +182,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 171 | `tasks.list` | tasks | N | yes | PASS_SYNTH_E2E | 23/19/6 | yes | no |  |
 | 172 | `tasks.get` | tasks | N | yes | PASS_SYNTH_E2E | 3/3/0 | yes | no |  |
 | 173 | `tasks.setStatus` | tasks | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 174 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 189/83/0 | yes | no |  |
+| 174 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 195/87/0 | yes | no |  |
 | 175 | `meetings.integrity` | meetings | N | yes | PASS_SYNTH_E2E | 12/7/1 | yes | no |  |
 | 176 | `meetings.auditRepair` | meetings | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 177 | `audit.list` | audit | A | yes | PASS_SYNTH_E2E | 7/3/5 | yes | yes |  |
