@@ -11,6 +11,7 @@ const trimU = u => u.replace(/[.,;:]+$/, '');
 const SCOPES = new Set(JSON.parse(fs.readFileSync(path.join(root, 'src', 'appsscript.json'), 'utf8')).oauthScopes || []);
 // REVIEWED, file-scoped allowances (each is a synthetic INPUT to a validation/attack test, never a request target): [file regex, finding regex, reason]
 const ALLOW = [[/test_pages_scan\.js$/, /person@gmail\.com|script\.google\.com|Google URL/, 'hostile INPUT strings for the Pages privacy-scan negative tests (the scanner must reject them); never fetched or sent anywhere'],
+  [/(selfsigned|e2e_release_package)\.js$/, /network\/Google client module required/, 'loopback-only: selfsigned test does a TLS handshake with itself on 127.0.0.1; the package E2E connects only to the launcher it started (and tries this machine\'s own addresses to prove they are refused); no external host'],
   [/secure_test_server\.js$/, /https:\/\/evil\.example|network\/Google client module required/, 'loopback-only TLS client (127.0.0.1, self-signed test cert) against the private TEST server started by the test itself; evil.example is a hostile Origin header VALUE, never a request target'],
   [/auth_gateway\.js$/, /https:\/\/(maslul\.test\.invalid|evil\.example)/, 'synthetic Origin header values fed to the gateway CSRF test (never a request target)'],
   [/fakesheets\.js$/, /https:\/\/fake\//, 'fake base URL of the in-memory sheet fake'],
