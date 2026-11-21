@@ -47,7 +47,7 @@
             }, isAdmin() ? 'שמירת שינוי' : 'שליחת בקשה');
           } }) : null;
           area.append(h('div', { class: 'card', style: 'display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap' }, [
-            h('div', {}, [h('strong', { text: r.soldier_name }), h('p', { class: 'muted', text: r.present ? 'נוכח' : 'חסר' })]), btn
+            h('div', {}, [h('strong', { text: r.soldier_name }), h('p', { class: 'muted', text: (r.present ? 'נוכח' : 'חסר') + (r.early_exit ? ' · יציאה מוקדמת' : '') + (r.absence_approved ? ' · היעדרות מאושרת' : '') + (r.notes ? ' · ' + r.notes : '') })]), btn
           ]));
         });
       });

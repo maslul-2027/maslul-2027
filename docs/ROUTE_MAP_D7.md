@@ -111,7 +111,6 @@ Source of truth: `tests/route_classes.json` (enforced by test D7-ROUTE-MAP: exac
 | `import.start` | A | D7-SWEEP-OPERATIONAL (every commander refused) + v1_pentest |
 | `marches.create` | O | D7-SWEEP-OPERATIONAL (out-of-scope refused; in-scope commander sees only visible soldiers) + v1_pentest |
 | `marches.list` | O | D7-SWEEP-OPERATIONAL (out-of-scope refused; in-scope commander sees only visible soldiers) + v1_pentest |
-| `marches.roll` | O | D7-SWEEP-OPERATIONAL (out-of-scope / foreign-course refused; commander sees only visible soldiers; names only in this operational roll) + tests/marches_scope.js |
 | `marches.summary` | G | D7-SWEEP-GROUP (recursive scan, admin + 4 commanders, 6 argument shapes) |
 | `meetings.auditRepair` | A | D7-SWEEP-OPERATIONAL (every commander refused) + v1_pentest |
 | `meetings.get` | N | D7-SWEEP-GROUP |

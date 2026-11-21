@@ -1,8 +1,8 @@
 {
- "when": "2026-11-21T12:43:46.980Z",
+ "when": "2026-11-21T18:06:38.495Z",
  "node": "v22.23.4",
  "flags": {
-  "ui": false,
+  "ui": true,
   "strict": true
  },
  "env_ok": true,
@@ -43,7 +43,7 @@
    "s": "backup_restore",
    "types": null,
    "state": "PASS",
-   "pass": 23,
+   "pass": 24,
    "fail": 0,
    "why": ""
   },
@@ -51,7 +51,7 @@
    "s": "full_backup",
    "types": null,
    "state": "PASS",
-   "pass": 13,
+   "pass": 15,
    "fail": 0,
    "why": ""
   },
@@ -59,7 +59,27 @@
    "s": "documents_server",
    "types": null,
    "state": "PASS",
-   "pass": 14,
+   "pass": 15,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "marches_scope",
+   "types": {
+    "unit": 0,
+    "integration": 0,
+    "hardening": 7
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "marches_server",
+   "types": null,
+   "state": "PASS",
+   "pass": 7,
    "fail": 0,
    "why": ""
   },
@@ -590,10 +610,10 @@
   {
    "s": "demo_data_audit",
    "types": null,
-   "state": "FAIL",
-   "pass": 25,
-   "fail": 1,
-   "why": "failed tests"
+   "state": "PASS",
+   "pass": 26,
+   "fail": 0,
+   "why": ""
   },
   {
    "s": "r5_privacy_subcohort",
@@ -629,119 +649,133 @@
   },
   {
    "s": "ui_staging_smoke",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 17,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_smoke",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_v1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 9,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_form",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 5,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_fitness",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 20,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_b7b8",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 26,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_r3",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 10,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 21,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd2",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 11,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd6_meetings",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 20,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_pd6_qa",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 18,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_uxqa",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 43,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_ux_sprint1",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 8,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   },
   {
    "s": "ui_synthetic_app",
-   "state": "SKIP",
-   "pass": 0,
+   "types": null,
+   "state": "PASS",
+   "pass": 171,
    "fail": 0,
-   "why": "UI suites not requested (run with --ui; needs Playwright + Chromium)"
+   "why": ""
   }
  ],
  "totals": {
   "breakdown": {
    "node_unit": 95,
    "node_integration": 294,
-   "node_hardening": 235,
-   "browser": 0,
-   "unclassified": 136
+   "node_hardening": 242,
+   "browser": 405,
+   "unclassified": 148
   },
-  "node_total": 760,
-  "suites": 71,
-  "PASS": 56,
-  "FAIL": 1,
-  "SKIP": 14,
-  "tests_run": 761,
-  "passed": 760,
-  "failed": 1
+  "node_total": 779,
+  "suites": 73,
+  "PASS": 73,
+  "FAIL": 0,
+  "SKIP": 0,
+  "tests_run": 1184,
+  "passed": 1184,
+  "failed": 0
  },
- "result": "FAILED"
+ "result": "COMPLETE_PASS"
 }

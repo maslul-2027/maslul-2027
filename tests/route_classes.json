@@ -102,7 +102,6 @@
  "import.start": "A",
  "marches.create": "O",
  "marches.list": "O",
- "marches.roll": "O",
  "marches.summary": "G",
  "meetings.auditRepair": "A",
  "meetings.get": "N",

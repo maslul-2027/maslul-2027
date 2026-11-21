@@ -210,18 +210,6 @@ const Marches = {
     }).sort(function (a, b) { return a.march_date < b.march_date ? 1 : -1; });
   },
   overlaps_(ctx, courseId, m) { return Mods.scopeSoldiers_(ctx, courseId, m.scope_type, m.scope_id).length > 0; },
-  /** Operational roll of ONE march: a row per soldier the caller may see (admin: all incl. inactive) — explicit present/absent, never aggregate. Corrections go through correction.request (audited, reviewed). */
-  roll(ctx, courseId, marchId) {
-    Records.guardCourse_(ctx, 'result.read', courseId);
-    const m = Db.get('Marches', Util.str(marchId));
-    if (!m || m.course_id !== courseId || (m.record_status !== RECORD_STATUS.ACTIVE && ctx.role !== ROLES.ADMIN)) throw new AppError('NOT_FOUND', 'המסע לא נמצא.');
-    if (ctx.role !== ROLES.ADMIN && !Mods.scopeAllowed_(ctx, courseId, m.scope_type, m.scope_id) && !Marches.overlaps_(ctx, courseId, m)) throw new AppError('NOT_FOUND', 'המסע לא נמצא.');
-    const sol = Mods.soldierMap_(courseId), vis = Soldiers.visibleFn_(ctx, courseId);
-    const rows = Db.where('MarchAttendance', function (r) { return r.march_id === m.id && (ctx.role === ROLES.ADMIN || (r.record_status === RECORD_STATUS.ACTIVE && !!sol[r.soldier_id] && vis(sol[r.soldier_id]))); })
-      .map(function (r) { const s = sol[r.soldier_id]; return { id: r.id, soldier_id: r.soldier_id, soldier_name: s ? s.full_name : '', present: Util.isTrue(r.present), notes: r.notes || '', own: String(r.created_by).toLowerCase() === ctx.email }; })
-      .sort(function (a, b) { return String(a.soldier_name).localeCompare(String(b.soldier_name), 'he'); });
-    return rows;
-  },
   /** Soldier totals from Snapshot rows: km only for marches he attended; participation count; absences. Sums, not averages. */
   aggregate_(rows) {
     let no = 0, st = 0, n = 0, absent = 0;
