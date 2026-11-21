@@ -3,7 +3,10 @@ const OUT=process.env.E2E_CALLS_OUT;const http=require('http'),fs=require('fs'),
 const dir=path.resolve(process.argv[2]||'preview');const M={'.html':'text/html;charset=utf-8','.js':'text/javascript','.json':'application/json','.svg':'image/svg+xml','.webmanifest':'application/manifest+json'};
 const srv=http.createServer((q,r)=>{const u=q.url.split('?')[0],f=path.join(dir,u==='/'?'index.html':u);if(!fs.existsSync(f)){r.statusCode=404;return r.end('')}r.setHeader('content-type',M[path.extname(f)]||'application/octet-stream');r.end(fs.readFileSync(f))});
 (async()=>{await new Promise(r=>srv.listen(0,r));const base='http://127.0.0.1:'+srv.address().port,b=await chromium.launch(),errs=[];let n=0;const ok=m=>console.log('ok',++n,m);
-for(const w of[320,360,390,414]){const c=await b.newContext({viewport:{width:w,height:780}});const p=await c.newPage();p.on('pageerror',e=>errs.push(e.message));await p.goto(base+'/');await p.waitForFunction(()=>!/…/.test(document.getElementById('k3')?.textContent||'…'));
+for(const w of[320,360,390,414]){const c=await b.newContext({viewport:{width:w,height:780}});const p=await c.newPage();p.on('pageerror',e=>errs.push(e.message));await p.goto(base+'/');await p.waitForFunction(()=>!/…/.test(document.getElementById('k3')?.textContent||'…'),null,{timeout:12000}).catch(async e=>{
+   const diag=await p.evaluate(()=>({home:document.getElementById('view')?.textContent.slice(0,450),k1:document.getElementById('k1')?.textContent,k3:document.getElementById('k3')?.textContent,client:typeof window.appClient,ready:!!window.__app,hash:location.hash}));
+   throw new Error('Home load failed at '+w+': '+JSON.stringify(diag)+'; pageerrors='+errs.join(' | ')+'; '+e.message.split('\n')[0]);
+ });
  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal overflow @'+w);
  for(const g of['soldiers','tasks','more','home']){await p.click('[data-go='+g+']');await p.waitForTimeout(250);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,g+' overflow @'+w);}
  const small=await p.evaluate(()=>[...document.querySelectorAll('button,a,input,select')].filter(e=>e.offsetParent&&(e.getBoundingClientRect().height<44)).map(e=>e.textContent.slice(0,20)));assert.deepEqual(small,[],'targets >=44px @'+w);
