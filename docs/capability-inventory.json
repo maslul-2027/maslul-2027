@@ -118,6 +118,7 @@
     "marches": [
       "marches.create",
       "marches.list",
+      "marches.roll",
       "marches.summary"
     ],
     "readiness": [

@@ -87,6 +87,7 @@ const API_ = {
   'attendance.summary': function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Attendance.summary(ctx, a.courseId, a.soldierId, a.opts || {}); }); },
   'marches.create': function (ctx, a) { return Marches.create(ctx, a.courseId, a.data); },
   'marches.list': function (ctx, a) { return Marches.list(ctx, a.courseId, a.opts || {}); },
+  'marches.roll': function (ctx, a) { return Marches.roll(ctx, a.courseId, a.marchId); },
   'marches.summary': function (ctx, a) { return Analytics.scopeGate_(ctx, a, function () { return Marches.summary(ctx, a.courseId, a.soldierId, a.opts || {}); }); },
   'readiness.assess': function (ctx, a) { return Readiness.assess(ctx, a.courseId, a.data); },
   'readiness.list': function (ctx, a) { return Readiness.list(ctx, a.courseId, a.opts || {}); },

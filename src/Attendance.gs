@@ -172,13 +172,35 @@ const Marches = {
       return { march: m, duplicate: false, records: n };
     });
   },
+  /**
+   * #79: same visibility model as Attendance.eventsList — a commander sees only marches whose scope he may act on or that contain at least one soldier he can see;
+   * participant / absent counts are computed ONLY over MarchAttendance rows of soldiers the caller may see (admin: all); the present / absent split of one march is
+   * shown to a scoped commander only if each side is 0 or >= MIN_GROUP (otherwise null + counts_suppressed; admin: exact). Names stay in the explicit operational roll (`marches.roll`).
+   */
   list(ctx, courseId, opts) {
     opts = opts || {}; Records.guardCourse_(ctx, 'result.read', courseId);
-    const att = Object.create(null); Db.where('MarchAttendance', function (r) { return r.course_id === courseId && r.record_status === RECORD_STATUS.ACTIVE; }).forEach(function (r) { (att[r.march_id] = att[r.march_id] || []).push(r); });
-    return Db.where('Marches', function (m) { return m.course_id === courseId && (opts.includeCancelled === true && ctx.role === ROLES.ADMIN ? true : m.record_status === RECORD_STATUS.ACTIVE); })
-      .map(function (m) { const rs = att[m.id] || []; return { id: m.id, march_date: Util.cellToIsoDate(m.march_date), location: m.location, km_no_stretcher: Number(m.km_no_stretcher), km_stretcher: Number(m.km_stretcher), total_km: Number(m.total_km),
-        scope_type: m.scope_type, participants: rs.filter(function (r) { return Util.isTrue(r.present); }).length, total: rs.length, record_status: ctx.role === ROLES.ADMIN ? m.record_status : undefined }; })
+    const sol = Mods.soldierMap_(courseId), vis = Soldiers.visibleFn_(ctx, courseId), isAdmin = ctx.role === ROLES.ADMIN;
+    const att = Object.create(null); Db.where('MarchAttendance', function (r) { return r.course_id === courseId && r.record_status === RECORD_STATUS.ACTIVE; }).forEach(function (r) {
+      if (!isAdmin && !(sol[r.soldier_id] && vis(sol[r.soldier_id]))) return; (att[r.march_id] = att[r.march_id] || []).push(r); });
+    return Db.where('Marches', function (m) { return m.course_id === courseId && (opts.includeCancelled === true && isAdmin ? true : m.record_status === RECORD_STATUS.ACTIVE); })
+      .filter(function (m) { return isAdmin || Mods.scopeAllowed_(ctx, courseId, m.scope_type, m.scope_id) || Marches.overlaps_(ctx, courseId, m); })
+      .map(function (m) { const rs = att[m.id] || [], present = rs.filter(function (r) { return Util.isTrue(r.present); }).length, okP = isAdmin || Analytics.splitOk_(present, rs.length - present);   // admin = full operational view; D2 suppression protects scoped commanders
+        return { id: m.id, march_date: Util.cellToIsoDate(m.march_date), location: m.location, km_no_stretcher: Number(m.km_no_stretcher), km_stretcher: Number(m.km_stretcher), total_km: Number(m.total_km),
+          scope_type: m.scope_type, scope_id: m.scope_id, participants: okP ? present : null, absent: okP ? rs.length - present : null, total: rs.length, counts_suppressed: okP ? undefined : true, record_status: isAdmin ? m.record_status : undefined }; })
       .sort(function (a, b) { return a.march_date < b.march_date ? 1 : -1; });
+  },
+  overlaps_(ctx, courseId, m) { return Mods.scopeSoldiers_(ctx, courseId, m.scope_type, m.scope_id).length > 0; },
+  /** Operational roll of ONE march: a row per soldier the caller may see (admin: all incl. inactive) — explicit present/absent, never aggregate. Corrections go through correction.request (audited, reviewed). */
+  roll(ctx, courseId, marchId) {
+    Records.guardCourse_(ctx, 'result.read', courseId);
+    const m = Db.get('Marches', Util.str(marchId));
+    if (!m || m.course_id !== courseId || (m.record_status !== RECORD_STATUS.ACTIVE && ctx.role !== ROLES.ADMIN)) throw new AppError('NOT_FOUND', 'המסע לא נמצא.');
+    if (ctx.role !== ROLES.ADMIN && !Mods.scopeAllowed_(ctx, courseId, m.scope_type, m.scope_id) && !Marches.overlaps_(ctx, courseId, m)) throw new AppError('NOT_FOUND', 'המסע לא נמצא.');
+    const sol = Mods.soldierMap_(courseId), vis = Soldiers.visibleFn_(ctx, courseId);
+    const rows = Db.where('MarchAttendance', function (r) { return r.march_id === m.id && (ctx.role === ROLES.ADMIN || (r.record_status === RECORD_STATUS.ACTIVE && !!sol[r.soldier_id] && vis(sol[r.soldier_id]))); })
+      .map(function (r) { const s = sol[r.soldier_id]; return { id: r.id, soldier_id: r.soldier_id, soldier_name: s ? s.full_name : '', present: Util.isTrue(r.present), notes: r.notes || '', own: String(r.created_by).toLowerCase() === ctx.email }; })
+      .sort(function (a, b) { return String(a.soldier_name).localeCompare(String(b.soldier_name), 'he'); });
+    return rows;
   },
   /** Soldier totals from Snapshot rows: km only for marches he attended; participation count; absences. Sums, not averages. */
   aggregate_(rows) {
