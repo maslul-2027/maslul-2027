@@ -63,7 +63,10 @@ let n = 0; const ok = m => console.log('ok', ++n, m), errs = [];
   ok('viewer: reads everything; create CTA and deep form hidden; direct POST refused with no changes');
   // 7b. Issue #65: tasks quick add over the real server. Viewer: no +, no writes. Commander: + → save → listed after server confirmation; survives the restart below.
   await V.goto(ORIGIN + '/#/tasks'); await V.waitForFunction(() => /משימות|אין משימות|פתוחות/.test(document.getElementById('view').textContent)); assert.equal(await V.locator('#taskFab').count(), 0, 'viewer has no quick-add +');
-  await V.goto(ORIGIN + '/#/d/meetings/0'); await V.waitForSelector('#mtSubject'); await V.fill('#mtSubject', 'צופה מנסה'); await V.fill('#mtT0', 'לא אמורה להישמר'); await V.click('#mtSave'); await V.waitForSelector('#view .msg.err, #view [role=alert]:not(:empty)'); assert.ok(/צפייה|הרשאה|אין/.test(await V.textContent('#view')), 'viewer save refused with a message');
+  await V.goto(ORIGIN + '/#/d/meetings/0'); await V.waitForSelector('#view'); assert.equal(await V.locator('#mtSubject').count(), 0, 'viewer deep URL cannot open meeting editor');
+  const deniedMeeting = await V.evaluate(async () => window.appClient.api('meetings.save', { courseId: window.__app.state.course.id, data: { request_id: 'viewer-denied-meeting', subject: 'צופה מנסה', meeting_at: '2026-11-21T15:00', tasks: [] } }));
+  assert.equal(deniedMeeting.ok, false, 'viewer meeting write denied even by direct API');
+  assert.ok(['FORBIDDEN','POLICY_BLOCKED','UNAUTHORIZED','NO_PERMISSION'].includes(deniedMeeting.code), JSON.stringify(deniedMeeting));
   await C.goto(ORIGIN + '/#/tasks'); await C.waitForSelector('#taskFab'); await C.click('#taskFab'); await C.waitForSelector('#qtTitle'); await C.waitForFunction(() => document.getElementById('qtWho').options.length > 0); await C.fill('#qtTitle', 'משימה מהירה בשרת'); await C.click('#qtSave'); await C.waitForFunction(() => !document.querySelector('dialog'), null, { timeout: 15000 });
   await C.waitForFunction(() => document.getElementById('view').textContent.includes('משימה מהירה בשרת'), null, { timeout: 15000 }); await shot(C, 'commander_tasks_quickadd_390');
   ok('tasks quick add: viewer has no + and cannot save; commander adds a task through the + and it is listed after the server confirmed it');
