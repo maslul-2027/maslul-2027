@@ -219,10 +219,8 @@
         fields.forEach(function (fd) { if (wraps[fd.n].hidden) return; var v = val(fd); if (fd.req && (v === '' || v === null || v === undefined || (fd.t === 'check' && v === false))) { fieldErr(wraps[fd.n], 'שדה חובה.'); bad = true; return; } if (fd.t === 'number' && v !== '' && !isFinite(Number(v))) { fieldErr(wraps[fd.n], 'ערך מספרי בלבד.'); bad = true; return; } if (v !== '' && !(Array.isArray(v) && !v.length)) x[fd.n] = fd.t === 'number' ? Number(v) : v; else if (fd.t === 'multisoldier') x[fd.n] = []; });
         if (bad) return; busy(save, true, 'שמירה');
         var data; try { data = spec.build ? spec.build(x, req) : Object.assign({ request_id: req }, x); } catch (er) { busy(save, false, 'שמירה'); msg.textContent = er.message; msg.className = 'msg err'; return; } var args = spec.rawKey ? Object.fromEntries([[spec.rawKey, data]]) : (spec.raw ? data : { courseId: S.course.id, data: data });
-        api(spec.m, args).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast((r.data && r.data.duplicate) ? 'הרשומה כבר נשמרה' : 'נשמר');
-          var created = r.data && (id === 'marches' ? r.data.march : id === 'attendance' && idx === 0 ? r.data.event : null);
-          go('d/' + id);
-          if (created && created.id) setTimeout(function () { participantEditor(id, created, function () { Domain(id); }); }, 100); }); });
+        api(spec.m, args).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast((r.data && r.data.duplicate) ? 'הרשומה כבר נשמרה' : id === 'marches' || id === 'attendance' && idx === 0 ? 'נשמר. לחצו על האירוע כדי לערוך משתתפים.' : 'נשמר');
+          go('d/' + id); }); });
       holder.replaceWith(f);
     });
   }
