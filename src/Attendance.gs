@@ -172,13 +172,42 @@ const Marches = {
       return { march: m, duplicate: false, records: n };
     });
   },
+  /** March records and optional scoped operational roster. A foreign team may not see a march or its raw counts.
+   *  `includeRoster` requires a specific marchId and returns ONLY visible trainees; never used by group analytics.
+   */
   list(ctx, courseId, opts) {
     opts = opts || {}; Records.guardCourse_(ctx, 'result.read', courseId);
-    const att = Object.create(null); Db.where('MarchAttendance', function (r) { return r.course_id === courseId && r.record_status === RECORD_STATUS.ACTIVE; }).forEach(function (r) { (att[r.march_id] = att[r.march_id] || []).push(r); });
-    return Db.where('Marches', function (m) { return m.course_id === courseId && (opts.includeCancelled === true && ctx.role === ROLES.ADMIN ? true : m.record_status === RECORD_STATUS.ACTIVE); })
-      .map(function (m) { const rs = att[m.id] || []; return { id: m.id, march_date: Util.cellToIsoDate(m.march_date), location: m.location, km_no_stretcher: Number(m.km_no_stretcher), km_stretcher: Number(m.km_stretcher), total_km: Number(m.total_km),
-        scope_type: m.scope_type, participants: rs.filter(function (r) { return Util.isTrue(r.present); }).length, total: rs.length, record_status: ctx.role === ROLES.ADMIN ? m.record_status : undefined }; })
-      .sort(function (a, b) { return a.march_date < b.march_date ? 1 : -1; });
+    const admin = ctx.role === ROLES.ADMIN, bySoldier = Mods.soldierMap_(courseId), visible = Soldiers.visibleFn_(ctx, courseId);
+    const attendance = Object.create(null);
+    Db.where('MarchAttendance', function (r) { return r.course_id === courseId && r.record_status === RECORD_STATUS.ACTIVE; })
+      .forEach(function (r) {
+        if (!admin && !(bySoldier[r.soldier_id] && visible(bySoldier[r.soldier_id]))) return;
+        (attendance[r.march_id] = attendance[r.march_id] || []).push(r);
+      });
+    return Db.where('Marches', function (m) {
+      return m.course_id === courseId && (opts.includeCancelled === true && admin ? true : m.record_status === RECORD_STATUS.ACTIVE)
+        && (!opts.marchId || String(m.id) === String(opts.marchId));
+    }).filter(function (m) {
+      return admin || Mods.scopeSoldiers_(ctx, courseId, m.scope_type, m.scope_id).length > 0;
+    }).map(function (m) {
+      const rs = attendance[m.id] || [], present = rs.filter(function (r) { return Util.isTrue(r.present); }).length;
+      const splitOk = Analytics.splitOk_(present, rs.length - present);
+      const row = { id: m.id, march_date: Util.cellToIsoDate(m.march_date), location: m.location,
+        km_no_stretcher: Number(m.km_no_stretcher), km_stretcher: Number(m.km_stretcher), total_km: Number(m.total_km),
+        scope_type: m.scope_type, scope_id: m.scope_id, participants: splitOk ? present : null,
+        absent: splitOk ? rs.length - present : null, total: rs.length, counts_suppressed: !splitOk,
+        record_status: admin ? m.record_status : undefined };
+      // Named attendance is an explicitly requested operational roster, not an analytics aggregate.
+      if (opts.includeRoster === true && opts.marchId && String(opts.marchId) === String(m.id)) {
+        row.roster = rs.map(function (r) {
+          const soldier = bySoldier[r.soldier_id];
+          return { id: r.id, soldier_id: r.soldier_id, soldier_name: soldier ? soldier.full_name : '',
+            present: Util.isTrue(r.present), version: Number(r.version || 1),
+            own: String(r.created_by || '').toLowerCase() === String(ctx.email || '').toLowerCase() };
+        }).sort(function (a, b) { return String(a.soldier_name).localeCompare(String(b.soldier_name), 'he'); });
+      }
+      return row;
+    }).sort(function (a, b) { return a.march_date < b.march_date ? 1 : -1; });
   },
   /** Soldier totals from Snapshot rows: km only for marches he attended; participation count; absences. Sums, not averages. */
   aggregate_(rows) {

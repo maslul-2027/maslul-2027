@@ -421,9 +421,56 @@ dialog.sheet{max-height:92vh;overflow:auto}
   var YES = function (v) { return v === true || v === 'true' || v === 1 ? 'כן' : v === false || v === 'false' || v === 0 ? 'לא' : (v === null || v === undefined ? '—' : v); };
   /* the scope a user may record for: whole course for admin/course-wide commanders, otherwise their own team (or department) — the server re-checks this */
   function myScope() { var m = S.mine; if (isAdmin() || !m || m.course_wide) return { t: 'course', id: S.course.id }; if ((m.team_ids || []).length) return { t: 'team', id: m.team_ids[0] }; if ((m.department_ids || []).length) return { t: 'department', id: m.department_ids[0] }; return { t: 'course', id: S.course.id }; }
+  /* Operational attendance editor: a saved event/march opens a REAL scoped roster.
+     Edit one participant per confirmed server transaction (admin); commanders submit audited
+     correction requests only for records they originally entered. No fake local toggle. */
+  function participantEditor(kind, item, reload) {
+    var march = kind === 'marches', title = march ? item.location : (item.type_name || 'אירוע נוכחות');
+    var area = h('div', { id: 'participantRoster', 'aria-live': 'polite' }, [skeleton(2)]);
+    var detail = march ? h('button', { type: 'button', class: 'secondary', text: 'עריכת פרטי המסע', onclick: function () { dlg.close(); setTimeout(function () { recordSheet('Marches', item, reload); }, 140); } }) : null;
+    var dlg = dialog('משתתפים — ' + title, march ? [detail, area] : [area], function () { return true; }, 'סגירה');
+    function loadRoster() {
+      area.replaceChildren(skeleton(2));
+      var method = march ? 'marches.list' : 'attendance.roll';
+      var args = march ? { courseId: S.course.id, opts: { marchId: item.id, includeRoster: true } } : { courseId: S.course.id, eventId: item.id };
+      api(method, args).then(function (r) {
+        if (!dlg.isConnected) return;
+        if (!r.ok) { area.replaceChildren(errBox(r, loadRoster)); return; }
+        var raw = march ? ((r.data || [])[0] || {}).roster : r.data;
+        if (!Array.isArray(raw)) { area.replaceChildren(h('p', { class: 'msg err', role: 'alert', text: 'לא ניתן לטעון את רשימת המשתתפים.' })); return; }
+        var present = raw.filter(function (x) { return x.present; }).length;
+        area.replaceChildren(h('p', { class: 'muted', role: 'status', text: 'נוכחים ' + present + ' · חסרים ' + (raw.length - present) + ' · מתוך ' + raw.length + ' חניכים בתחום ההרשאה שלך' }));
+        if (!raw.length) { area.append(emptyBox('אין חניכים בתחום ההרשאה לאירוע הזה.')); return; }
+        raw.forEach(function (r) {
+          var editable = isAdmin() || (C.mode !== 'server' || C.role === 'commander') && r.own;
+          var btn = editable ? h('button', { type: 'button', class: 'secondary', text: isAdmin() ? 'שינוי נוכחות' : 'בקשת תיקון', onclick: function () {
+            var sel = h('select', { id: 'rosterPresent' }, [h('option', { value: 'true', text: 'נוכח' }), h('option', { value: 'false', text: 'חסר' })]);
+            sel.value = r.present ? 'true' : 'false';
+            var reason = h('input', { id: 'rosterReason', placeholder: 'סיבת השינוי', maxlength: '300' });
+            dialog('נוכחות — ' + r.soldier_name, [h('p', { text: 'הסטטוס הקיים: ' + (r.present ? 'נוכח' : 'חסר') }), field('סטטוס מתוקן', sel), field('סיבה לתיקון *', reason)], function (msg) {
+              if (!reason.value.trim()) { msg.textContent = 'חובה לציין סיבה לתיקון.'; msg.className = 'msg err'; return false; }
+              var wanted = sel.value === 'true'; if (wanted === r.present) { msg.textContent = 'לא בוצע שינוי.'; msg.className = 'msg err'; return false; }
+              var tab = march ? 'MarchAttendance' : 'AttendanceRecords', args = isAdmin()
+                ? { table: tab, id: r.id, patch: { present: wanted }, reason: reason.value.trim() }
+                : { table: tab, id: r.id, changes: { present: wanted }, reason: reason.value.trim() };
+              return api(isAdmin() ? 'record.edit' : 'correction.request', args).then(function (res) {
+                if (!res.ok) { errMsg(msg, res); return false; }
+                toast(isAdmin() ? 'הנוכחות עודכנה ונשמרה' : 'בקשת התיקון נשלחה לאישור');
+                loadRoster(); if (reload) reload(); return true;
+              });
+            }, isAdmin() ? 'שמירת שינוי' : 'שליחת בקשה');
+          } }) : null;
+          area.append(h('div', { class: 'card', style: 'display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap' }, [
+            h('div', {}, [h('strong', { text: r.soldier_name }), h('p', { class: 'muted', text: r.present ? 'נוכח' : 'חסר' })]), btn
+          ]));
+        });
+      });
+    }
+    loadRoster(); return dlg;
+  }
   var CID = function () { return { courseId: S.course.id }; };
   var D = {
-    attendance: { title: 'נוכחות ואירועים', lists: [{ h: 'אירועי נוכחות', m: 'attendance.events', a: CID, row: function (e) { return [(e.type_name || 'אירוע') + ' · ' + fmtD(e.event_date), 'נוכחים ' + (e.present === null || e.present === undefined ? 'מדוכא' : e.present) + ' · חסרים ' + (e.absent === null || e.absent === undefined ? 'מדוכא' : e.absent) + ' · סה״כ ' + (e.total || 0)]; } }],
+    attendance: { title: 'נוכחות ואירועים', lists: [{ h: 'אירועי נוכחות', m: 'attendance.events', a: CID, row: function (e) { return [(e.type_name || 'אירוע') + ' · ' + fmtD(e.event_date), 'נוכחים ' + (e.present === null || e.present === undefined ? 'מדוכא' : e.present) + ' · חסרים ' + (e.absent === null || e.absent === undefined ? 'מדוכא' : e.absent) + ' · סה״כ ' + (e.total || 0) + ' · לחצו לעריכת משתתפים']; }, click: function (e, reload) { participantEditor('attendance', e, reload); } }],
       forms: [{ t: 'אירוע נוכחות חדש', m: 'attendance.create', pre: ['acttypes.list'], fields: function (P) { return [{ n: 'event_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'activity_type_id', l: 'סוג פעילות', t: 'select', req: 1, o: (P['acttypes.list'] || []).filter(function (t) { return t.active; }).map(function (t) { return [t.id, t.name]; }) }, { n: 'absent', l: 'חסרים', t: 'multisoldier' }]; }, build: function (x, requestId) { return { request_id: requestId, event_date: x.event_date, activity_type_id: x.activity_type_id, scope_type: myScope().t, scope_id: myScope().id, absent: (x.absent || []).map(function (id) { return { soldier_id: id }; }) }; } },
         { t: 'סוג פעילות חדש', admin: 1, m: 'acttypes.create', fields: function () { return [{ n: 'name', l: 'שם', req: 1 }]; }, build: function (x) { return { courseId: S.course.id, name: x.name }; }, raw: 1 }] },
     fitness: { title: 'כשירות גופנית', lists: [{ h: 'תוצאות', m: 'fitness.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.test_date) + (r.type_name ? ' · ' + r.type_name : ''), fitScoreText(r)]; } }],
@@ -434,7 +481,7 @@ dialog.sheet{max-height:92vh;overflow:auto}
       forms: [{ t: 'הזנת תוצאת ניווט', m: 'nav.create', pre: ['navtypes.list'], fields: function (P) { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'navigation_type_id', l: 'סוג ניווט', t: 'select', req: 1, o: (P['navtypes.list'] || []).filter(function (t) { return t.active; }).map(function (t) { return [t.id, t.name]; }) }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'distance_km', l: 'מרחק משוער (ק״מ)', t: 'number', req: 1, step: '0.5' }, { n: 'plan_score', l: 'ציון תכנון (0–5)', t: 'number', req: 1, step: '0.5' }, { n: 'debrief_score', l: 'ציון תחקיר (0–5)', t: 'number', req: 1, step: '0.5' }, { n: 'points_completed', l: 'נקודות שנדקרו', t: 'number', req: 1 }, { n: 'points_total', l: 'סך נקודות', t: 'number', req: 1 }, { n: 'notes', l: 'הערות' }]; } }, { t: 'סוג ניווט חדש', admin: 1, m: 'navtypes.create', fields: function () { return [{ n: 'name', l: 'שם', req: 1 }]; }, build: function (x) { return { courseId: S.course.id, name: x.name }; }, raw: 1 }] },
     mk: { title: 'קליעה', lists: [{ h: 'תוצאות', m: 'mk.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.test_date), { regular: 'רגילה', ylm: 'יל״מ', both: 'רגילה + יל״מ' }[r.test_kind] + ' · בוחן ' + (r.examiner_score === undefined || r.examiner_score === null ? '—' : r.examiner_score) + ' · יל״מ ' + (r.ylm_score === undefined || r.ylm_score === null ? '—' : r.ylm_score)]; } }],
       forms: [{ t: 'הזנת קליעה (רגילה / יל״מ — נפרדים)', m: 'mk.create', fields: function () { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'weapon_type', l: 'נשק', req: 1 }, { n: 'distance_m', l: 'מרחק (מ׳)', t: 'number', req: 1 }, { n: 'examiner_score', l: 'ציון בוחן (רגילה)', t: 'number' }, { n: 'weapon_zeroed', l: 'נשק מאופס', t: 'check' }, { n: 'ylm_score', l: 'ציון יל״מ', t: 'number' }, { n: 'notes', l: 'הערות' }]; } }] },
-    marches: { title: 'מסעות', lists: [{ h: 'מסעות', m: 'marches.list', a: CID, row: function (r) { return [(r.location || 'מסע') + ' · ' + fmtD(r.march_date), 'ק״מ ללא אלונקה ' + (r.km_no_stretcher || 0) + ' · עם אלונקה ' + (r.km_stretcher || 0)]; } }],
+    marches: { title: 'מסעות', lists: [{ h: 'מסעות', m: 'marches.list', a: CID, row: function (r) { return [(r.location || 'מסע') + ' · ' + fmtD(r.march_date), 'ק״מ ללא אלונקה ' + (r.km_no_stretcher || 0) + ' · עם אלונקה ' + (r.km_stretcher || 0) + ' · לחצו לעריכת משתתפים']; }, click: function (r, reload) { participantEditor('marches', r, reload); } }],
       forms: [{ t: 'מסע חדש', m: 'marches.create', fields: function () { return [{ n: 'march_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'location', l: 'מקום', req: 1 }, { n: 'km_no_stretcher', l: 'ק״מ ללא אלונקה', t: 'number' }, { n: 'km_stretcher', l: 'ק״מ עם אלונקה', t: 'number' }, { n: 'scope', l: 'תחולה (ברירת מחדל: כל הקורס)', t: 'select', o: scopeOpts() }, { n: 'absent', l: 'מי חסר במסע?', t: 'multisoldier' }]; }, build: function (x, requestId) { var p = String(x.scope || ('course:' + S.course.id)).split(':'); var d = Object.assign({ request_id: requestId, km_no_stretcher: 0, km_stretcher: 0 }, x); delete d.scope; d.scope_type = p[0]; d.scope_id = p[1]; d.absent = (x.absent || []).map(function (id) { return { soldier_id: id }; }); return d; } }] },
     readiness: { title: 'כשירות מבצעית', lists: [{ h: 'סטטוסים', m: 'readiness.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)), (r.status || '') + (r.start_date ? ' · מ-' + fmtD(r.start_date) : '')]; } }],
       forms: [{ t: 'עדכון כשירות', m: 'readiness.assess', fields: function () { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'status', l: 'סטטוס', t: 'select', req: 1, o: [['fit', 'כשיר'], ['limited', 'מוגבל'], ['unfit', 'לא כשיר']] }, { n: 'restrictions', l: 'מגבלות פעילות (ללא אבחנה)' }, { n: 'start_date', l: 'מתאריך', t: 'date', req: 1 }, { n: 'next_review_date', l: 'מועד בדיקה הבא', t: 'date' }]; } }] },
@@ -587,7 +634,8 @@ dialog.sheet{max-height:92vh;overflow:auto}
         fields.forEach(function (fd) { if (wraps[fd.n].hidden) return; var v = val(fd); if (fd.req && (v === '' || v === null || v === undefined || (fd.t === 'check' && v === false))) { fieldErr(wraps[fd.n], 'שדה חובה.'); bad = true; return; } if (fd.t === 'number' && v !== '' && !isFinite(Number(v))) { fieldErr(wraps[fd.n], 'ערך מספרי בלבד.'); bad = true; return; } if (v !== '' && !(Array.isArray(v) && !v.length)) x[fd.n] = fd.t === 'number' ? Number(v) : v; else if (fd.t === 'multisoldier') x[fd.n] = []; });
         if (bad) return; busy(save, true, 'שמירה');
         var data; try { data = spec.build ? spec.build(x, req) : Object.assign({ request_id: req }, x); } catch (er) { busy(save, false, 'שמירה'); msg.textContent = er.message; msg.className = 'msg err'; return; } var args = spec.rawKey ? Object.fromEntries([[spec.rawKey, data]]) : (spec.raw ? data : { courseId: S.course.id, data: data });
-        api(spec.m, args).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast((r.data && r.data.duplicate) ? 'הרשומה כבר נשמרה' : 'נשמר'); go('d/' + id); }); });
+        api(spec.m, args).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast((r.data && r.data.duplicate) ? 'הרשומה כבר נשמרה' : id === 'marches' || id === 'attendance' && idx === 0 ? 'נשמר. לחצו על האירוע כדי לערוך משתתפים.' : 'נשמר');
+          go('d/' + id); }); });
       holder.replaceWith(f);
     });
   }
@@ -642,7 +690,7 @@ dialog.sheet{max-height:92vh;overflow:auto}
     var d = dialog('פעולות על רשומה', [body], function (msg) { if (!fsel.value) { msg.textContent = 'בחרו שדה לתיקון, או סגרו.'; msg.className = 'msg err'; return false; } if (!rs.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } var v = typeof row[fsel.value] === 'number' ? Number(nv.value) : nv.value; var ch = {}; ch[fsel.value] = v; var adm = isAdmin(); return api(adm ? 'record.edit' : 'correction.request', adm ? { table: table, id: row.id, patch: ch, reason: rs.value.trim() } : { table: table, id: row.id, changes: ch, reason: rs.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast(adm ? 'הרשומה עודכנה' : 'בקשת התיקון נשלחה לאישור מנהל'); reload(); }); }, isAdmin() ? 'שמירת עריכה' : 'שליחת בקשת תיקון');
     if (isAdmin()) { var cb = h('button', { class: 'danger', type: 'button', text: row.record_status === 'cancelled' ? 'שחזור רשומה' : 'ביטול רשומה', onclick: function () { var why = row.record_status === 'cancelled' ? null : window.prompt ? null : null; var rr = h('input', { id: 'rcC' }); d.close(); dialog(row.record_status === 'cancelled' ? 'שחזור רשומה' : 'ביטול רשומה', [field('סיבה' + (row.record_status === 'cancelled' ? '' : ' (חובה)'), rr)], function (msg) { if (row.record_status !== 'cancelled' && !rr.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } return api(row.record_status === 'cancelled' ? 'record.restore' : 'record.cancel', { table: table, id: row.id, reason: rr.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('בוצע'); reload(); }); }, 'אישור', true); } }); body.append(h('div', { class: 'btns' }, [cb])); }
   }
-  ['fitness', 'nav', 'mk', 'exams', 'marches', 'readiness', 'events'].forEach(function (k) { var l = D[k].lists[0]; l.click = function (x, reload) { recordSheet(TBL[k], x, reload); }; });
+  ['fitness', 'nav', 'mk', 'exams', 'readiness', 'events'].forEach(function (k) { var l = D[k].lists[0]; l.click = function (x, reload) { recordSheet(TBL[k], x, reload); }; }); // Marches uses its scoped participant editor (above), not generic recordSheet.
   function sumList(h2, m, fn, a) { return { h: h2, m: m, a: a || CID, view: function (d, box) { fn(d, box); } }; }
   function pct(x) { return x === null || x === undefined ? '—' : x + '%'; }
   D.summaries = { title: 'סיכומי תחומים (קבוצתי)', forms: [], lists: [
