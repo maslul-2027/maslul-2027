@@ -14,6 +14,8 @@
     return e;
   }
   var view = $('#view'), toastT;
+  /* connectivity: a saved-state is only ever shown after a real server answer; while offline say so, plainly */
+  (function () { function sync() { var b = document.getElementById('offBar'); if (navigator.onLine === false) { if (!b) { b = document.createElement('div'); b.id = 'offBar'; b.setAttribute('role', 'status'); b.style.cssText = 'position:sticky;top:0;z-index:30;background:#9d202b;color:#fff;padding:8px 14px;text-align:center;font-size:14px'; b.textContent = 'אין חיבור — שינויים לא יישמרו עד שהחיבור יחזור'; document.body.prepend(b); } } else if (b) b.remove(); } window.addEventListener('offline', sync); window.addEventListener('online', sync); })();
   function toast(msg, kind) { var o = $('.toast'); if (o) o.remove(); var t = h('div', { class: 'toast', role: kind === 'err' ? 'alert' : 'status', text: msg }); if (kind === 'err') t.style.background = '#9d202b'; document.body.append(t); clearTimeout(toastT); toastT = setTimeout(function () { t.remove(); }, 3200); }
   var GW = { pending: ['GET', '/admin/pending', 'pending'], users: ['GET', '/admin/users', 'users'], approve: ['POST', '/admin/approve'], reject: ['POST', '/admin/reject'], revoke: ['POST', '/admin/revoke'], 'set-scope': ['POST', '/admin/set-scope'], 'set-active': ['POST', '/admin/set-active'] };
   function api(m, a, src) { if (m.indexOf('gw:') === 0) { var g = GW[m.slice(3)]; return C.gw(g[0], g[1], a).then(function (r) { if (r && r.ok && g[2]) return { ok: true, data: r[g[2]] || [] }; return r; }); }
@@ -89,6 +91,7 @@
     mount('home', [
       h('div', { class: 'hero' }, [h('small', { text: 'בוקר טוב 👋' }), h('h1', { text: 'הכול ברור. אפשר להתקדם.' }), h('p', { id: 'heroWhy', text: 'מסך בית שמציג את הפעולה החשובה הבאה, בלי לחפש בין עשרות תפריטים.' }), h('button', { class: 'primary', id: 'heroCta', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
       sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp),
+      h('div', { id: 'lastAct', 'aria-live': 'polite' }),
       h('div', { class: 'section' }, [h('h2', { text: 'מה חשוב לדעת היום' }), upd]), today,
       sectionHead('תמונת מצב פיקודית', null), brief, more, ask,
       sectionHead('גישה מהירה', 'הכי שימושי'),
@@ -104,6 +107,13 @@
     var pS = api('soldiers.list', { courseId: cid, opts: { active: true } }).then(function (r) { st.soldiers = r.ok ? r.data.length : null; setK('#k1', r.ok ? String(r.data.length) : '—'); });
     var pF = Promise.all([api('followups.list', { courseId: cid, opts: {} }), api('tasks.indicators', { courseId: cid })]).then(function (r) { st.follow = r[0].ok ? r[0].data.filter(function (x) { return x.status === 'open'; }).length : 0; st.tasks = r[1].ok ? (r[1].data.my_open || 0) : 0; st.overdue = r[1].ok ? (r[1].data.my_overdue || r[1].data.overdue || 0) : 0; setK('#k2', (r[0].ok || r[1].ok) ? String(st.follow + st.tasks) : '—'); });
     var pA = api('alerts.counts', { courseId: cid }).then(function (r) { st.alerts = r.ok ? r.data.open : null; var k = $('#k3'); if (!k) return; k.textContent = r.ok ? String(r.data.open) : '—'; if (r.ok && r.data.red > 0) k.style.color = '#c52d36'; });
+    /* live strip: the newest event / march as saved on the server (counts only inside the caller's scope; suppressed small groups stay hidden) */
+    Promise.all([api('attendance.events', { courseId: cid, opts: {} }), api('marches.list', { courseId: cid })]).then(function (r) {
+      var box = $('#lastAct'); if (!box) return; var line = function (t, x, date) { return x.counts_suppressed ? t + ' · ' + fmtD(date) + ' · מוסתר (קבוצה קטנה)' : t + ' · ' + fmtD(date) + ' · נוכחים ' + (x.present !== undefined ? x.present : x.participants) + ' מתוך ' + x.total; };
+      var ev = r[0].ok && r[0].data[0], mr = r[1].ok && r[1].data[0], rows = [];
+      if (ev) rows.push(line('אירוע נוכחות אחרון: ' + (ev.type_name || ''), ev, ev.event_date)); if (mr) rows.push(line('מסע אחרון: ' + (mr.location || ''), mr, mr.march_date));
+      if (rows.length) box.replaceChildren(h('div', { class: 'card', role: 'group', 'aria-label': 'פעילות אחרונה', style: 'display:block;margin:8px 0' }, rows.map(function (t) { return h('p', { class: 'muted', style: 'margin:3px 0', text: t }); })));
+    });
     var pI = api('analytics.insights', { courseId: cid, f: {} });
     Promise.all([pS, pF, pA, pI]).then(function (all) {
       var ins = all[3], items = [], reason = '', gen = '';
