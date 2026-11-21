@@ -21,7 +21,7 @@
     mk: { title: 'קליעה', lists: [{ h: 'תוצאות', m: 'mk.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.test_date), { regular: 'רגילה', ylm: 'יל״מ', both: 'רגילה + יל״מ' }[r.test_kind] + ' · בוחן ' + (r.examiner_score === undefined || r.examiner_score === null ? '—' : r.examiner_score) + ' · יל״מ ' + (r.ylm_score === undefined || r.ylm_score === null ? '—' : r.ylm_score)]; } }],
       forms: [{ t: 'הזנת קליעה (רגילה / יל״מ — נפרדים)', m: 'mk.create', fields: function () { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'weapon_type', l: 'נשק', req: 1 }, { n: 'distance_m', l: 'מרחק (מ׳)', t: 'number', req: 1 }, { n: 'examiner_score', l: 'ציון בוחן (רגילה)', t: 'number' }, { n: 'weapon_zeroed', l: 'נשק מאופס', t: 'check' }, { n: 'ylm_score', l: 'ציון יל״מ', t: 'number' }, { n: 'notes', l: 'הערות' }]; } }] },
     marches: { title: 'מסעות', lists: [{ h: 'מסעות', m: 'marches.list', a: CID, row: function (r) { return [(r.location || 'מסע') + ' · ' + fmtD(r.march_date), 'ק״מ ללא אלונקה ' + (r.km_no_stretcher || 0) + ' · עם אלונקה ' + (r.km_stretcher || 0)]; } }],
-      forms: [{ t: 'מסע חדש', m: 'marches.create', fields: function () { return [{ n: 'march_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'location', l: 'מקום', req: 1 }, { n: 'km_no_stretcher', l: 'ק״מ ללא אלונקה', t: 'number' }, { n: 'km_stretcher', l: 'ק״מ עם אלונקה', t: 'number' }, { n: 'scope', l: 'תחולה (ברירת מחדל: כל הקורס)', t: 'select', o: scopeOpts() }]; }, build: function (x) { var p = String(x.scope || ('course:' + S.course.id)).split(':'); var d = Object.assign({ request_id: rid(), km_no_stretcher: 0, km_stretcher: 0 }, x); delete d.scope; d.scope_type = p[0]; d.scope_id = p[1]; return d; } }] },
+      forms: [{ t: 'מסע חדש', m: 'marches.create', fields: function () { return [{ n: 'march_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'location', l: 'מקום', req: 1 }, { n: 'km_no_stretcher', l: 'ק״מ ללא אלונקה', t: 'number' }, { n: 'km_stretcher', l: 'ק״מ עם אלונקה', t: 'number' }, { n: 'scope', l: 'תחולה (ברירת מחדל: כל הקורס)', t: 'select', o: scopeOpts() }, { n: 'absent', l: 'מי חסר במסע?', t: 'multisoldier' }]; }, build: function (x) { var p = String(x.scope || ('course:' + S.course.id)).split(':'); var d = Object.assign({ request_id: rid(), km_no_stretcher: 0, km_stretcher: 0 }, x); delete d.scope; d.scope_type = p[0]; d.scope_id = p[1]; d.absent = (x.absent || []).map(function (id) { return { soldier_id: id }; }); return d; } }] },
     readiness: { title: 'כשירות מבצעית', lists: [{ h: 'סטטוסים', m: 'readiness.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)), (r.status || '') + (r.start_date ? ' · מ-' + fmtD(r.start_date) : '')]; } }],
       forms: [{ t: 'עדכון כשירות', m: 'readiness.assess', fields: function () { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'status', l: 'סטטוס', t: 'select', req: 1, o: [['fit', 'כשיר'], ['limited', 'מוגבל'], ['unfit', 'לא כשיר']] }, { n: 'restrictions', l: 'מגבלות פעילות (ללא אבחנה)' }, { n: 'start_date', l: 'מתאריך', t: 'date', req: 1 }, { n: 'next_review_date', l: 'מועד בדיקה הבא', t: 'date' }]; } }] },
     events: { title: 'אירועים והישגים', lists: [{ h: 'אירועים', m: 'events.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.event_date), (r.event_type === 'achievement' ? 'הישג' : 'אירוע') + ': ' + (r.description || '')]; } }],
@@ -132,6 +132,38 @@
         ins[fd.n] = inp; var w = field((fd.l || fd.n) + (fd.req ? ' *' : ''), inp); wraps[fd.n] = w; f.append(w); });
       var tf = ins.test_type_id, types = P['fitness.types'] || [];
       if (tf && fields.some(function (fd) { return fd.comp; })) { var sync = function () { var t = types.filter(function (x) { return x.id === tf.value; })[0], w = (t && t.weights) || {}; fields.forEach(function (fd) { if (fd.comp) wraps[fd.n].hidden = !(w[fd.n] > 0); }); }; tf.addEventListener('change', sync); sync(); }
+      /* Keep the missing-trainee chooser in sync with the event scope. Unchecked = present by default.
+         Server policy revalidates every ID and scope; the UI never substitutes for authorization. */
+      if (ins.absent) {
+        var miss = ins.absent, selScope = ins.scope, searchMiss = h('input', { type: 'search', placeholder: 'חיפוש חניך לפי שם', 'aria-label': 'חיפוש חניך חסר' }),
+          missCount = h('p', { role: 'status', 'aria-live': 'polite', class: 'muted' });
+        wraps.absent.insertBefore(searchMiss, miss); wraps.absent.append(missCount);
+        if (selScope && !isAdmin() && S.mine && !S.mine.course_wide) {
+          var mine = S.mine, teamIds = mine.team_ids || [], depIds = mine.department_ids || [];
+          [].slice.call(selScope.options).forEach(function (o) {
+            var p = o.value.split(':'), allowed = p[0] === 'team' && (teamIds.indexOf(p[1]) !== -1 || (S.org.teams || []).some(function (t) { return t.id === p[1] && depIds.indexOf(t.department_id) !== -1; })) ||
+              p[0] === 'department' && depIds.indexOf(p[1]) !== -1;
+            if (!allowed) o.remove();
+          });
+          if (selScope.options.length) selScope.value = selScope.options[0].value;
+        }
+        var syncMissing = function () {
+          var sp = selScope && selScope.value ? selScope.value.split(':') : [myScope().t, myScope().id],
+            term = searchMiss.value.trim().toLowerCase(), eligible = 0, absent = 0;
+          [].slice.call(miss.querySelectorAll('input[type=checkbox]')).forEach(function (ch) {
+            var s = (cache.soldiers || []).find(function (r) { return r.id === ch.value; }), inScope = !!s && (
+              sp[0] === 'course' || sp[0] === 'department' && s.department_id === sp[1] || sp[0] === 'team' && s.team_id === sp[1]);
+            if (!inScope) ch.checked = false;
+            if (inScope) eligible++;
+            if (inScope && ch.checked) absent++;
+            ch.parentNode.hidden = !inScope || !!term && String(s.full_name || '').toLowerCase().indexOf(term) === -1;
+          });
+          missCount.textContent = 'חסרים ' + absent + ' מתוך ' + eligible + ' · כל מי שלא סומן יירשם כנוכח';
+        };
+        searchMiss.addEventListener('input', syncMissing); miss.addEventListener('change', syncMissing);
+        if (selScope) selScope.addEventListener('change', syncMissing);
+        syncMissing();
+      }
       if (spec.live) spec.live({ ins: ins, wraps: wraps, f: f, P: P });
       var save = h('button', { class: 'primary', type: 'submit', text: 'שמירה' }); f.append(msg, h('div', { class: 'btns' }, [save, h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { go('d/' + id); } })]));
       function val(fd) { var i = ins[fd.n]; if (fd.t === 'check') return i.checked; if (fd.t === 'multisoldier') return [].slice.call(i.querySelectorAll('input:checked')).map(function (c) { return c.value; }); return i.value; }
