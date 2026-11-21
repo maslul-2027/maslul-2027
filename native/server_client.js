@@ -20,6 +20,18 @@
       var p = http('POST', '/api', { method: method, args: send }).then(function (r) { if (wr && rk) { if (r && r.ok === false && r.code !== 'BUSY') delete IDEM[rk]; else if (IDEM[rk]) IDEM[rk].t = Date.now() - 55000; } rec(method, r, src, gest); return expired(r); });
       if (key) { live[key] = p; var fin = function () { if (live[key] === p) delete live[key]; }; p.then(fin, fin); } return p;
     },
+    /* REAL file download (generated report): authenticated GET → binary → browser download. The server re-checks role/scope; nothing is fabricated client-side. Records evidence for reports.download like any other call. */
+    download: function (id) {
+      var gest = (Date.now() - lastGesture) < 1500;
+      return fetch('/api/download/report/' + encodeURIComponent(String(id)), { method: 'GET', credentials: 'same-origin', headers: {} }).then(function (r) {
+        if (!r.ok) return r.json().catch(function () { return {}; }).then(function (j) { var d = { ok: false, code: (j && j.code) || 'ERR', message: (j && j.message) || 'ההורדה נכשלה.' }; rec('reports.download', d, 'ui', gest); return expired(d); });
+        var cd = r.headers.get('content-disposition') || '', m = /filename="([^"]+)"/.exec(cd), name = m ? m[1] : 'maslul-report', type = r.headers.get('content-type') || 'application/octet-stream';
+        return r.blob().then(function (b) {
+          if (!b.size) { var e = { ok: false, code: 'EMPTY', message: 'הקובץ ריק.' }; rec('reports.download', e, 'ui', gest); return e; }
+          var u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = name; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(function () { a.remove(); URL.revokeObjectURL(u); }, 4000);
+          var ok = { ok: true, filename: name, type: type, bytes: b.size }; rec('reports.download', ok, 'ui', gest); return ok; });
+      }).catch(function () { return { ok: false, code: 'NETWORK', message: 'אין תקשורת עם השרת. נסו שוב.' }; });
+    },
     /* gateway (auth/admin) calls: not part of the 174 engine routes */
     gw: function (method, path, body) { return http(method, path, body).then(expired); },
     logout: function () { return http('POST', '/auth/logout', {}).then(function () { try { sessionStorage.clear(); } catch (e) {} location.reload(); }); },

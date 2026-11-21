@@ -22,6 +22,15 @@ function create(opts) {
   const PropertiesService = { getScriptProperties: () => ({ getProperty: () => null, setProperty: nc, setProperties: nc, deleteProperty: nc }) };
   const scon = { log() {}, warn() {}, info() {}, error(m) { lastErr = String(m); } };
   const X = new Function('console', 'CacheService', 'PropertiesService', GOOGLE.join(','), loadSource())(scon, CacheService, PropertiesService, gs, gs, gs, gs, gs, gs, gs);
+  // Real local adapters (private TEST only): generated REPORT files — real PDF/XLSX bytes, stored encrypted by file_store. Every other bucket (documents, backups) and OCR/Drive stay NOT_CONNECTED until their own PR.
+  if (opts.files) {
+    const ef = require('./export_formats'), only = b => { if (b !== 'reports') nc(); };
+    X.Adapters._fake = { saveFile(bucket, name, mime, b64) { only(bucket); return opts.files.save(bucket, name, mime, Buffer.from(b64, 'base64')); },
+      readFile(id) { let r; try { r = opts.files.read(id); } catch (e) { throw new X.AppError(e.code === 'INTEGRITY' ? 'INTERNAL' : 'NOT_FOUND', e.code === 'INTEGRITY' ? 'בדיקת שלמות הקובץ נכשלה.' : 'הקובץ לא נמצא.'); } only(r.meta.bucket); return { name: r.meta.name, mime: r.meta.mime, b64: r.buf.toString('base64') }; },
+      trashFile() { nc(); }, fileState(id) { return opts.files.state(id); },
+      pdfFromHtml(html) { return ef.pdfFromHtml(html).toString('base64'); }, xlsxFromModel(model) { return ef.xlsxFromModel(model).toString('base64'); },
+      driveReport() { nc(); }, ocrAvailable() { return false; }, ocrExtract() { nc(); } };
+  }
   let tick = 0; const base = Date.now(); X.Util._clock = () => new Date(Math.max(Date.now(), base) + (++tick));
   X.Db.use({ readAll: t => (mem[t] = mem[t] || []).map(clone), insert: (t, o) => { (mem[t] = mem[t] || []).push(clone(o)); return o; },
     updateById: (t, id, p) => { const r = (mem[t] || []).find(x => String(x.id) === String(id)); if (!r) throw new X.AppError('NOT_FOUND', 'x'); Object.assign(r, clone(p)); },

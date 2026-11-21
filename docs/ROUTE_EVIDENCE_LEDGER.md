@@ -9,8 +9,8 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | # | Route | Group | Authz class | Native | Status | calls | interaction_verified | Negative authz seen | Note |
 |---|---|---|---|---|---|---|---|---|---|
 
-| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 89/14/4 | yes | no |  |
-| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 74/6/7 | yes | no |  |
+| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 91/14/4 | yes | no |  |
+| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 76/6/7 | yes | no |  |
 | 3 | `courses.create` | courses | A | yes | PASS_SYNTH_E2E | 1/1/7 | yes | no |  |
 | 4 | `courses.archive` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 5 | `courses.reopen` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
@@ -18,7 +18,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 7 | `users.list` | users | A | yes | PASS_SYNTH_E2E | 12/7/1 | yes | yes |  |
 | 8 | `users.add` | users | A | yes | PASS_SYNTH_E2E | 1/1/1 | yes | yes |  |
 | 9 | `users.set` | users | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 235/79/18 | yes | yes |  |
+| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 246/87/18 | yes | yes |  |
 | 11 | `soldiers.card` | soldiers | O | yes | PASS_SYNTH_E2E | 22/19/3 | yes | no |  |
 | 12 | `soldiers.private` | soldiers | P | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 13 | `emergency.get` | emergency | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
@@ -38,7 +38,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 27 | `navtypes.rename` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 28 | `navtypes.setActive` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 29 | `assignments.list` | assignments | A | yes | PASS_SYNTH_E2E | 14/7/9 | yes | yes |  |
-| 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 69/4/2 | yes | yes |  |
+| 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 71/4/2 | yes | yes |  |
 | 31 | `assignments.create` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 32 | `assignments.update` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 33 | `assignments.setActive` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/3 | yes | yes |  |
@@ -48,7 +48,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 37 | `record.restore` | record | O | yes | PASS_SYNTH_E2E | 1/1/1 | yes | no |  |
 | 38 | `record.history` | record | O | yes | PASS_SYNTH_E2E | 1/1/2 | yes | no |  |
 | 39 | `correction.request` | correction | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 40 | `correction.list` | correction | O | yes | PASS_SYNTH_E2E | 3/2/0 | yes | no |  |
+| 40 | `correction.list` | correction | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
 | 41 | `correction.review` | correction | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 42 | `settings.list` | settings | N | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
 | 43 | `settings.set` | settings | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
@@ -114,7 +114,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 103 | `notes.list` | notes | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
 | 104 | `followups.create` | followups | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 105 | `followups.update` | followups | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 106 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 163/76/0 | yes | yes |  |
+| 106 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 174/83/0 | yes | yes |  |
 | 107 | `favorites.toggle` | favorites | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 108 | `favorites.list` | favorites | O | yes | PASS_SYNTH_E2E | 21/19/0 | yes | no |  |
 | 109 | `snote.add` | snote | O | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
@@ -123,7 +123,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 112 | `alerts.refresh` | alerts | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
 | 113 | `alerts.list` | alerts | O | yes | PASS_SYNTH_E2E | 9/6/1 | yes | no |  |
 | 114 | `alerts.handle` | alerts | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 115 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 173/73/0 | yes | no |  |
+| 115 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 183/79/0 | yes | no |  |
 | 116 | `forms.generalLink` | forms | N | yes | PASS_SYNTH_E2E | 3/2/0 | yes | no |  |
 | 117 | `forms.createLink` | forms | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 118 | `forms.list` | forms | O | yes | PASS_SYNTH_E2E | 4/3/1 | yes | no |  |
@@ -134,12 +134,12 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 123 | `dash.compareCourses` | dash | G | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 124 | `dash.trends` | dash | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: owner charter 2026-11-20 (docs/OWNER_CURRENT_CHARTER_2026-11-20.md) allows group-level analytics only — no per-soldier trends. Backend route preserved for an owner-approved disposition; no native screen calls it. |
 | 125 | `dash.strengthsGaps` | dash | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 126 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 177/75/0 | yes | no |  |
+| 126 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 186/80/0 | yes | no |  |
 | 127 | `reports.build` | reports | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: returns per-soldier rows (names, personal numbers, individual scores); owner charter 2026-11-20 allows group-level reporting only (N>=5). The group-safe report is reports.preview. Not counted as completed. |
 | 128 | `reports.preview` | reports | G | yes | PASS_SYNTH_E2E | 6/2/1 | yes | no |  |
-| 129 | `reports.generate` | reports | O | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive export adapter |
-| 130 | `reports.fullExport` | reports | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | adapter not connected in synthetic mode |
-| 131 | `reports.download` | reports | O | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive export adapter |
+| 129 | `reports.generate` | reports | O | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real PDF/XLSX, encrypted at rest): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md |
+| 130 | `reports.fullExport` | reports | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real multi-sheet XLSX): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md |
+| 131 | `reports.download` | reports | O | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real PDF/XLSX, encrypted at rest): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md |
 | 132 | `reports.jobs` | reports | O | yes | PASS_SYNTH_E2E | 6/2/0 | yes | no |  |
 | 133 | `import.start` | import | A | yes | PASS_SYNTH_E2E | 4/4/0 | yes | yes |  |
 | 134 | `import.preview` | import | A | yes | PASS_SYNTH_E2E | 7/7/0 | yes | no |  |
@@ -174,14 +174,14 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 163 | `preflight.last` | preflight | A | yes | PASS_SYNTH_E2E | 11/4/0 | yes | yes |  |
 | 164 | `backup.prune` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
 | 165 | `migration.run` | migration | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | mutating schema migration is NOT exposed from the UI in this release (manager gate: plan/dry-run only): needs an approved private server and a separately reviewed migration plan; the UI makes zero migration.run calls |
-| 166 | `meetings.list` | meetings | N | yes | PASS_SYNTH_E2E | 6/3/2 | yes | no |  |
-| 167 | `meetings.get` | meetings | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 168 | `meetings.options` | meetings | N | yes | PASS_SYNTH_E2E | 2/1/0 | yes | no |  |
-| 169 | `meetings.save` | meetings | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
-| 170 | `tasks.list` | tasks | N | yes | PASS_SYNTH_E2E | 8/8/1 | yes | no |  |
-| 171 | `tasks.get` | tasks | N | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
+| 166 | `meetings.list` | meetings | N | yes | PASS_SYNTH_E2E | 18/15/6 | yes | no |  |
+| 167 | `meetings.get` | meetings | N | yes | PASS_SYNTH_E2E | 9/9/3 | yes | no |  |
+| 168 | `meetings.options` | meetings | N | yes | PASS_SYNTH_E2E | 9/8/0 | yes | no |  |
+| 169 | `meetings.save` | meetings | A | yes | PASS_SYNTH_E2E | 8/8/1 | yes | no |  |
+| 170 | `tasks.list` | tasks | N | yes | PASS_SYNTH_E2E | 23/19/6 | yes | no |  |
+| 171 | `tasks.get` | tasks | N | yes | PASS_SYNTH_E2E | 3/3/0 | yes | no |  |
 | 172 | `tasks.setStatus` | tasks | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 173 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 173/73/0 | yes | no |  |
-| 174 | `meetings.integrity` | meetings | N | yes | PASS_SYNTH_E2E | 9/4/1 | yes | no |  |
+| 173 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 183/79/0 | yes | no |  |
+| 174 | `meetings.integrity` | meetings | N | yes | PASS_SYNTH_E2E | 12/7/1 | yes | no |  |
 | 175 | `meetings.auditRepair` | meetings | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 176 | `audit.list` | audit | A | yes | PASS_SYNTH_E2E | 7/3/5 | yes | yes |  |

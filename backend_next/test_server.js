@@ -63,7 +63,7 @@ async function start(o) {
     }
   };
   const gw = gateway({ store: st, pepper: sec.pepper, origin, bootstrapToken: sec.bootstrap, trustedProxies: o.trustedProxies || [], api, authOpts: o.authOpts });
-  gwRef = gw; gw.state.engine = gw.state.engine || {}; host = engineHost.create({ mem: gw.state.engine });
+  gwRef = gw; gw.state.engine = gw.state.engine || {}; host = engineHost.create({ mem: gw.state.engine, files: require('./file_store').open({ dir: path.join(dir, 'files'), key: Buffer.from(sec.storeKey, 'hex') }) });
   const sn = o.seedAdmin || (process.env.MASLUL_SEED_ADMIN_PHONE ? { fullName: process.env.MASLUL_SEED_ADMIN_NAME || 'מנהל בדיקות', phone: process.env.MASLUL_SEED_ADMIN_PHONE, pin: process.env.MASLUL_SEED_ADMIN_PIN } : null);
   if (sn && !gw.state.users.length) { gw.auth.seedAdmin(sec.bootstrap, sn); await st.save(gw.state); }
   const handler = toHttp(gw);
