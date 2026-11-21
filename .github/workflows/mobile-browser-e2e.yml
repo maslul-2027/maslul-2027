@@ -83,11 +83,10 @@ jobs:
         run: |
           node scripts/build_native_app.js --server
           SHOTS_DIR=artifacts/secure_screens node scripts/e2e_secure_browser.js
-      - name: One-action TEST package (Issue #70) — build ZIP, extract clean, run only the launcher, drive the real UI end to end
+      - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
         run: |
           node tests/selfsigned.js
           node scripts/e2e_release_package.js artifacts/package_screens
-          node scripts/build_release_package.js --out artifacts/package
       - name: Route evidence ledger (generated from the browser runs)
         run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Enforce truthful route ledger counts and native-screen evidence
@@ -113,8 +112,6 @@ jobs:
             artifacts/tasks_screens
             artifacts/secure_screens
             artifacts/package_screens
-            artifacts/package/*.zip
-            artifacts/package/*.sha256
             artifacts/ledger
             artifacts/calls_*.json
           if-no-files-found: ignore

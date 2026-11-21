@@ -42,18 +42,34 @@ async function restore(src) {
   S.saveNow(st); say('Restored. All sessions were revoked: sign in again.'); return 0;
 }
 
-/** Integrity: every file listed in SHA256SUMS.txt (next to START-MASLUL-TEST.cmd) must match. Read-only. */
-function verify() {
-  const f = path.join(root, '..', 'SHA256SUMS.txt'); if (!fs.existsSync(f)) { say('No SHA256SUMS.txt next to the package (running from a source checkout?).'); return 3; }
-  let bad = 0, n = 0; for (const l of fs.readFileSync(f, 'utf8').split(/\r?\n/).filter(Boolean)) { const m = /^([a-f0-9]{64})  (.+)$/.exec(l); if (!m) continue; n++; const p = path.join(root, '..', m[2]); let h = ''; try { h = crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex'); } catch (e) { /* missing */ } if (h !== m[1]) { bad++; say('MISMATCH/MISSING: ' + m[2]); } }
-  say(bad ? bad + ' of ' + n + ' files differ — do not use this copy; download the package again.' : 'All ' + n + ' files match SHA256SUMS.txt.'); return bad ? 5 : 0;
+/** Integrity (fail-closed). In a PACKAGE (SHA256SUMS.txt, MANIFEST.json or the .cmd files sit next to app/) EVERY start/check re-verifies: manifest present and well-formed, at least one entry,
+ *  entry count == MANIFEST.json "files", every listed file's SHA-256 matches, and no unlisted file exists outside data/. There is deliberately no switch to skip this in a package.
+ *  NOTE: SHA256SUMS.txt travels inside the ZIP, so it detects corruption / partial extraction / edits, not a malicious publisher — compare the ZIP's own SHA-256 with the digest published separately. */
+function verifyPackage() {
+  const pk = path.join(root, '..'), sums = path.join(pk, 'SHA256SUMS.txt'), man = path.join(pk, 'MANIFEST.json');
+  const isPackage = fs.existsSync(sums) || fs.existsSync(man) || fs.existsSync(path.join(pk, 'START-MASLUL-TEST.cmd'));
+  if (!isPackage) return { package: false, ok: true, lines: ['Running from a source checkout (no package manifest): integrity check not applicable.'] };
+  const bad = []; let listed = new Map(), meta = {};
+  if (!fs.existsSync(sums)) bad.push('SHA256SUMS.txt is missing'); if (!fs.existsSync(man)) bad.push('MANIFEST.json is missing');
+  if (!bad.length) {
+    try { meta = JSON.parse(fs.readFileSync(man, 'utf8')); } catch (e) { bad.push('MANIFEST.json is not valid JSON'); }
+    for (const l of fs.readFileSync(sums, 'utf8').split(/\r?\n/)) { if (!l.trim()) continue; const m = /^([a-f0-9]{64})  ([A-Za-z0-9_.\-\/]+)$/.exec(l); if (!m || m[2].includes('..') || path.isAbsolute(m[2])) { bad.push('malformed checksum line: ' + l.slice(0, 80)); continue; } if (listed.has(m[2])) bad.push('duplicate entry: ' + m[2]); listed.set(m[2], m[1]); }
+    if (listed.size === 0) bad.push('SHA256SUMS.txt lists no files (an empty manifest can never pass)');
+    if (!Number.isInteger(meta.files) || meta.files !== listed.size) bad.push('file count mismatch: MANIFEST.json says ' + meta.files + ', SHA256SUMS.txt lists ' + listed.size);
+    for (const [rel, h] of listed) { let got = ''; try { got = crypto.createHash('sha256').update(fs.readFileSync(path.join(pk, rel))).digest('hex'); } catch (e) { bad.push('missing: ' + rel); continue; } if (got !== h) bad.push('modified: ' + rel); }
+    const walk = (d, rel) => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => { const r = rel ? rel + '/' + e.name : e.name; if (!rel && e.name === 'data') return []; return e.isDirectory() ? walk(path.join(d, e.name), r) : [r]; });
+    for (const r of walk(pk, '')) if (!listed.has(r) && r !== 'SHA256SUMS.txt' && r !== 'MANIFEST.json') bad.push('unexpected file not in the manifest: ' + r);
+  }
+  return { package: true, ok: bad.length === 0, lines: bad.length ? bad : ['All ' + listed.size + ' files match SHA256SUMS.txt (source commit ' + String(meta.source_commit || '?').slice(0, 7) + ').'] };
 }
+function verify() { const v = verifyPackage(); v.lines.forEach(l => say(v.ok ? l : ' ✗ ' + l)); if (!v.ok) say('\nIntegrity check FAILED — do not use this copy. Download the ZIP again from the approved source and compare its SHA-256 with the published digest.'); return v.ok ? 0 : 5; }
 async function main() {
   say('MASLUL 2027 — TEST launcher (synthetic data only · this computer only)');
   if (flag('verify')) return verify();
   if (flag('backup')) return backup();
   if (flag('restore')) return restore(arg('restore'));
   problems.push(...preflight());
+  { const v = verifyPackage(); if (!v.ok) problems.push('Integrity check failed (the package is incomplete, modified or has extra files): ' + v.lines.slice(0, 5).join('; ') + '. Download the ZIP again from the approved source and compare its SHA-256 with the published digest.'); else if (v.package) say(v.lines[0]); }
   const want = Number(arg('port', 8443)), port = problems.length ? 0 : await pickPort(want, 20);
   if (!problems.length && !port) problems.push('No free local port between ' + want + ' and ' + (want + 19) + '. Close the other program that uses them, or run with --port <number>.');
   try { const l = JSON.parse(fs.readFileSync(lockFile(), 'utf8')); if (alive(l.pid) && l.pid !== process.pid) problems.push('Another MASLUL TEST window is already running on this data folder (pid ' + l.pid + ', ' + l.origin + '). Use it, or close it first.'); } catch (e) { /* no lock */ }
@@ -71,7 +87,7 @@ async function main() {
   say('  Click "Advanced" → "Proceed to localhost". Certificate SHA-256 (compare if you wish):\n  ' + fp);
   say('\n  Sign in with the SYNTHETIC admin: ' + (first ? 'phone 0500000001, PIN ' + seed.pin + '  (also saved in ' + credFile + ')' : 'the phone/PIN printed on the first run (see ADMIN-LOGIN-SYNTHETIC.txt if you kept it)'));
   say('  Data folder: ' + dataDir + '   |   Close this window to stop the app. Other devices cannot reach it.\n');
-  if (!flag('no-browser')) { try { if (process.platform === 'win32') cp.spawn('cmd', ['/c', 'start', '', s.origin + '/'], { stdio: 'ignore', detached: true }).unref(); else if (process.platform === 'darwin') cp.spawn('open', [s.origin + '/'], { stdio: 'ignore', detached: true }).unref(); else cp.spawn('xdg-open', [s.origin + '/'], { stdio: 'ignore', detached: true }).on('error', () => {}).unref(); } catch (e) { /* the link above is enough */ } }
+  if (!flag('no-browser') && !process.env.MASLUL_NO_BROWSER) { try { if (process.platform === 'win32') cp.spawn('cmd', ['/c', 'start', '', s.origin + '/'], { stdio: 'ignore', detached: true }).unref(); else if (process.platform === 'darwin') cp.spawn('open', [s.origin + '/'], { stdio: 'ignore', detached: true }).unref(); else cp.spawn('xdg-open', [s.origin + '/'], { stdio: 'ignore', detached: true }).on('error', () => {}).unref(); } catch (e) { /* the link above is enough */ } }
   const stop = async () => { try { fs.unlinkSync(lockFile()); } catch (e) { /* ignore */ } try { await s.close(); } catch (e) { /* ignore */ } process.exit(0); };
   process.on('SIGINT', stop); process.on('SIGTERM', stop); process.on('exit', () => { try { fs.unlinkSync(lockFile()); } catch (e) { /* ignore */ } });
   return null;   // keep serving

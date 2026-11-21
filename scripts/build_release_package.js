@@ -7,7 +7,11 @@ const fs = require('fs'), path = require('path'), cp = require('child_process'),
 const root = path.join(__dirname, '..'), arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : d; };
 const out = path.resolve(arg('out', path.join(root, 'dist'))), sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
 if (!process.argv.includes('--skip-build')) cp.execFileSync(process.execPath, [path.join(root, 'scripts', 'build_native_app.js'), '--server'], { cwd: root, stdio: 'ignore' });
-const head = (() => { try { return cp.execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root }).toString().trim(); } catch (e) { return 'unknown'; } })();
+const git = (...a) => cp.execFileSync('git', a, { cwd: root }).toString().trim();
+const head = (() => { try { return git('rev-parse', 'HEAD'); } catch (e) { return 'unknown'; } })();
+// provenance: CI passes the reviewed commit it checked out; a mismatch or a dirty tracked tree means the ZIP would not be built from that commit -> refuse
+if (process.env.EXPECT_SHA && process.env.EXPECT_SHA !== head) throw new Error('refusing: HEAD ' + head + ' is not the expected reviewed commit ' + process.env.EXPECT_SHA);
+if (process.argv.includes('--require-clean') && git('status', '--porcelain', '--untracked-files=no')) throw new Error('refusing: tracked files differ from the commit (build --server output must be gitignored/unchanged)');
 const stage = path.join(out, 'MASLUL-TEST'); fs.rmSync(out, { recursive: true, force: true }); fs.mkdirSync(path.join(stage, 'app'), { recursive: true });
 const walk = (d, rel) => fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name < b.name ? -1 : 1).flatMap(e => { const r = rel ? rel + '/' + e.name : e.name, f = path.join(d, e.name); if (e.isSymbolicLink()) throw new Error('symlink in package source: ' + r); return e.isDirectory() ? walk(f, r) : [r]; });
 const files = [];   // [source, destination relative to stage]
