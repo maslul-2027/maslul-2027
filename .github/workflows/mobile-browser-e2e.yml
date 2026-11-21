@@ -40,6 +40,8 @@ on:
       - 'scripts/e2e_native_tasks.js'
       - 'scripts/build_route_ledger.js'
       - 'scripts/check_route_ledger.js'
+      - 'scripts/build_env_ledger.js'
+      - 'docs/CAPABILITIES_BY_ENVIRONMENT.md'
       - 'scripts/native_screenshots.js'
       - '.github/workflows/mobile-browser-e2e.yml'
   workflow_dispatch:
@@ -123,6 +125,7 @@ jobs:
         run: |
           node scripts/check_route_ledger.js artifacts/ledger/route-evidence-ledger.json
           node scripts/check_route_ledger.js docs/route-evidence-ledger.json
+          node scripts/build_env_ledger.js --check
       - name: Design parity screenshots (original PR #10 vs native)
         run: |
           test -s golden-source/preview/index.html
