@@ -147,12 +147,6 @@
   D.admin.lists[1].row = function (c) { return [c.name, 'התחלה ' + fmtD(c.start_date), status(c.status === 'archived' ? 'בארכיון' : 'פעיל', c.status === 'archived')]; };
   D.admin.lists[0].row = function (u) { return [u.display_name || u.email, (u.role === 'admin' ? 'מ״פ (מנהל)' : 'מפקד') + ' · ' + u.email, status(u.active ? 'פעיל' : 'מושבת', !u.active)]; };
   function marchCounts(r) { return r.counts_suppressed ? 'נוכחים/חסרים: מוסתר (קבוצה קטנה)' : (r.participants === null || r.participants === undefined ? '' : 'נוכחים ' + r.participants + ' מתוך ' + r.total + ' · חסרים ' + (r.absent === null || r.absent === undefined ? (r.total - r.participants) : r.absent)); }
-  /** operational roll of ONE march (server-authorised: only soldiers the caller may see): content for a dialog (opened from the record sheet) or an inline panel (shown right after saving a new march — non-modal, nothing blocks the screen). */
-  D.attendance.lists[0].click = function (e) {
-    api('attendance.roll', { courseId: S.course.id, eventId: e.id }).then(function (r) {
-      var rows = r.ok ? r.data : [], body = r.ok ? (rows.length ? rows.map(function (x) { return h('div', { class: 'row', style: 'display:flex;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid #eee' }, [h('span', { text: x.soldier_name || x.soldier_id }), h('span', { text: (x.present ? 'נוכח' : 'חסר') + (x.early_exit ? ' · יציאה מוקדמת' : '') + (x.absence_approved ? ' · היעדרות מאושרת' : '') })]); }) : [h('p', { class: 'muted', text: 'אין רשומות בהיקף שלך.' })]) : [h('p', { class: 'msg err', role: 'alert', text: msgOf(r) })];
-      var d = dialog((e.type_name || 'אירוע') + ' · ' + fmtD(e.event_date), body, function () { return true; }, 'סגירה'); });
-  };
   D.attendance.lists.push({ h: 'סוגי פעילות (לחיצה לשינוי שם/סטטוס)', m: 'acttypes.list', a: CID, row: function (t) { return [t.name, '', status(t.active ? 'פעיל' : 'מושבת', !t.active)]; }, click: function (t, reload) { typeDialog('acttypes', t, reload, 'סוג פעילות'); } });
   D.nav.lists.push({ h: 'סוגי ניווט (לחיצה לשינוי שם/סטטוס)', m: 'navtypes.list', a: CID, row: function (t) { return [t.name, '', status(t.active ? 'פעיל' : 'מושבת', !t.active)]; }, click: function (t, reload) { typeDialog('navtypes', t, reload, 'סוג ניווט'); } });
   function Domain(id) {
@@ -214,6 +208,17 @@
         };
         searchMiss.addEventListener('input', syncMissing); miss.addEventListener('change', syncMissing);
         if (selScope) selScope.addEventListener('change', syncMissing);
+        /* guided flow inside ONE screen: 1 details → 2 who is missing → 3 review (named, live) → save once */
+        var stepHd = function (n, t) { return h('h2', { class: 'stepHd', style: 'font-size:15px;margin:16px 0 6px;display:flex;gap:8px;align-items:center' }, [h('span', { 'aria-hidden': 'true', text: String(n), style: 'background:#007f83;color:#fff;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;flex:none' }), h('span', { text: 'שלב ' + n + ' · ' + t })]); },
+          rv = h('div', { id: 'review', role: 'status', 'aria-live': 'polite', style: 'background:#f1f8f8;border:1px solid #cfe3e1;border-radius:14px;padding:10px 12px;line-height:1.7' });
+        f.insertBefore(stepHd(1, 'פרטים'), f.firstChild); f.insertBefore(stepHd(2, 'מי חסר? (כל מי שלא סומן נרשם כנוכח)'), wraps.absent); wraps.absent.after(stepHd(3, 'סקירה ושמירה (נשמר פעם אחת, אחרי אישור השרת)'), rv);
+        var syncReview = function () {
+          var names = [].slice.call(miss.querySelectorAll('input:checked')).map(function (c) { return (c.nextSibling && c.nextSibling.textContent || '').split(' · ')[0]; }), elig = [].slice.call(miss.querySelectorAll('input[type=checkbox]')).filter(function (c) { return !c.parentNode.hidden || c.checked; }).length,
+            what = (ins.location && ins.location.value.trim()) || (ins.activity_type_id && ins.activity_type_id.selectedOptions[0] && ins.activity_type_id.value ? ins.activity_type_id.selectedOptions[0].text : ''), dt = (ins.march_date || ins.event_date || {}).value || '',
+            sc = selScope && selScope.selectedOptions[0] ? selScope.selectedOptions[0].text : 'כל הקורס';
+          rv.replaceChildren(h('div', { text: (what || 'ללא כותרת עדיין') + (dt ? ' · ' + fmtD(dt) : '') + ' · תחולה: ' + sc }), h('div', { text: 'חסרים ' + names.length + ' · נוכחים (כל השאר) ' + Math.max(0, miss.querySelectorAll('input[type=checkbox]').length - names.length) }), names.length ? h('div', { class: 'muted', text: 'חסרים: ' + names.slice(0, 12).join(', ') + (names.length > 12 ? ' ועוד ' + (names.length - 12) : '') }) : h('div', { class: 'muted', text: 'לא סומן אף חסר — כולם יירשמו כנוכחים.' }));
+        };
+        f.addEventListener('input', syncReview); f.addEventListener('change', syncReview); var _sm = syncMissing; syncMissing = function () { _sm(); syncReview(); };
         syncMissing();
       }
       if (spec.live) spec.live({ ins: ins, wraps: wraps, f: f, P: P });
