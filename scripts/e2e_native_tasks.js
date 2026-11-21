@@ -2,7 +2,7 @@
 const OUT = process.env.E2E_CALLS_OUT; const http = require('http'), fs = require('fs'), path = require('path'), assert = require('assert/strict'); const { chromium } = require('playwright');
 const dir = path.resolve(process.argv[2] || 'preview'), SHOTS = process.argv[3] || null, M = { '.html': 'text/html;charset=utf-8', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' }; if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const srv = http.createServer((q, r) => { const u = q.url.split('?')[0], f = path.join(dir, u === '/' ? 'index.html' : u); if (!fs.existsSync(f)) { r.statusCode = 404; return r.end(''); } r.setHeader('content-type', M[path.extname(f)] || 'application/octet-stream'); r.end(fs.readFileSync(f)); });
-let pass = 0, fail = 0; const t = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } catch (e) { fail++; console.log('FAIL', n, String(e.message).split('\n').slice(0, 4).join(' | ')); } };
+let pass = 0, fail = 0; const t = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } catch (e) { fail++; console.log('FAIL', n, String(e.message).split("\n").slice(0, 12).join(' | ')); } };
 const READ = (p, m, a) => p.evaluate(([m, a]) => window.__app.api(m, a), [m, a]);
 const shot = async (p, n) => { if (SHOTS) await p.screenshot({ path: path.join(SHOTS, n + '.png') }); };
 (async () => {

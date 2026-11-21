@@ -21,6 +21,8 @@ on:
       - 'scripts/e2e_native_batch3.js'
       - 'scripts/e2e_native_card.js'
       - 'scripts/e2e_native_batch5.js'
+      - 'scripts/e2e_native_ux.js'
+      - 'scripts/e2e_native_motion.js'
       - 'scripts/e2e_native_qa.js'
       - 'scripts/e2e_native_batch6.js'
       - 'scripts/e2e_native_batch7.js'
@@ -88,6 +90,8 @@ jobs:
         run: |
           node scripts/build_native_app.js --server
           SHOTS_DIR=artifacts/secure_screens node scripts/e2e_secure_browser.js
+      - run: node scripts/e2e_native_ux.js preview artifacts/ux_screens
+      - run: node scripts/e2e_native_motion.js preview
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
         run: |
           node tests/selfsigned.js
@@ -116,6 +120,7 @@ jobs:
             artifacts/fitness_screens
             artifacts/tasks_screens
             artifacts/secure_screens
+            artifacts/ux_screens
             artifacts/package_screens
             artifacts/ledger
             artifacts/calls_*.json
