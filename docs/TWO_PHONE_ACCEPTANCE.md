@@ -30,3 +30,9 @@ Hosting/private network and who runs it · approved certificate · secret store 
 | 7 | Viewer cannot change anything | NOT_RUN |
 | 8 | Data persists after refresh, logout/login, server restart | NOT_RUN |
 | 9 | Pilot ends: trust profile removed, directory deleted | NOT_RUN |
+
+## עדכון אבטחה (סקירת מנהל): הפעלה ישירה = אותה הקפדה כמו ה-launcher
+`test_server.start()` (כניסה ישירה, ללא `private_test_launch`) כבר אינו עוקף: בלשון non-loopback הוא דורש (1) bind RFC1918/ULA בלבד; (2) ORIGIN ב-https, וכש-ORIGIN הוא IP — **שווה ל-bind**; (3) פורט ה-ORIGIN **שווה** לפורט ההאזנה; (4) תעודה+מפתח שסופקו: SAN מכיל את מארח ה-ORIGIN, בתוקף כעת ולפחות שעה, והמפתח תואם לתעודה (`private_net.checkCertFiles`, ללא openssl, משותף ל-launcher). כשל = השרת לא עולה ולא נשמע דבר. מסלול ה-loopback של חבילת Windows (תעודת Node טהור) לא מושפע. בדיקות: `tests/private_net.js` (10) כולל ORIGIN שגוי, פורט שגוי, SAN שגוי, פג תוקף, מפתח לא תואם, קבצים חסרים, ופיקסצ'ר פרטי מאושר חיובי.
+
+## מה צריך מהבעלים/IT לפיילוט שני הטלפונים (NOT_RUN עד אז)
+1. מארח פרטי מאושר ברשת RFC1918 + כתובת/שם קבוע. 2. תעודת HTTPS מהימנה מה-IT (לא CA על מכשיר אישי). 3. מאגר סודות + נתיב גיבוי. 4. שני מכשירים סינתטיים מאושרים. 5. אישור InfoSec ושער go-live של הבעלים. PIN בלבד אינו מאמת בעלות טלפון.

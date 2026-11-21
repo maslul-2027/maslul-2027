@@ -28,4 +28,16 @@ function checkOrigin(origin, bindIp) {
   if (net.isIP(h)) { const c = checkBind(h, { allowLoopback: true }); if (!c.ok) return { ok: false, reason: 'ORIGIN host ' + c.reason }; if (bindIp && h !== bindIp) return { ok: false, reason: 'ORIGIN IP must equal the bind address' }; }
   return { ok: true, host: h };
 }
-module.exports = { classify, checkBind, checkOrigin };
+/** Validate a supplied certificate/key pair for `name` WITHOUT openssl (works on stock Windows too): readable PEMs, SAN contains the name (IP or DNS, no CN fallback), valid now and for >= 1 hour, private key matches.
+ *  Throws (the server must stay closed) otherwise. Used by BOTH entry points (private_test_launch and a direct test_server start) so neither can be a bypass of the other. */
+function checkCertFiles({ certFile, keyFile, name }) {
+  const crypto = require('crypto'), fs = require('fs'); let x, key;
+  try { x = new crypto.X509Certificate(fs.readFileSync(certFile)); } catch (e) { throw new Error('certificate file is missing or not a valid PEM certificate'); }
+  try { key = crypto.createPrivateKey(fs.readFileSync(keyFile)); } catch (e) { throw new Error('private key file is missing or not a valid PEM key'); }
+  const sanOk = net.isIP(name) ? (x.subjectAltName || '').split(/,\s*/).some(e => e === 'IP Address:' + name) : !!x.subjectAltName && x.checkHost(name, { subject: 'never', wildcards: false }) === name;
+  if (!sanOk) throw new Error('TLS SAN does not contain ' + name + ' — refusing to start (no browser warning workaround)');
+  const now = Date.now(); if (new Date(x.validFrom).getTime() > now) throw new Error('certificate is not valid yet'); if (new Date(x.validTo).getTime() < now + 3600e3) throw new Error('certificate is expired or expires within one hour');
+  if (!x.checkPrivateKey(key)) throw new Error('private key does not match the certificate');
+  return { san: (net.isIP(name) ? 'IP Address:' : 'DNS:') + name, validTo: x.validTo, fingerprint256: x.fingerprint256 };
+}
+module.exports = { classify, checkBind, checkOrigin, checkCertFiles };

@@ -27,7 +27,10 @@ async function start(o) {
     const b = privateNet.checkBind(bindHost); if (!b.ok) throw new Error('BIND REFUSED: ' + b.reason);
     if (!(o.origin || process.env.ORIGIN)) throw new Error('BIND_HOST outside loopback requires ORIGIN=https://<private-name-or-ip> (exact origin used for CSRF)');
     if (!(o.certFile || process.env.TLS_CERT_FILE)) throw new Error('A non-loopback bind requires a real certificate (TLS_CERT_FILE/TLS_KEY_FILE); the throw-away local certificate is loopback-only');
-    const og = privateNet.checkOrigin(o.origin || process.env.ORIGIN, null); if (!og.ok) throw new Error('ORIGIN REFUSED: ' + og.reason);
+    const og = privateNet.checkOrigin(o.origin || process.env.ORIGIN, bindHost); if (!og.ok) throw new Error('ORIGIN REFUSED: ' + og.reason);   // an IP origin must EQUAL the bind address (same rule as private_test_launch)
+    const ou = new URL(o.origin || process.env.ORIGIN); if (Number(ou.port || 443) !== port) throw new Error('ORIGIN REFUSED: ORIGIN port ' + (ou.port || '443') + ' must equal the listening port ' + port);
+    try { privateNet.checkCertFiles({ certFile: o.certFile || process.env.TLS_CERT_FILE, keyFile: o.keyFile || process.env.TLS_KEY_FILE, name: og.host }); } catch (e) { throw new Error('TLS REFUSED: ' + e.message); }   // SAN for the origin host, currently valid, key matches — no direct-start bypass
+    if (!(o.keyFile || process.env.TLS_KEY_FILE)) throw new Error('TLS REFUSED: TLS_KEY_FILE missing');
   }
   const origin = o.origin || process.env.ORIGIN || 'https://localhost:' + port, publicDir = path.resolve(o.publicDir || path.join(root, 'server_public'));
   const st = store.open({ file: path.join(dir, 'state.bin'), key: Buffer.from(sec.storeKey, 'hex') });
@@ -80,7 +83,7 @@ async function start(o) {
     } catch (e) { try { send(rs, 500, 'error'); } catch (e2) { /* socket already gone */ } }
   });
   server.on('clientError', (e, sock) => { try { sock.end('HTTP/1.1 400 Bad Request\r\n\r\n'); } catch (x) { /* ignore */ } });
-  await new Promise(r => server.listen(port, bindHost, r));
+  await new Promise((r, j) => { server.once('error', j); server.listen(port, bindHost, () => { server.removeListener('error', j); r(); }); });   // a failed bind (address not owned, port taken) is a clean rejection, not an uncaught event
   return { server, store: st, port: server.address().port, origin, gw, dir, bootstrap: sec.bootstrap, close: () => new Promise(r => { server.close(r); if (server.closeAllConnections) server.closeAllConnections(); }) };
 }
 module.exports = { start };

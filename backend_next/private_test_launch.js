@@ -26,14 +26,7 @@ function prepare({ dir, name, days }) {
   return { caCert: f('ca.crt'), serverCert: f('server.crt'), serverKey: f('server.key'), caFingerprint: fp, san };
 }
 /** Validate a certificate file pair for `name`: SAN contains the name, currently valid, key matches. Throws (server stays closed) otherwise. */
-function checkCert({ certFile, keyFile, name }) {
-  const txt = sh('openssl', ['x509', '-in', certFile, '-noout', '-text']).toString();
-  const want = net.isIP(name) ? 'IP Address:' + name : 'DNS:' + name, esc = want.replace(/[.:]/g, '\\$&');
-  if (!new RegExp('(?:^|[\\s,])' + esc + '(?=,|\\s|$)', 'm').test(txt)) throw new Error('TLS SAN does not contain ' + name + ' — refusing to start (no browser warning workaround)');
-  try { sh('openssl', ['x509', '-in', certFile, '-noout', '-checkend', '3600']); } catch (e) { throw new Error('certificate is expired or expires within one hour'); }
-  const pub = sh('openssl', ['x509', '-in', certFile, '-noout', '-pubkey']).toString(), pub2 = sh('openssl', ['pkey', '-in', keyFile, '-pubout']).toString(); if (pub.trim() !== pub2.trim()) throw new Error('private key does not match the certificate');
-  return { san: want };
-}
+function checkCert(a) { return privateNet.checkCertFiles(a); }
 module.exports = { prepare, checkCert };
 if (require.main === module) (async () => {
   const die = m => { console.error('REFUSED: ' + m); process.exit(2); };
