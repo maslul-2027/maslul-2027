@@ -118,6 +118,8 @@
   }
   function DomainForm(id, idx) {
     var d = D[id], spec = d && d.forms[idx]; if (!spec) return More();
+    /* Never expose a write form through a guessed deep URL to a read-only account. The server independently denies mutations. */
+    if (C.mode === 'server' && C.role === 'viewer') return Domain(id);
     if (spec.screen) return spec.screen(spec);
     var f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' }), holder = h('div', {}, skeleton(2));
     mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/' + id); }, text: '→ חזרה' }), h('h1', { class: 'page', text: spec.t }), holder], spec.t);
