@@ -147,9 +147,9 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 136 | `import.commit` | import | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
 | 137 | `import.cancel` | import | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 138 | `import.jobs` | import | A | yes | PASS_SYNTH_E2E | 13/5/5 | yes | yes |  |
-| 139 | `docs.upload` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive file storage |
+| 139 | `docs.upload` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (content-guarded, encrypted, scope-checked): tests/documents_server.js + scripts/e2e_documents_browser.js, see docs/DOCUMENTS_TEST.md |
 | 140 | `docs.list` | docs | P | yes | PASS_SYNTH_E2E | 43/16/8 | yes | no |  |
-| 141 | `docs.download` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive file storage |
+| 141 | `docs.download` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (GET /api/download/document/:id, byte-identical): see docs/DOCUMENTS_TEST.md |
 | 142 | `docs.requestLink` | docs | P | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no | UI flow click-tested on synthetic fixture rows (no upload/OCR provider connected) — proves the review/link logic, not a real file or OCR pipeline |
 | 143 | `docs.reviewLink` | docs | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | yes | UI flow click-tested on synthetic fixture rows (no upload/OCR provider connected) — proves the review/link logic, not a real file or OCR pipeline |
 | 144 | `docs.pendingLinks` | docs | A | yes | PASS_SYNTH_E2E | 12/4/0 | yes | yes | UI flow click-tested on synthetic fixture rows (no upload/OCR provider connected) — proves the review/link logic, not a real file or OCR pipeline |

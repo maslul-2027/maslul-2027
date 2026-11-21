@@ -2649,7 +2649,7 @@
    "direct_ok_calls": 0,
    "ui_ok_calls": 0,
    "negative_authz_observed": "no",
-   "blocked": "needs Drive file storage",
+   "blocked": "public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (content-guarded, encrypted, scope-checked): tests/documents_server.js + scripts/e2e_documents_browser.js, see docs/DOCUMENTS_TEST.md",
    "secured_test_e2e": "NOT_RUN",
    "deployed": "NO"
   },
@@ -2687,7 +2687,7 @@
    "direct_ok_calls": 0,
    "ui_ok_calls": 0,
    "negative_authz_observed": "no",
-   "blocked": "needs Drive file storage",
+   "blocked": "public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (GET /api/download/document/:id, byte-identical): see docs/DOCUMENTS_TEST.md",
    "secured_test_e2e": "NOT_RUN",
    "deployed": "NO"
   },
