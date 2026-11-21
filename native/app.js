@@ -98,9 +98,10 @@
     ].filter(Boolean), 'בית');
     if (!S.course) return;
     var cid = S.course.id, st = { soldiers: null, follow: 0, tasks: 0, overdue: 0, alerts: null };
-    var pS = api('soldiers.list', { courseId: cid, opts: { active: true } }).then(function (r) { st.soldiers = r.ok ? r.data.length : null; $('#k1').textContent = r.ok ? String(r.data.length) : '—'; });
-    var pF = Promise.all([api('followups.list', { courseId: cid, opts: {} }), api('tasks.indicators', { courseId: cid })]).then(function (r) { st.follow = r[0].ok ? r[0].data.filter(function (x) { return x.status === 'open'; }).length : 0; st.tasks = r[1].ok ? (r[1].data.my_open || 0) : 0; st.overdue = r[1].ok ? (r[1].data.my_overdue || r[1].data.overdue || 0) : 0; $('#k2').textContent = (r[0].ok || r[1].ok) ? String(st.follow + st.tasks) : '—'; });
-    var pA = api('alerts.counts', { courseId: cid }).then(function (r) { st.alerts = r.ok ? r.data.open : null; var k = $('#k3'); k.textContent = r.ok ? String(r.data.open) : '—'; if (r.ok && r.data.red > 0) k.style.color = '#c52d36'; });
+    function setK(sel, t) { var e = $(sel); if (e) e.textContent = t; }   // the home view may already be gone when a slow answer arrives (user navigated / logged out)
+    var pS = api('soldiers.list', { courseId: cid, opts: { active: true } }).then(function (r) { st.soldiers = r.ok ? r.data.length : null; setK('#k1', r.ok ? String(r.data.length) : '—'); });
+    var pF = Promise.all([api('followups.list', { courseId: cid, opts: {} }), api('tasks.indicators', { courseId: cid })]).then(function (r) { st.follow = r[0].ok ? r[0].data.filter(function (x) { return x.status === 'open'; }).length : 0; st.tasks = r[1].ok ? (r[1].data.my_open || 0) : 0; st.overdue = r[1].ok ? (r[1].data.my_overdue || r[1].data.overdue || 0) : 0; setK('#k2', (r[0].ok || r[1].ok) ? String(st.follow + st.tasks) : '—'); });
+    var pA = api('alerts.counts', { courseId: cid }).then(function (r) { st.alerts = r.ok ? r.data.open : null; var k = $('#k3'); if (!k) return; k.textContent = r.ok ? String(r.data.open) : '—'; if (r.ok && r.data.red > 0) k.style.color = '#c52d36'; });
     var pI = api('analytics.insights', { courseId: cid, f: {} });
     Promise.all([pS, pF, pA, pI]).then(function (all) {
       var ins = all[3], items = [], reason = '', gen = '';
