@@ -12,7 +12,7 @@ const CASES=[
  {d:'nav',i:1,fill:{x_name:'ניווט בדיקה'}},
  {d:'nav',i:0,fill:{x_soldier_id:{i:1},x_navigation_type_id:{i:1},x_test_date:T,x_distance_km:'3',x_plan_score:'4',x_debrief_score:'4',x_points_completed:'4',x_points_total:'5'},read:T},
  {d:'mk',i:0,fill:{x_soldier_id:{i:1},x_test_date:T,x_weapon_type:'M16',x_distance_m:'100',x_examiner_score:'80'},read:T},
- {d:'marches',i:0,fill:{x_march_date:T,x_location:'מסע בדיקה',x_km_no_stretcher:'10',x_km_stretcher:'2'},read:'מסע בדיקה'},
+ {d:'marches',i:0,fill:{x_march_date:T,x_location:'מסע בדיקה',x_km_no_stretcher:'10',x_km_stretcher:'2'},tick:'#x_absent input',read:'מסע בדיקה'},
  {d:'readiness',i:0,fill:{x_soldier_id:{i:1},x_status:{i:1},x_start_date:T}},
  {d:'events',i:0,fill:{x_soldier_id:{i:1},x_event_date:T,x_event_type:'achievement',x_description:'הישג בדיקה'},read:'הישג בדיקה'},
  {d:'qual',i:0,fill:{x_name:'הסמכת בדיקה',x_completion_terms:'תנאי',x_scope_type:'course'},read:'הסמכת בדיקה'},
@@ -23,10 +23,15 @@ const CASES=[
 await p.goto(base+'/');await p.waitForSelector('#k1');let pass=0,fail=0;
 for(const c of CASES){const name=c.d+'#'+c.i;try{await p.evaluate(h=>{location.hash=h},'#/d/'+c.d+'/'+c.i);await p.waitForSelector('form',{timeout:8000});
  for(const[k,v] of Object.entries(c.fill)){const sel='#'+k;if(v&&v.i!==undefined)await p.selectOption(sel,{index:v.i});else if((await p.getAttribute(sel,'type'))==='date'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='INPUT'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='TEXTAREA')await p.fill(sel,v);else await p.selectOption(sel,v);}
- if(c.tick){const bx=await p.$$(c.tick);if(bx.length)await bx[0].check();}
+ if(c.tick){await p.waitForSelector(c.tick,{timeout:8000});const bx=await p.$$(c.tick);assert.ok(bx.length,'missing-trainee checkboxes exist');await bx[0].check();if(c.d==='marches')assert.match(await p.textContent('#view'),/חסרים 1 מתוך/);}
  await p.click('button[type=submit]');await p.waitForFunction(()=>/#\/d\/[a-z]+$/.test(location.hash)||document.querySelector('.msg.err'),null,{timeout:8000});
  const err=await p.$('.msg.err');if(err)throw new Error('backend: '+(await err.textContent()));
  await p.waitForSelector('.section',{timeout:5000});await p.waitForTimeout(400);
  if(c.read){await p.waitForFunction(t=>document.getElementById('view').textContent.includes(t),c.read,{timeout:6000}).catch(async()=>{throw new Error('read-back missing: '+c.read+' | view='+(await p.textContent('#view')).slice(0,300))});}
+ if(c.d==='marches'){const z=await p.evaluate(async()=>appClient.api('marches.list',{courseId:window.__app.state.course.id}));assert.ok(z.ok,'marches.list');const m=z.data.find(x=>x.location==='מסע בדיקה');assert.ok(m && m.total>0 && m.total-m.participants===1,'exactly one missing trainee persisted for new march');}
+ if(c.d==='attendance' && c.i===0){const z=await p.evaluate(async()=>appClient.api('attendance.events',{courseId:window.__app.state.course.id}));assert.ok(z.ok);const e=z.data.find(x=>x.event_date==='2026-11-15');assert.ok(e,'attendance event created');const v=await p.evaluate(async eventId=>appClient.api('attendance.roll',{courseId:window.__app.state.course.id,eventId}),e.id);assert.ok(v.ok && v.data.some(x=>!x.present),'one absent attendee persisted');}
  pass++;console.log('PASS',name);}catch(e){fail++;console.log('FAIL',name,String(e.message).split('\n')[0]);}}
+try{await p.evaluate(()=>{location.hash='#/attendance'});await p.waitForSelector('button:has-text("+ אירוע נוכחות חדש")',{timeout:6000});pass++;console.log('PASS attendance main entry opens canonical event creation');}catch(e){fail++;console.log('FAIL attendance main entry',String(e.message).split('\n')[0]);}
+try{await p.evaluate(()=>{location.hash='#/home'});await p.getByRole('button',{name:/מסע חדש/}).waitFor({timeout:8000});await p.getByRole('button',{name:/מסע חדש/}).click();await p.waitForSelector('#x_absent input[type=checkbox]',{timeout:8000});pass++;console.log('PASS Home → new march exposes missing-trainee selection');}catch(e){fail++;console.log('FAIL Home → march',String(e.message).split('\n')[0]);}
+try{await p.evaluate(()=>{location.hash='#/home'});await p.getByRole('button',{name:/אירוע נוכחות חדש/}).waitFor({timeout:8000});await p.getByRole('button',{name:/אירוע נוכחות חדש/}).click();await p.waitForSelector('#x_absent input[type=checkbox]',{timeout:8000});pass++;console.log('PASS Home → new attendance event exposes missing-trainee selection');}catch(e){fail++;console.log('FAIL Home → attendance',String(e.message).split('\n')[0]);}
 assert.deepEqual(errs,[]);console.log('DOMAINS E2E pass='+pass+' fail='+fail);if(OUT)fs.writeFileSync(OUT,JSON.stringify(await p.evaluate(()=>appClient.calls)));await b.close();srv.close();process.exit(fail?1:0);})();

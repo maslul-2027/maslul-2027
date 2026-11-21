@@ -10,7 +10,7 @@
   var CID = function () { return { courseId: S.course.id }; };
   var D = {
     attendance: { title: 'נוכחות ואירועים', lists: [{ h: 'אירועי נוכחות', m: 'attendance.events', a: CID, row: function (e) { return [(e.type_name || 'אירוע') + ' · ' + fmtD(e.event_date), 'נוכחים ' + (e.present === null || e.present === undefined ? 'מדוכא' : e.present) + ' · חסרים ' + (e.absent === null || e.absent === undefined ? 'מדוכא' : e.absent) + ' · סה״כ ' + (e.total || 0)]; } }],
-      forms: [{ t: 'אירוע נוכחות חדש', m: 'attendance.create', pre: ['acttypes.list'], fields: function (P) { return [{ n: 'event_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'activity_type_id', l: 'סוג פעילות', t: 'select', req: 1, o: (P['acttypes.list'] || []).filter(function (t) { return t.active; }).map(function (t) { return [t.id, t.name]; }) }, { n: 'absent', l: 'חסרים', t: 'multisoldier' }]; }, build: function (x) { return { request_id: rid(), event_date: x.event_date, activity_type_id: x.activity_type_id, scope_type: myScope().t, scope_id: myScope().id, absent: (x.absent || []).map(function (id) { return { soldier_id: id }; }) }; } },
+      forms: [{ t: 'אירוע נוכחות חדש', m: 'attendance.create', pre: ['acttypes.list'], fields: function (P) { return [{ n: 'event_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'activity_type_id', l: 'סוג פעילות', t: 'select', req: 1, o: (P['acttypes.list'] || []).filter(function (t) { return t.active; }).map(function (t) { return [t.id, t.name]; }) }, { n: 'absent', l: 'חסרים', t: 'multisoldier' }]; }, build: function (x, requestId) { return { request_id: requestId, event_date: x.event_date, activity_type_id: x.activity_type_id, scope_type: myScope().t, scope_id: myScope().id, absent: (x.absent || []).map(function (id) { return { soldier_id: id }; }) }; } },
         { t: 'סוג פעילות חדש', admin: 1, m: 'acttypes.create', fields: function () { return [{ n: 'name', l: 'שם', req: 1 }]; }, build: function (x) { return { courseId: S.course.id, name: x.name }; }, raw: 1 }] },
     fitness: { title: 'כשירות גופנית', lists: [{ h: 'תוצאות', m: 'fitness.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.test_date) + (r.type_name ? ' · ' + r.type_name : ''), fitScoreText(r)]; } }],
       forms: [{ t: 'הזנת מבחן כש״ג רגיל', m: 'fitness.create', pre: ['fitness.types'], live: fitLive, fields: function (P) { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'test_type_id', l: 'סוג מבחן', t: 'select', req: 1, o: (P['fitness.types'] || []).filter(function (t) { return t.active !== false && t.selectable !== false && !t.is_opening; }).map(function (t) { return [t.id, t.name]; }) }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'pullups', comp: 1, l: 'מתח — חזרות', t: 'number' }, { n: 'parallel_bars', comp: 1, l: 'מקבילים — חזרות', t: 'number' }, { n: 'trap_bar', comp: 1, l: 'Trap Bar — חזרות', t: 'number' }, { n: 'run150x2', comp: 1, l: 'ריצת הלוך־חזור 300 מ׳ (דק׳:שנ׳)', ph: '00:50' }, { n: 'run3km', comp: 1, l: 'ריצת 3 ק״מ (דק׳:שנ׳)', ph: '13:00' }, { n: 'notes', l: 'הערות' }]; } }] },
@@ -21,7 +21,7 @@
     mk: { title: 'קליעה', lists: [{ h: 'תוצאות', m: 'mk.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.test_date), { regular: 'רגילה', ylm: 'יל״מ', both: 'רגילה + יל״מ' }[r.test_kind] + ' · בוחן ' + (r.examiner_score === undefined || r.examiner_score === null ? '—' : r.examiner_score) + ' · יל״מ ' + (r.ylm_score === undefined || r.ylm_score === null ? '—' : r.ylm_score)]; } }],
       forms: [{ t: 'הזנת קליעה (רגילה / יל״מ — נפרדים)', m: 'mk.create', fields: function () { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'weapon_type', l: 'נשק', req: 1 }, { n: 'distance_m', l: 'מרחק (מ׳)', t: 'number', req: 1 }, { n: 'examiner_score', l: 'ציון בוחן (רגילה)', t: 'number' }, { n: 'weapon_zeroed', l: 'נשק מאופס', t: 'check' }, { n: 'ylm_score', l: 'ציון יל״מ', t: 'number' }, { n: 'notes', l: 'הערות' }]; } }] },
     marches: { title: 'מסעות', lists: [{ h: 'מסעות', m: 'marches.list', a: CID, row: function (r) { return [(r.location || 'מסע') + ' · ' + fmtD(r.march_date), 'ק״מ ללא אלונקה ' + (r.km_no_stretcher || 0) + ' · עם אלונקה ' + (r.km_stretcher || 0)]; } }],
-      forms: [{ t: 'מסע חדש', m: 'marches.create', fields: function () { return [{ n: 'march_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'location', l: 'מקום', req: 1 }, { n: 'km_no_stretcher', l: 'ק״מ ללא אלונקה', t: 'number' }, { n: 'km_stretcher', l: 'ק״מ עם אלונקה', t: 'number' }, { n: 'scope', l: 'תחולה (ברירת מחדל: כל הקורס)', t: 'select', o: scopeOpts() }]; }, build: function (x) { var p = String(x.scope || ('course:' + S.course.id)).split(':'); var d = Object.assign({ request_id: rid(), km_no_stretcher: 0, km_stretcher: 0 }, x); delete d.scope; d.scope_type = p[0]; d.scope_id = p[1]; return d; } }] },
+      forms: [{ t: 'מסע חדש', m: 'marches.create', fields: function () { return [{ n: 'march_date', l: 'תאריך', t: 'date', req: 1 }, { n: 'location', l: 'מקום', req: 1 }, { n: 'km_no_stretcher', l: 'ק״מ ללא אלונקה', t: 'number' }, { n: 'km_stretcher', l: 'ק״מ עם אלונקה', t: 'number' }, { n: 'scope', l: 'תחולה (ברירת מחדל: כל הקורס)', t: 'select', o: scopeOpts() }, { n: 'absent', l: 'מי חסר במסע?', t: 'multisoldier' }]; }, build: function (x, requestId) { var p = String(x.scope || ('course:' + S.course.id)).split(':'); var d = Object.assign({ request_id: requestId, km_no_stretcher: 0, km_stretcher: 0 }, x); delete d.scope; d.scope_type = p[0]; d.scope_id = p[1]; d.absent = (x.absent || []).map(function (id) { return { soldier_id: id }; }); return d; } }] },
     readiness: { title: 'כשירות מבצעית', lists: [{ h: 'סטטוסים', m: 'readiness.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)), (r.status || '') + (r.start_date ? ' · מ-' + fmtD(r.start_date) : '')]; } }],
       forms: [{ t: 'עדכון כשירות', m: 'readiness.assess', fields: function () { return [{ n: 'soldier_id', l: 'חייל', t: 'soldier', req: 1 }, { n: 'status', l: 'סטטוס', t: 'select', req: 1, o: [['fit', 'כשיר'], ['limited', 'מוגבל'], ['unfit', 'לא כשיר']] }, { n: 'restrictions', l: 'מגבלות פעילות (ללא אבחנה)' }, { n: 'start_date', l: 'מתאריך', t: 'date', req: 1 }, { n: 'next_review_date', l: 'מועד בדיקה הבא', t: 'date' }]; } }] },
     events: { title: 'אירועים והישגים', lists: [{ h: 'אירועים', m: 'events.list', a: CID, row: function (r) { return [(r.soldier_name || sname(r.soldier_id)) + ' · ' + fmtD(r.event_date), (r.event_type === 'achievement' ? 'הישג' : 'אירוע') + ': ' + (r.description || '')]; } }],
@@ -110,7 +110,7 @@
     var d = D[id]; if (!d || (id === 'access' && !(C.mode === 'server' && isAdmin()))) return More();
     var body = h('div', { 'aria-live': 'polite' }), top = [h('button', { class: 'back', type: 'button', onclick: function () { go('more'); }, text: '→ חזרה ל"עוד"' }), sectionHead(d.title, null), body];
     mount('more', top, d.title);
-    var bar = h('div', { class: 'btns', style: 'margin-top:0' }); (d.actions || []).forEach(function (ac) { if (ac.admin && !isAdmin()) return; bar.append(h('button', { class: 'secondary', type: 'button', text: ac.t, onclick: function (ev) { var btn = ev.currentTarget; busy(btn, true); ac.run().then(function (r) { busy(btn, false); if (!r.ok) { toast(msgOf(r) + (r.code === 'NOT_CONNECTED' ? '' : ''), 'err'); } else if (!r.silent) { toast(ac.ok || 'בוצע'); Domain(id); } }); } })); }); d.forms.forEach(function (f, i) { if (f.admin && !isAdmin()) return; bar.append(h('button', { class: i ? 'secondary' : 'primary', type: 'button', text: '+ ' + f.t, onclick: function () { go('d/' + id + '/' + i); } })); }); if (bar.children.length) body.append(bar);
+    var bar = h('div', { class: 'btns', style: 'margin-top:0' }); (d.actions || []).forEach(function (ac) { if (ac.admin && !isAdmin()) return; bar.append(h('button', { class: 'secondary', type: 'button', text: ac.t, onclick: function (ev) { var btn = ev.currentTarget; busy(btn, true); ac.run().then(function (r) { busy(btn, false); if (!r.ok) { toast(msgOf(r) + (r.code === 'NOT_CONNECTED' ? '' : ''), 'err'); } else if (!r.silent) { toast(ac.ok || 'בוצע'); Domain(id); } }); } })); }); d.forms.forEach(function (f, i) { if (C.mode === 'server' && C.role === 'viewer' || f.admin && !isAdmin()) return; bar.append(h('button', { class: i ? 'secondary' : 'primary', type: 'button', text: '+ ' + f.t, onclick: function () { go('d/' + id + '/' + i); } })); }); if (bar.children.length) body.append(bar);
     ensureSoldiers().then(function () { d.lists.forEach(function (l) { if (l.role && (l.role === 'admin') !== isAdmin()) return; var box = h('div', {}, [h('h3', { text: l.h, style: 'margin:16px 0 4px;font-size:15px' }), skeleton(2)]); body.append(box);
       function load() { api(l.m, l.a()).then(function (r) { box.replaceChildren(h('h3', { text: l.h, style: 'margin:16px 0 4px;font-size:15px' })); if (!r.ok) { box.append(errBox(r, load)); return; } var rows = Array.isArray(r.data) ? r.data : (r.data && (r.data.rows || r.data.items)) || []; if (!l.view && !rows.length) { box.append(emptyBox(l.empty || 'אין רשומות עדיין.')); return; } if (l.view) { l.view(r.data, box, load); return; } rows.slice(0, 100).forEach(function (x) { var t = l.row(x); box.append(card(t[0], t[1], t[2] || null, l.click ? function () { l.click(x, load); } : null)); }); if (rows.length > 100) box.append(h('p', { class: 'muted', text: 'מוצגות 100 ראשונות.' })); }); }
       load(); });
@@ -118,6 +118,8 @@
   }
   function DomainForm(id, idx) {
     var d = D[id], spec = d && d.forms[idx]; if (!spec) return More();
+    /* Never expose a write form through a guessed deep URL to a read-only account. The server independently denies mutations. */
+    if (C.mode === 'server' && C.role === 'viewer') return Domain(id);
     if (spec.screen) return spec.screen(spec);
     var f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' }), holder = h('div', {}, skeleton(2));
     mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/' + id); }, text: '→ חזרה' }), h('h1', { class: 'page', text: spec.t }), holder], spec.t);
@@ -132,13 +134,45 @@
         ins[fd.n] = inp; var w = field((fd.l || fd.n) + (fd.req ? ' *' : ''), inp); wraps[fd.n] = w; f.append(w); });
       var tf = ins.test_type_id, types = P['fitness.types'] || [];
       if (tf && fields.some(function (fd) { return fd.comp; })) { var sync = function () { var t = types.filter(function (x) { return x.id === tf.value; })[0], w = (t && t.weights) || {}; fields.forEach(function (fd) { if (fd.comp) wraps[fd.n].hidden = !(w[fd.n] > 0); }); }; tf.addEventListener('change', sync); sync(); }
+      /* Keep the missing-trainee chooser in sync with the event scope. Unchecked = present by default.
+         Server policy revalidates every ID and scope; the UI never substitutes for authorization. */
+      if (ins.absent) {
+        var miss = ins.absent, selScope = ins.scope, searchMiss = h('input', { type: 'search', placeholder: 'חיפוש חניך לפי שם', 'aria-label': 'חיפוש חניך חסר' }),
+          missCount = h('p', { role: 'status', 'aria-live': 'polite', class: 'muted' });
+        wraps.absent.insertBefore(searchMiss, miss); wraps.absent.append(missCount);
+        if (selScope && !isAdmin() && S.mine && !S.mine.course_wide) {
+          var mine = S.mine, teamIds = mine.team_ids || [], depIds = mine.department_ids || [];
+          [].slice.call(selScope.options).forEach(function (o) {
+            var p = o.value.split(':'), allowed = p[0] === 'team' && (teamIds.indexOf(p[1]) !== -1 || (S.org.teams || []).some(function (t) { return t.id === p[1] && depIds.indexOf(t.department_id) !== -1; })) ||
+              p[0] === 'department' && depIds.indexOf(p[1]) !== -1;
+            if (!allowed) o.remove();
+          });
+          if (selScope.options.length) selScope.value = selScope.options[0].value;
+        }
+        var syncMissing = function () {
+          var sp = selScope && selScope.value ? selScope.value.split(':') : [myScope().t, myScope().id],
+            term = searchMiss.value.trim().toLowerCase(), eligible = 0, absent = 0;
+          [].slice.call(miss.querySelectorAll('input[type=checkbox]')).forEach(function (ch) {
+            var s = (cache.soldiers || []).find(function (r) { return r.id === ch.value; }), inScope = !!s && (
+              sp[0] === 'course' || sp[0] === 'department' && s.department_id === sp[1] || sp[0] === 'team' && s.team_id === sp[1]);
+            if (!inScope) ch.checked = false;
+            if (inScope) eligible++;
+            if (inScope && ch.checked) absent++;
+            ch.parentNode.hidden = !inScope || !!term && String(s.full_name || '').toLowerCase().indexOf(term) === -1;
+          });
+          missCount.textContent = 'חסרים ' + absent + ' מתוך ' + eligible + ' · כל מי שלא סומן יירשם כנוכח';
+        };
+        searchMiss.addEventListener('input', syncMissing); miss.addEventListener('change', syncMissing);
+        if (selScope) selScope.addEventListener('change', syncMissing);
+        syncMissing();
+      }
       if (spec.live) spec.live({ ins: ins, wraps: wraps, f: f, P: P });
       var save = h('button', { class: 'primary', type: 'submit', text: 'שמירה' }); f.append(msg, h('div', { class: 'btns' }, [save, h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { go('d/' + id); } })]));
       function val(fd) { var i = ins[fd.n]; if (fd.t === 'check') return i.checked; if (fd.t === 'multisoldier') return [].slice.call(i.querySelectorAll('input:checked')).map(function (c) { return c.value; }); return i.value; }
       f.addEventListener('submit', function (e) { e.preventDefault(); clearErr(f); msg.className = ''; msg.textContent = ''; var bad = false, x = {};
         fields.forEach(function (fd) { if (wraps[fd.n].hidden) return; var v = val(fd); if (fd.req && (v === '' || v === null || v === undefined || (fd.t === 'check' && v === false))) { fieldErr(wraps[fd.n], 'שדה חובה.'); bad = true; return; } if (fd.t === 'number' && v !== '' && !isFinite(Number(v))) { fieldErr(wraps[fd.n], 'ערך מספרי בלבד.'); bad = true; return; } if (v !== '' && !(Array.isArray(v) && !v.length)) x[fd.n] = fd.t === 'number' ? Number(v) : v; else if (fd.t === 'multisoldier') x[fd.n] = []; });
         if (bad) return; busy(save, true, 'שמירה');
-        var data; try { data = spec.build ? spec.build(x) : Object.assign({ request_id: req }, x); } catch (er) { busy(save, false, 'שמירה'); msg.textContent = er.message; msg.className = 'msg err'; return; } var args = spec.rawKey ? Object.fromEntries([[spec.rawKey, data]]) : (spec.raw ? data : { courseId: S.course.id, data: data });
+        var data; try { data = spec.build ? spec.build(x, req) : Object.assign({ request_id: req }, x); } catch (er) { busy(save, false, 'שמירה'); msg.textContent = er.message; msg.className = 'msg err'; return; } var args = spec.rawKey ? Object.fromEntries([[spec.rawKey, data]]) : (spec.raw ? data : { courseId: S.course.id, data: data });
         api(spec.m, args).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast((r.data && r.data.duplicate) ? 'הרשומה כבר נשמרה' : 'נשמר'); go('d/' + id); }); });
       holder.replaceWith(f);
     });

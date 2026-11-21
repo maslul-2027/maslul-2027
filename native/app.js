@@ -94,6 +94,8 @@
       sectionHead('גישה מהירה', 'הכי שימושי'),
       card('חיפוש חניך', 'מוצאים אדם בשניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldiers'); }),
       card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('tasks'); }),
+      (C.mode === 'server' && C.role === 'viewer') ? null : card('אירוע נוכחות חדש', 'בחרו סוג פעילות וסמנו רק את החניכים שחסרים', h('span', { class: 'arrow', text: '←' }), function () { go('d/attendance/0'); }),
+      (C.mode === 'server' && C.role === 'viewer') ? null : card('מסע חדש', 'מזינים פרטי מסע ובוחרים מי חסר', h('span', { class: 'arrow', text: '←' }), function () { go('d/marches/0'); }),
       (C.mode === 'server' && !isAdmin()) ? null : card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
     ].filter(Boolean), 'בית');
     if (!S.course) return;
@@ -322,11 +324,9 @@
 
   /* ---------- ATTENDANCE (read) & ALERTS (read) ---------- */
   function Attendance() {
-    var body = h('div', { 'aria-live': 'polite' }); mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('more'); }, text: '→ חזרה ל"עוד"' }), sectionHead('נוכחות ואירועים', null), body], 'נוכחות');
-    body.append(skeleton(3)); api('attendance.events', { courseId: S.course.id }).then(function (r) {
-      if (!r.ok) { body.replaceChildren(errBox(r, Attendance)); return; } body.replaceChildren(); if (!r.data.length) { body.append(emptyBox('אין אירועי נוכחות. יצירת אירוע ורישום היעדרויות יועברו בשלב הבא.')); return; }
-      r.data.slice(0, 50).forEach(function (e) { body.append(card(e.title || e.type || 'אירוע', (e.date || e.event_date || '') + (e.start_time ? ' · ' + e.start_time : ''), null)); });
-    });
+    /* One canonical attendance screen: the domain view already supports creating an event
+       with a missing-trainee roster; never strand navigation in the old read-only prototype. */
+    return Domain('attendance');
   }
   function Alerts() {
     var body = h('div', { 'aria-live': 'polite' }); mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('more'); }, text: '→ חזרה ל"עוד"' }), sectionHead('התראות', null), body], 'התראות');
