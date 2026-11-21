@@ -40,6 +40,7 @@
   function restoreScroll(y) { userScrolled = false; var n = 0; (function step() { if (userScrolled) return; window.scrollTo(0, y); if (++n < 5 && Math.abs(window.scrollY - y) > 2) setTimeout(step, n * 120); })(); }
   function mount(tab, nodes, title) {
     var key = location.hash || '#/home', changed = key !== curKey, deeper = /^#\/(soldier|d)\//.test(key), pop = navPop, top = forceTop, keep = window.scrollY; navPop = false; forceTop = false;
+    document.querySelectorAll('dialog.closing').forEach(function (x) { if (x._rawClose) x._rawClose(); });   // a sheet that was closing for a route change must not keep the page inert (modal) after the new screen is in
     view.replaceChildren.apply(view, nodes.filter(Boolean)); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); }
     if (changed || top) { var y = !top && (pop || ROOTS.test(key)) ? scrollMem[key] || 0 : 0; window.scrollTo(0, 0); if (y > 0) restoreScroll(y); }
     else if (keep > 0) restoreScroll(keep);   // same route re-rendered in place (reload after a save / a filter): keep the position while the async content grows back
@@ -55,7 +56,7 @@
     var opener = document.activeElement, d = h('dialog', { 'aria-labelledby': 'dlgT' }), f = h('form', { method: 'dialog' }), msg = h('div', { role: 'alert' });
     var ok = h('button', { class: danger ? 'danger' : 'primary', type: 'submit', text: okLabel || 'אישור' }), cancel = h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { d.close(); } });
     f.append(h('h2', { id: 'dlgT', text: title }), h('div', {}, bodyNodes), msg, h('div', { class: 'btns' }, [ok, cancel])); d.append(f); document.body.append(d);
-    var rawClose = d.close.bind(d); d.close = function () { if (REDUCED || !d.open || d.classList.contains('closing')) return rawClose(); d.classList.add('closing'); setTimeout(rawClose, 110); }; d.addEventListener('cancel', function (e) { e.preventDefault(); d.close(); });
+    var rawClose = d.close.bind(d); d._rawClose = rawClose; d.close = function () { if (REDUCED || !d.open || d.classList.contains('closing')) return rawClose(); d.classList.add('closing'); setTimeout(rawClose, 110); }; d.addEventListener('cancel', function (e) { e.preventDefault(); d.close(); });
     f.addEventListener('submit', function (e) { e.preventDefault(); msg.textContent = ''; msg.className = ''; busy(ok, true); Promise.resolve(onOk(msg)).then(function (done) { if (done === false) busy(ok, false); else d.close(); }); });
     d.addEventListener('close', function () { d.remove(); if (opener && opener.isConnected && typeof opener.focus === 'function') { try { opener.focus({ preventScroll: true }); } catch (e) {} } }); d.showModal(); return d;
   }
