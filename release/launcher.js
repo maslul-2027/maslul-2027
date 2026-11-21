@@ -122,5 +122,5 @@ async function main() {
   process.on('SIGINT', stop); process.on('SIGTERM', stop); process.on('exit', () => { try { fs.unlinkSync(lockFile()); } catch (e) { /* ignore */ } });
   return null;   // keep serving
 }
-module.exports = { preflight, randomPin, environmentChecks };
+module.exports = { preflight, randomPin, environmentChecks, REQUIRED };
 if (require.main === module) main().then(c => { if (c !== null) process.exit(c); }).catch(e => { console.error('Unexpected error: ' + e.message); process.exit(1); });
