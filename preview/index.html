@@ -427,7 +427,8 @@ dialog.sheet{max-height:92vh;overflow:auto}
   function participantEditor(kind, item, reload) {
     var march = kind === 'marches', title = march ? item.location : (item.type_name || 'אירוע נוכחות');
     var area = h('div', { id: 'participantRoster', 'aria-live': 'polite' }, [skeleton(2)]);
-    var dlg = dialog('משתתפים — ' + title, [area], function () { return true; }, 'סגירה');
+    var detail = march ? h('button', { type: 'button', class: 'secondary', text: 'עריכת פרטי המסע', onclick: function () { dlg.close(); setTimeout(function () { recordSheet('Marches', item, reload); }, 140); } }) : null;
+    var dlg = dialog('משתתפים — ' + title, march ? [detail, area] : [area], function () { return true; }, 'סגירה');
     function loadRoster() {
       area.replaceChildren(skeleton(2));
       var method = march ? 'marches.list' : 'attendance.roll';
@@ -689,7 +690,7 @@ dialog.sheet{max-height:92vh;overflow:auto}
     var d = dialog('פעולות על רשומה', [body], function (msg) { if (!fsel.value) { msg.textContent = 'בחרו שדה לתיקון, או סגרו.'; msg.className = 'msg err'; return false; } if (!rs.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } var v = typeof row[fsel.value] === 'number' ? Number(nv.value) : nv.value; var ch = {}; ch[fsel.value] = v; var adm = isAdmin(); return api(adm ? 'record.edit' : 'correction.request', adm ? { table: table, id: row.id, patch: ch, reason: rs.value.trim() } : { table: table, id: row.id, changes: ch, reason: rs.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast(adm ? 'הרשומה עודכנה' : 'בקשת התיקון נשלחה לאישור מנהל'); reload(); }); }, isAdmin() ? 'שמירת עריכה' : 'שליחת בקשת תיקון');
     if (isAdmin()) { var cb = h('button', { class: 'danger', type: 'button', text: row.record_status === 'cancelled' ? 'שחזור רשומה' : 'ביטול רשומה', onclick: function () { var why = row.record_status === 'cancelled' ? null : window.prompt ? null : null; var rr = h('input', { id: 'rcC' }); d.close(); dialog(row.record_status === 'cancelled' ? 'שחזור רשומה' : 'ביטול רשומה', [field('סיבה' + (row.record_status === 'cancelled' ? '' : ' (חובה)'), rr)], function (msg) { if (row.record_status !== 'cancelled' && !rr.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } return api(row.record_status === 'cancelled' ? 'record.restore' : 'record.cancel', { table: table, id: row.id, reason: rr.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('בוצע'); reload(); }); }, 'אישור', true); } }); body.append(h('div', { class: 'btns' }, [cb])); }
   }
-  ['fitness', 'nav', 'mk', 'exams', 'marches', 'readiness', 'events'].forEach(function (k) { var l = D[k].lists[0]; l.click = function (x, reload) { recordSheet(TBL[k], x, reload); }; });
+  ['fitness', 'nav', 'mk', 'exams', 'readiness', 'events'].forEach(function (k) { var l = D[k].lists[0]; l.click = function (x, reload) { recordSheet(TBL[k], x, reload); }; }); // Marches uses its scoped participant editor (above), not generic recordSheet.
   function sumList(h2, m, fn, a) { return { h: h2, m: m, a: a || CID, view: function (d, box) { fn(d, box); } }; }
   function pct(x) { return x === null || x === undefined ? '—' : x + '%'; }
   D.summaries = { title: 'סיכומי תחומים (קבוצתי)', forms: [], lists: [
