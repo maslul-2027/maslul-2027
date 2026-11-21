@@ -71,6 +71,8 @@ function gateway(opts) {
       if (ctx.role !== 'admin' && args.courseId !== undefined && !ctx.courseIds.includes(String(args.courseId))) { auth.authorize(ctx, 'read', { courseId: String(args.courseId) }); }   // fail closed on a foreign course before the engine is reached
       const u = state.users.find(x => x.id === ctx.userId);
       const body2 = opts.api.call({ userId: ctx.userId, role: ctx.role === 'user' ? 'commander' : ctx.role, name: u ? u.name : '', courseIds: ctx.courseIds }, method, args);
+      if ((method === 'backup.restore' || method === 'backup.recover') && body2 && body2.ok && body2.data && body2.data.restored) {      // a restore replaces the data every session was built on: ALL sessions end, everyone signs in again
+        const n = state.sessions.filter(x => !x.revoked).length; state.sessions.forEach(x => { x.revoked = true; }); auth.audit.push({ at: new Date((opts.now || Date.now)()).toISOString(), ev: 'sessions_revoked_after_restore', user: ctx.userId, revoked: n }); body2.data.sessions_revoked = true; }
       skipSave = !opts.api.dirty && !write;   // persist whenever the engine actually changed state, whatever the method is called
       return { status: 200, body: body2 };
     }

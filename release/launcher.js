@@ -28,16 +28,30 @@ const lockFile = () => path.join(dataDir, 'server.lock');
 function readSecrets() { return JSON.parse(fs.readFileSync(path.join(dataDir, 'secrets.json'), 'utf8')); }
 function openStore() { const store = require(path.join(root, 'backend_next', 'store.js')); return store.open({ file: path.join(dataDir, 'state.bin'), key: Buffer.from(readSecrets().storeKey, 'hex') }); }
 
+function openFull() {
+  const store = openStore(), key = Buffer.from(readSecrets().storeKey, 'hex'), files = require(path.join(root, 'backend_next', 'file_store.js')).open({ dir: path.join(dataDir, 'files'), key });
+  return { store, files, full: require(path.join(root, 'backend_next', 'full_backup.js')).open({ dataDir, store, files }) };
+}
+/** FULL backup: encrypted state AND every stored report file in one integrity-protected container (see backend_next/full_backup.js). Same-installation scope: it carries no key. */
 async function backup() {
   if (!fs.existsSync(path.join(dataDir, 'state.bin'))) { say('Nothing to back up yet: start the app once first.'); return 3; }
-  const S = openStore(), st = S.load(), dir = path.join(dataDir, 'backups'); fs.mkdirSync(dir, { recursive: true });
-  const dest = path.join(dir, 'backup-' + new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '') + '.bin'); const r = await S.backup(st, dest);
-  say('Encrypted backup written: ' + dest + (r && r.sha ? '\nSHA-256 of content: ' + r.sha : '')); say('It can only be opened with THIS data folder\'s secrets.json — keep both together. Synthetic data only.'); return 0;
+  const { full } = openFull(), dir = path.join(dataDir, 'backups'); fs.mkdirSync(dir, { recursive: true });
+  const dest = path.join(dir, 'full-backup-' + new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '') + '.mbk');
+  let r; try { r = full.create(dest); } catch (e) { say('Backup FAILED (' + e.message + '). Nothing was written.'); return 5; }
+  say('Full encrypted backup written: ' + dest + '\nContains: the app state + ' + r.files + ' stored file(s) (' + r.bytes + ' bytes)' + (r.skipped_corrupt ? '\nWARNING: ' + r.skipped_corrupt + ' stored file(s) failed their own integrity check and were NOT copied.' : '') + '\nSHA-256 of the backup file: ' + r.sha);
+  say('It contains NO secret. It can only be restored into THIS installation (same data folder / secrets.json) — keep secrets.json safe, separately. Synthetic data only.'); return 0;
 }
 async function restore(src) {
   if (!src || !fs.existsSync(src)) { say('Restore needs an existing backup file: --restore <file>'); return 3; }
   try { const l = JSON.parse(fs.readFileSync(lockFile(), 'utf8')); if (alive(l.pid)) { say('The app is running (pid ' + l.pid + '). Close its window first, then restore.'); return 3; } } catch (e) { /* no lock */ }
+  const head = Buffer.alloc(4); try { const fd = fs.openSync(src, 'r'); fs.readSync(fd, head, 0, 4, 0); fs.closeSync(fd); } catch (e) { say('Cannot read the backup file.'); return 3; }
+  if (head.toString('latin1') === 'MBK1') {
+    const { full } = openFull(); try { const rec = full.recover(); if (rec.action !== 'none') say('An interrupted restore was found and ' + rec.action + '.'); } catch (e) { say('REFUSED — could not recover the interrupted restore (' + e.message + '). Nothing changed.'); return 4; }
+    let r; try { r = full.restore(src); } catch (e) { say((e.code === 'CORRUPT' ? 'REFUSED — backup is not valid for this data folder (' + e.message + ')' : 'FAILED — ' + e.message) + '. Current data and reports untouched.'); return e.code === 'CORRUPT' ? 4 : 5; }
+    say('Restored state + ' + r.files + ' stored file(s) (' + r.added + ' added, ' + r.repaired + ' repaired). Everything that was there before is kept in ' + r.rollback + ' (delete it when you no longer need it).'); say('All sessions were revoked: sign in again.'); return 0;
+  }
   const S = openStore(); let st; try { st = S.restore(src); } catch (e) { say('REFUSED — backup is not valid for this data folder (' + e.message + '). Current data untouched.'); return 4; }
+  say('NOTE: this is an OLD state-only backup (no report files). Report files already in this data folder are left as they are.');
   const keep = path.join(dataDir, 'state.before-restore-' + Date.now() + '.bin'); try { fs.copyFileSync(path.join(dataDir, 'state.bin'), keep); say('Previous state kept as ' + keep); } catch (e) { /* first run */ }
   S.saveNow(st); say('Restored. All sessions were revoked: sign in again.'); return 0;
 }
@@ -78,6 +92,7 @@ async function main() {
 
   const first = !fs.existsSync(path.join(dataDir, 'state.bin')), credFile = path.join(dataDir, 'ADMIN-LOGIN-SYNTHETIC.txt');
   let seed; if (first) { const pin = randomPin(); seed = { fullName: 'מנהל בדיקות (סינתטי)', phone: '0500000001', pin }; fs.writeFileSync(credFile, 'MASLUL TEST — SYNTHETIC admin (no real person).\r\nPhone: ' + seed.phone + '\r\nPIN: ' + pin + '\r\nThis file stays on this computer. Delete it after you have memorised the PIN.\r\n', { mode: 0o600 }); }
+  if (!first) { try { const rec = openFull().full.recover(); if (rec.action !== 'none') say('An interrupted restore was found and ' + rec.action + ' (your data is consistent).'); } catch (e) { say('FAILED TO START: an interrupted restore could not be recovered (' + e.message + '). Nothing was changed.'); return 1; } }
   const ts = require(path.join(root, 'backend_next', 'test_server.js'));
   let s; try { s = await ts.start({ dir: dataDir, port, host: '127.0.0.1', origin: 'https://localhost:' + port, seedAdmin: seed }); } catch (e) { say('FAILED TO START: ' + e.message); return 1; }
   fs.writeFileSync(lockFile(), JSON.stringify({ pid: process.pid, origin: s.origin, at: new Date().toISOString() }));
