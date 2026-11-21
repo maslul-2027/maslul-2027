@@ -23,6 +23,9 @@ on:
       - 'scripts/e2e_native_qa.js'
       - 'scripts/e2e_native_batch6.js'
       - 'scripts/e2e_native_batch7.js'
+      - 'scripts/e2e_native_fitness.js'
+      - 'tests/fitness_regular.js'
+      - 'scripts/e2e_native_tasks.js'
       - 'scripts/build_route_ledger.js'
       - 'scripts/check_route_ledger.js'
       - 'scripts/native_screenshots.js'
@@ -64,6 +67,11 @@ jobs:
       - run: E2E_CALLS_OUT=artifacts/calls_native_qa.json node scripts/e2e_native_qa.js preview artifacts/qa_screens
       - run: E2E_CALLS_OUT=artifacts/calls_native_batch6.json node scripts/e2e_native_batch6.js preview artifacts/batch6_screens
       - run: E2E_CALLS_OUT=artifacts/calls_native_batch7.json node scripts/e2e_native_batch7.js preview artifacts/batch7_screens
+      - name: Fitness regular-only entry, live preview, scoring reference (Issue #66)
+        run: |
+          node tests/fitness_regular.js
+          E2E_CALLS_OUT=artifacts/calls_native_fitness.json node scripts/e2e_native_fitness.js preview artifacts/fitness_screens
+      - run: E2E_CALLS_OUT=artifacts/calls_native_tasks.json node scripts/e2e_native_tasks.js preview artifacts/tasks_screens
       - name: Private TEST server — secure API tests over real TLS (Issue #43)
         run: |
           node scripts/build_native_app.js --server
@@ -75,7 +83,7 @@ jobs:
           SHOTS_DIR=artifacts/secure_screens node scripts/e2e_secure_browser.js
       - run: node scripts/e2e_native_ux.js preview artifacts/ux_screens
       - run: node scripts/e2e_native_motion.js preview
-      - name: 174-route evidence ledger (generated from the browser runs)
+      - name: Route evidence ledger (generated from the browser runs)
         run: node scripts/build_route_ledger.js artifacts artifacts/ledger
       - name: Enforce truthful route ledger counts and native-screen evidence
         run: |
@@ -96,6 +104,8 @@ jobs:
             artifacts/qa_screens
             artifacts/batch6_screens
             artifacts/batch7_screens
+            artifacts/fitness_screens
+            artifacts/tasks_screens
             artifacts/secure_screens
             artifacts/ux_screens
             artifacts/ledger

@@ -53,3 +53,15 @@ dialog{overscroll-behavior:contain}
 #view{display:flow-root}
 
 #heroWhy{min-height:3.2em}   /* reserve the two-line hero explanation so the contextual text arriving later never shifts the page */
+/* Issue #65: persistent quick-add + and meeting-editor task rows */
+.fab{position:fixed;inset-inline-start:16px;bottom:calc(88px + env(safe-area-inset-bottom));width:56px;height:56px;min-height:56px;border-radius:50%;background:var(--teal);color:#fff;border:0;font-size:30px;line-height:1;display:grid;place-items:center;box-shadow:0 6px 18px #0003;z-index:4;padding:0;transition:transform .15s ease,box-shadow .15s ease}
+.fab[hidden]{display:none}.fab:active{transform:scale(.93)}.fab:focus-visible{outline:3px solid #009fa4;outline-offset:3px}
+.has-fab{padding-bottom:104px}
+dialog.sheet{max-height:92vh;overflow:auto}
+.taskrow{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:10px 0;min-inline-size:0}.taskrow legend{font-weight:700;font-size:13px;padding:0 6px}.taskrow.err{border-color:var(--red)}
+.trow2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:8px}.trow2 select:first-child{grid-column:1/-1}.trow3{display:flex;gap:8px;margin-top:8px;justify-content:flex-end}
+.btn.ic,button.ic{min-width:44px;padding:0 12px}
+.stickybar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));z-index:3;background:linear-gradient(#fff0,#fff 30%);padding:10px 0 4px}.stickybar button{width:100%}
+@media (prefers-reduced-motion:reduce){.fab{transition:none}}
+.taskrow input,.taskrow select{width:100%;border:1px solid #dce3e6;background:#fff;border-radius:13px;min-height:48px;padding:12px;font:inherit;color:inherit}.taskrow input:focus-visible,.taskrow select:focus-visible{outline:3px solid #009fa4;outline-offset:1px}.taskrow.err input{border-color:var(--red)}
+.taskrow .errmsg{color:var(--red);font-size:13px;margin-top:6px}

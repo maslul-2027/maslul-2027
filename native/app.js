@@ -243,8 +243,14 @@
     function setSeg(v) { S.seg = v; seg.replaceChildren.apply(seg, segBtns()); load(); }
     function segBtns() { return [['tasks', 'משימות מישיבות'], ['follow', 'מעקבים אישיים']].map(function (p) { return h('button', { type: 'button', 'aria-pressed': S.seg === p[0] ? 'true' : 'false', text: p[1], onclick: function () { setSeg(p[0]); } }); }); }
     seg.replaceChildren.apply(seg, segBtns());
-    mount('tasks', [sectionHead('מעקבים', 'נתונים סינתטיים'), seg, body], 'מעקבים');
+    var flt = h('div', { class: 'seg', role: 'group', 'aria-label': 'סינון משימות' }), FL = S.tfilter || 'all';
+    function fltBtns() { return [['all', 'הכול'], ['mine', 'שלי'], ['overdue', 'באיחור']].map(function (p) { return h('button', { type: 'button', 'aria-pressed': FL === p[0] ? 'true' : 'false', text: p[1], onclick: function () { FL = S.tfilter = p[0]; flt.replaceChildren.apply(flt, fltBtns()); load(); } }); }); }
+    flt.replaceChildren.apply(flt, fltBtns());
+    var fab = canCreateTasks() ? h('button', { class: 'fab', type: 'button', id: 'taskFab', 'aria-label': 'הוספת משימה חדשה', 'aria-haspopup': 'dialog', text: '+', onclick: function (e) { openQuickTask(e.currentTarget); } }) : null;
+    mount('tasks', [sectionHead('מעקבים', 'נתונים סינתטיים'), seg, body].concat(fab ? [fab] : []), 'מעקבים'); S.reloadTasks = function () { if (S.seg !== 'follow') load(); };
     function load() {
+      if (fab) fab.hidden = S.seg === 'follow';
+      document.getElementById('view').classList.toggle('has-fab', !!fab && S.seg !== 'follow');
       body.replaceChildren(skeleton(3));
       if (S.seg === 'follow') {
         Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), cache.soldiers ? Promise.resolve({ ok: true, data: cache.soldiers }) : api('soldiers.list', { courseId: S.course.id, opts: {} })]).then(function (r) {
@@ -258,9 +264,10 @@
       } else {
         api('tasks.list', { courseId: S.course.id, opts: {} }).then(function (r) {
           if (!r.ok) { body.replaceChildren(errBox(r, load)); return; } var rows = r.data.tasks || []; body.replaceChildren();
-          body.append(h('p', { class: 'muted', text: 'פתוחות ' + r.data.counts.open + ' · בטיפול ' + r.data.counts.in_progress + ' · באיחור ' + r.data.counts.overdue }));
-          if (!rows.length) { body.append(emptyBox('אין משימות. משימות נוצרות בסיכום ישיבה.')); return; }
-          rows.forEach(function (t) { body.append(card(t.title, (t.assignee_name || t.assignee_email || '') + (t.due_date ? ' · ' + t.due_date : ''), status(taskLabel(t.status), t.status === 'open' || t.overdue), function () { TaskStatus(t); })); });
+          body.append(h('p', { class: 'muted', text: 'פתוחות ' + r.data.counts.open + ' · בטיפול ' + r.data.counts.in_progress + ' · באיחור ' + r.data.counts.overdue }), flt);
+          var me = String((S.who || {}).email || '').toLowerCase(), all = rows; rows = rows.filter(function (t) { return FL === 'mine' ? String(t.assignee_email).toLowerCase() === me : FL === 'overdue' ? t.overdue : true; });
+          if (!rows.length) { body.append(emptyBox(all.length ? 'אין משימות בסינון הזה.' : 'אין משימות עדיין. הוסיפו משימה עם כפתור ה־+ או בסיכום ישיבה.')); return; }
+          rows.forEach(function (t) { body.append(card(t.title, (t.assignee_name || t.assignee_email || '') + (t.due_date ? ' · ' + t.due_date : '') + (t.meeting_subject ? ' · ' + t.meeting_subject : ''), status(taskLabel(t.status), t.status === 'open' || t.overdue), function () { TaskStatus(t); })); });
         });
       }
     }
@@ -270,6 +277,7 @@
   function TaskStatus(t) {
     var sel = h('select', { id: 'tsel' }, ['open', 'in_progress', 'waiting', 'completed', 'cancelled'].map(function (v) { return h('option', { value: v, text: taskLabel(v) }); })); sel.value = t.status; var note = h('textarea', { id: 'tnote' });
     var det = h('div', { 'aria-live': 'polite' }); api('tasks.get', { id: t.id }).then(function (r) { if (!r.ok) return; var d = r.data || {}; det.append(h('p', { class: 'muted', text: (d.assignee_email || t.assignee_email || '') + (d.due_date ? ' · עד ' + String(d.due_date).slice(0, 10) : '') + (d.notes ? ' · ' + d.notes : '') })); (d.history || []).slice(0, 5).forEach(function (e) { det.append(h('p', { class: 'muted', text: (e.at ? String(e.at).slice(0, 10) + ' · ' : '') + (e.to_status || e.status || '') + (e.note ? ' — ' + e.note : '') })); }); });
+    if (t.meeting_id && D.meetings) det.append(h('button', { class: 'secondary', type: 'button', id: 'taskMeeting', text: 'פתיחת סיכום הישיבה' + (t.meeting_subject ? ': ' + t.meeting_subject : ''), onclick: function () { document.querySelectorAll('dialog').forEach(function (x) { x.close(); }); D.meetings.lists[0].click({ id: t.meeting_id, subject: t.meeting_subject || 'סיכום', meeting_at: '' }); } }));
     dialog(t.title, [det, field('סטטוס', sel), field('הערה', note)], function (msg) { return api('tasks.setStatus', { id: t.id, status: sel.value, note: note.value, expected_version: t.version }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('הסטטוס עודכן'); Tasks(); }); }, 'עדכון');
   }
   function FollowForm() {
@@ -285,7 +293,7 @@
   /* ---------- MORE ---------- */
   var DOMAINS = [
     ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבים ומשימות', 'מעקבים אישיים, משימות מישיבות', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'd/alerts', true], ['🗓', 'ישיבות ומשימות', 'סיכומי ישיבה ויצירת משימות', 'd/meetings', true], ['📊', 'לוח קורס', 'סקירה קבוצתית, מחלקות/צוותים והשוואת קורסים', 'd/dash', true], ['🧠', 'תמונת מצב קבוצתית', 'מדדים ותובנות ברמת קבוצה בלבד', 'd/insights', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
-    ['דוחות ונתונים', [['📄', 'דוחות וייצוא', 'תצוגה קבוצתית בלבד (N≥5); ייצוא חסום', 'd/reports', true], ['📎', 'ייבוא ומסמכים', 'ייבוא CSV עם תצוגה מקדימה, אישור וביטול', 'd/imports', true], ['📑', 'מסמכים וקישורים', 'בקשות קישור, אישורן וראיות להסמכות', 'd/docs', true], ['🔎', 'OCR לבדיקה', 'טיוטות חילוץ ואישור שורה-שורה (מנהל)', 'd/ocr', true], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', 'd/forms', true], ['✔', 'תיקונים', 'בקשות תיקון ואישורן', 'd/corrections', true]]],
+    ['דוחות ונתונים', [['📄', 'דוחות וייצוא', 'תצוגה קבוצתית בלבד (N≥5); ייצוא חסום', 'd/reports', true], ['📎', 'ייבוא ומסמכים', 'ייבוא CSV עם תצוגה מקדימה, אישור וביטול', 'd/imports', true], ['📑', 'מסמכים וקישורים', 'בקשות קישור, אישורן וראיות להסמכות', 'd/docs', true], ['ℹ️', 'אודות / מידע מקצועי', 'טבלאות ניקוד כש״ג — לקריאה בלבד', 'd/fitref', true], ['🔎', 'OCR לבדיקה', 'טיוטות חילוץ ואישור שורה-שורה (מנהל)', 'd/ocr', true], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', 'd/forms', true], ['✔', 'תיקונים', 'בקשות תיקון ואישורן', 'd/corrections', true]]],
     ['ניהול', [['🏫', 'קורסים', 'יצירה, ארכוב, פתיחה מחדש', null, false], ['🔐', 'משתמשים וקורסים', 'משתמשים, תפקידים וקורס חדש', 'd/admin', true], ['🧩', 'שיוך מפקדים', 'שיוך מפקד לקורס, מחלקה או צוות', 'd/assign', true], ['🏷', 'שמות מחלקות וצוותים', 'שינוי שמות יחידות', 'd/org', true], ['⚙', 'הגדרות', 'פרמטרים מקצועיים והיסטוריה', 'd/settings', true], ['💾', 'גיבוי ובדיקות מערכת', 'גיבוי, Preflight', 'd/backup', true], ['📜', 'יומן פעולות', 'Audit', 'd/audit', true], ['📈', 'סיכומי תחומים', 'סיכומים קבוצתיים לכל תחום', 'd/summaries', true], ['🧮', 'גרסאות ניקוד כש״ג', 'טיוטה, אימות ואישור טבלאות', 'd/fitadmin', true], ['📥', 'ייבוא ו-OCR', 'ייבוא קבצים וטיוטות OCR', null, false]]]
   ];
   function More() {

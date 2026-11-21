@@ -5,7 +5,7 @@
 //   WRITE   : changes data or triggers an action. Viewer: always denied. Others: engine role/scope rules apply.
 //   BLOCKED : owner policy — not callable by ANY role over the API (group-only analytics; no per-soldier AI; no schema-mutating migration).
 const READ = ('courses.list courses.org users.list soldiers.list soldiers.card soldiers.private emergency.get emergency.orphans nav.list nav.groups nav.summary navtypes.list assignments.list assignments.mine record.history correction.list settings.list ' +
-  'fitness.types fitness.draftSource fitness.versions fitness.list fitness.summary fitness.completion fitness.quality mk.list mk.summary exams.defs exams.attempts exams.meetings exams.summary acttypes.list attendance.events attendance.roll attendance.summary ' +
+  'fitness.types fitness.preview fitness.reference fitness.draftSource fitness.versions fitness.list fitness.summary fitness.completion fitness.quality mk.list mk.summary exams.defs exams.attempts exams.meetings exams.summary acttypes.list attendance.events attendance.roll attendance.summary ' +
   'marches.list marches.summary readiness.list readiness.summary readiness.notEntered events.list qual.list qual.dueHistory qual.assignments qual.summary assess.list notes.list followups.list favorites.list snote.list alerts.list alerts.counts forms.generalLink forms.list ' +
   'dash.home dash.overview dash.groups dash.compareCourses dash.strengthsGaps analytics.insights reports.preview reports.download reports.jobs import.preview import.jobs docs.list docs.download docs.pendingLinks docs.evidence ocr.rows ai.ask ' +
   'backup.list backup.verify backup.plan preflight.last meetings.list meetings.get meetings.options tasks.list tasks.get tasks.indicators meetings.integrity audit.list').split(' ');
