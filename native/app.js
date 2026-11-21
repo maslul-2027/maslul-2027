@@ -94,6 +94,8 @@
       sectionHead('גישה מהירה', 'הכי שימושי'),
       card('חיפוש חניך', 'מוצאים אדם בשניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldiers'); }),
       card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('tasks'); }),
+      (C.mode === 'server' && C.role === 'viewer') ? null : card('אירוע נוכחות חדש', 'בחרו סוג פעילות וסמנו רק את החניכים שחסרים', h('span', { class: 'arrow', text: '←' }), function () { go('d/attendance/0'); }),
+      (C.mode === 'server' && C.role === 'viewer') ? null : card('מסע חדש', 'מזינים פרטי מסע ובוחרים מי חסר', h('span', { class: 'arrow', text: '←' }), function () { go('d/marches/0'); }),
       (C.mode === 'server' && !isAdmin()) ? null : card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
     ].filter(Boolean), 'בית');
     if (!S.course) return;
