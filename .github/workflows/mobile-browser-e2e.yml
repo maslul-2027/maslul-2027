@@ -16,6 +16,7 @@ on:
       - 'scripts/e2e_secure_browser.js'
       - 'scripts/e2e_report_export_browser.js'
       - 'scripts/e2e_backup_restore_browser.js'
+      - 'scripts/e2e_documents_browser.js'
       - 'scripts/e2e_native.js'
       - 'scripts/e2e_native_domains.js'
       - 'scripts/e2e_native_roles.js'
@@ -100,6 +101,10 @@ jobs:
         run: |
           node scripts/build_native_app.js --server
           SHOTS_DIR=artifacts/backup_screens E2E_CALLS_OUT=artifacts/secure_calls_backup.json node scripts/e2e_backup_restore_browser.js
+      - name: Secure documents (Issue #72 part 3) — real upload through the file picker, content guard refusals, real byte-identical download, role denial
+        run: |
+          node scripts/build_native_app.js --server
+          E2E_CALLS_OUT=artifacts/secure_calls_documents.json node scripts/e2e_documents_browser.js
       - run: node scripts/e2e_native_ux.js preview artifacts/ux_screens
       - run: node scripts/e2e_native_motion.js preview
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)

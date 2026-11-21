@@ -26,8 +26,12 @@ function create(opts) {
   // A backup = the engine's table snapshot (JSON, encrypted) + a byte-for-byte snapshot of every stored file (file_bundle). Both are taken inside ONE synchronous engine call: no report can be created in between.
   const RANDOM = require('crypto').randomUUID, BK = { files: opts.files || null, bundle: opts.bundle || null };
   if (opts.files) {
-    const ef = require('./export_formats'), allow = b => { if (b !== 'reports' && b !== 'backups') nc(); };
-    X.Adapters._fake = { saveFile(bucket, name, mime, b64) { allow(bucket); const f = opts.files.save(bucket, name, mime, Buffer.from(b64, 'base64'));
+    const ef = require('./export_formats'), guard = require('./content_guard'), DOC_QUOTA = 300 * 1024 * 1024, allow = b => { if (b !== 'reports' && b !== 'backups' && b !== 'documents') nc(); };
+    X.Adapters._fake = { saveFile(bucket, name, mime, b64) { allow(bucket); const raw = Buffer.from(b64, 'base64');
+        if (bucket === 'documents') {      // strict content guard + per-installation quota; the engine already checked size/extension/MIME/magic and scope. Never a user-chosen path: ids are random.
+          const ext = (/\.([A-Za-z0-9]{2,5})$/.exec(String(name)) || [])[1]; try { guard.inspect(String(ext || '').toLowerCase(), raw); } catch (e) { throw new X.AppError('VALIDATION', e.message); }
+          const used = (mem.Documents || []).reduce((a, d) => a + (Number(d.size_bytes) || 0), 0); if (used + raw.length > DOC_QUOTA) throw new X.AppError('VALIDATION', 'חריגה ממכסת אחסון המסמכים של סביבת הבדיקה.'); }
+        const f = opts.files.save(bucket, name, mime, raw);
         if (bucket === 'backups') { if (!opts.bundle) { opts.files.trash(f.id); nc(); } const preRestore = /^backup_pre_restore_/.test(String(name)); let snap; try { snap = opts.bundle.snapshot(f.id, { allowPartial: preRestore }); } catch (e) { opts.files.trash(f.id); throw new X.AppError(e.code === 'TOO_LARGE' ? 'VALIDATION' : 'INTERNAL', e.code === 'CORRUPT_FILE' ? 'הגיבוי נעצר: קובץ שמור אחד או יותר (דוח/מסמך) אינו תקין, ולכן לא נוצר גיבוי חלקי. שחזרו מגיבוי מאומת קודם או פנו למנהל המערכת.' : 'לא ניתן ליצור צילום עקבי של הקבצים: ' + String(e.message).slice(0, 120)); }
           // every file the system state points to must be inside the snapshot — otherwise the "full" backup could not restore it. Only the automatic pre_restore safety net (taken because the live store may be damaged) is exempt; its gaps are listed in the manifest
           const have = new Set(snap.ids || []), refs = [].concat((mem.Documents || []).map(d => d.drive_file_id), (mem.ReportJobs || []).map(j => j.file_id)).filter(Boolean), miss = refs.filter(id => !have.has(String(id)));
@@ -105,6 +109,7 @@ function create(opts) {
     /** identity = {userId, role: admin|commander|viewer, name, courseIds} from the gateway session. */
     call(id, method, args) {
       email = sync(id); const viewer = id.role === 'viewer', snap = JSON.stringify(mem); this.dirty = false;
+      if (method === 'docs.upload' && args && args.data && typeof args.data.file_name === 'string') args = Object.assign({}, args, { data: Object.assign({}, args.data, { file_name: args.data.file_name.replace(/[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '_') }) });   // bidi / zero-width tricks in a file name (engine src is frozen; sanitise at the host)
       try {
         const r = method === 'whoAmI' ? run(X.whoAmI, []) : (/^backup\./.test(String(method)) ? backupHook(id, String(method), args, () => run(X.api, [String(method), clone(args || {})])) : run(X.api, [String(method), clone(args || {})]));
         if (method === 'whoAmI' && r.ok) { r.data.role = id.role; r.data.readOnly = viewer; r.data.displayName = id.name || r.data.displayName; }
