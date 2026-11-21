@@ -188,10 +188,10 @@ const Marches = {
       return m.course_id === courseId && (opts.includeCancelled === true && admin ? true : m.record_status === RECORD_STATUS.ACTIVE)
         && (!opts.marchId || String(m.id) === String(opts.marchId));
     }).filter(function (m) {
-      return admin || Mods.scopeSoldiers_(ctx, courseId, m.scope_type, m.scope_id).length > 0;
+      return admin || Mods.scopeAllowed_(ctx, courseId, m.scope_type, m.scope_id) || Marches.overlaps_(ctx, courseId, m);
     }).map(function (m) {
       const rs = attendance[m.id] || [], present = rs.filter(function (r) { return Util.isTrue(r.present); }).length;
-      const splitOk = Analytics.splitOk_(present, rs.length - present);
+      const splitOk = admin || Analytics.splitOk_(present, rs.length - present);   // admin = exact operational view; D2 suppression protects scoped commanders
       const row = { id: m.id, march_date: Util.cellToIsoDate(m.march_date), location: m.location,
         km_no_stretcher: Number(m.km_no_stretcher), km_stretcher: Number(m.km_stretcher), total_km: Number(m.total_km),
         scope_type: m.scope_type, scope_id: m.scope_id, participants: splitOk ? present : null,
@@ -209,6 +209,7 @@ const Marches = {
       return row;
     }).sort(function (a, b) { return a.march_date < b.march_date ? 1 : -1; });
   },
+  overlaps_(ctx, courseId, m) { return Mods.scopeSoldiers_(ctx, courseId, m.scope_type, m.scope_id).length > 0; },
   /** Soldier totals from Snapshot rows: km only for marches he attended; participation count; absences. Sums, not averages. */
   aggregate_(rows) {
     let no = 0, st = 0, n = 0, absent = 0;

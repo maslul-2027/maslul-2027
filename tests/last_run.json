@@ -1,5 +1,5 @@
 {
- "when": "2026-11-21T11:03:17.948Z",
+ "when": "2026-11-21T18:06:38.495Z",
  "node": "v22.23.4",
  "flags": {
   "ui": true,
@@ -36,6 +36,50 @@
    "types": null,
    "state": "PASS",
    "pass": 16,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "backup_restore",
+   "types": null,
+   "state": "PASS",
+   "pass": 24,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "full_backup",
+   "types": null,
+   "state": "PASS",
+   "pass": 15,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "documents_server",
+   "types": null,
+   "state": "PASS",
+   "pass": 15,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "marches_scope",
+   "types": {
+    "unit": 0,
+    "integration": 0,
+    "hardening": 7
+   },
+   "state": "PASS",
+   "pass": 7,
+   "fail": 0,
+   "why": ""
+  },
+  {
+   "s": "marches_server",
+   "types": null,
+   "state": "PASS",
+   "pass": 7,
    "fail": 0,
    "why": ""
   },
@@ -711,7 +755,7 @@
    "s": "ui_synthetic_app",
    "types": null,
    "state": "PASS",
-   "pass": 168,
+   "pass": 171,
    "fail": 0,
    "why": ""
   }
@@ -720,17 +764,17 @@
   "breakdown": {
    "node_unit": 95,
    "node_integration": 294,
-   "node_hardening": 235,
-   "browser": 402,
-   "unclassified": 87
+   "node_hardening": 242,
+   "browser": 405,
+   "unclassified": 148
   },
-  "node_total": 711,
-  "suites": 68,
-  "PASS": 68,
+  "node_total": 779,
+  "suites": 73,
+  "PASS": 73,
   "FAIL": 0,
   "SKIP": 0,
-  "tests_run": 1113,
-  "passed": 1113,
+  "tests_run": 1184,
+  "passed": 1184,
   "failed": 0
  },
  "result": "COMPLETE_PASS"

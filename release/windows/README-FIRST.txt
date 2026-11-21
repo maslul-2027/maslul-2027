@@ -28,8 +28,8 @@ HOW TO RUN (no commands to type)
 
 OTHER BUTTONS
   VERIFY-FILES.cmd     runs the same integrity check on its own (it also runs automatically on every start)
-  BACKUP-NOW.cmd       writes an encrypted backup to data\backups\
-  RESTORE-BACKUP.cmd   drag a backup file onto it (close the app first). Invalid/tampered backups are refused and nothing changes.
+  BACKUP-NOW.cmd       writes a FULL encrypted backup (app data + all saved report files) to data\backups\ (no secrets inside; keep data\secrets.json safe, separately)
+  RESTORE-BACKUP.cmd   drag a backup file onto it (close the app first). Invalid/tampered backups are refused and nothing changes; a failed or interrupted restore is rolled back automatically.
 
 WHAT IT DOES NOT DO
   This is NOT an installer and NOT one-click: Node 22 must be installed first, and the localhost certificate warning appears once.

@@ -2,28 +2,28 @@
 
 Source: `scripts/build_route_ledger.js` from `src/Code.gs` API_ map, `tests/route_classes.json`, native sources and the calls recorded by the browser E2E (`E2E_CALLS_OUT`). Synthetic data only. **secured TEST E2E = NOT_RUN and deployed = NO for every row** (no secured backend exists yet).
 
-**Summary:** {"total":176,"PASS_SYNTH_E2E":158,"API_ONLY_NOT_UI":0,"POLICY_BLOCKED":5,"interaction_verified":158,"IMPLEMENTED_NOT_E2E":0,"BLOCKED_NOT_CONNECTED":13,"NOT_IMPLEMENTED":0,"native_screen":165}
+**Summary:** {"total":176,"PASS_SYNTH_E2E":158,"API_ONLY_NOT_UI":0,"POLICY_BLOCKED":5,"interaction_verified":158,"IMPLEMENTED_NOT_E2E":0,"BLOCKED_NOT_CONNECTED":13,"NOT_IMPLEMENTED":0,"native_screen":169}
 
 Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the application UI code (`ui_origin_api_ok`, includes calls made automatically when a screen renders) — it is NOT by itself proof that a person (or Playwright) operated a control · **interaction_verified** (separate column/count) = at least one successful UI-origin call that started within 1.5 s after a *trusted* input event (real click/type/select/submit/keypress dispatched by the browser input pipeline) — a machine-correlated gesture, not a semantic proof of the intended action; the E2E scripts also read state back to check results · API_ONLY_NOT_UI = only the test hook (`window.__app.api`) succeeded · IMPLEMENTED_NOT_E2E = native code references the API but no successful browser call observed · BLOCKED_NOT_CONNECTED = missing external adapter, shown honestly · POLICY_BLOCKED = backend route exists but is intentionally not exposed natively (owner charter) and is NOT counted as completed · NOT_IMPLEMENTED = no native workflow. Cell format of `calls`: ui-origin/gesture-correlated/direct.
 
 | # | Route | Group | Authz class | Native | Status | calls | interaction_verified | Negative authz seen | Note |
 |---|---|---|---|---|---|---|---|---|---|
 
-| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 91/14/4 | yes | no |  |
-| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 76/6/7 | yes | no |  |
+| 1 | `courses.list` | courses | N | yes | PASS_SYNTH_E2E | 93/13/4 | yes | no |  |
+| 2 | `courses.org` | courses | N | yes | PASS_SYNTH_E2E | 79/7/7 | yes | no |  |
 | 3 | `courses.create` | courses | A | yes | PASS_SYNTH_E2E | 1/1/7 | yes | no |  |
 | 4 | `courses.archive` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 5 | `courses.reopen` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 6 | `courses.rename` | courses | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 7 | `users.list` | users | A | yes | PASS_SYNTH_E2E | 12/7/1 | yes | yes |  |
+| 7 | `users.list` | users | A | yes | PASS_SYNTH_E2E | 11/6/1 | yes | yes |  |
 | 8 | `users.add` | users | A | yes | PASS_SYNTH_E2E | 1/1/1 | yes | yes |  |
 | 9 | `users.set` | users | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 246/87/18 | yes | yes |  |
+| 10 | `soldiers.list` | soldiers | O | yes | PASS_SYNTH_E2E | 260/96/18 | yes | yes |  |
 | 11 | `soldiers.card` | soldiers | O | yes | PASS_SYNTH_E2E | 22/19/3 | yes | no |  |
 | 12 | `soldiers.private` | soldiers | P | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 13 | `emergency.get` | emergency | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
 | 14 | `emergency.set` | emergency | P | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 15 | `emergency.orphans` | emergency | A | yes | PASS_SYNTH_E2E | 10/6/0 | yes | no |  |
+| 15 | `emergency.orphans` | emergency | A | yes | PASS_SYNTH_E2E | 9/5/0 | yes | no |  |
 | 16 | `soldiers.create` | soldiers | O | yes | PASS_SYNTH_E2E | 1/1/19 | yes | yes |  |
 | 17 | `soldiers.update` | soldiers | O | yes | PASS_SYNTH_E2E | 1/1/1 | yes | no |  |
 | 18 | `soldiers.reassign` | soldiers | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
@@ -37,15 +37,15 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 26 | `navtypes.create` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/1 | yes | no |  |
 | 27 | `navtypes.rename` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 28 | `navtypes.setActive` | navtypes | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 29 | `assignments.list` | assignments | A | yes | PASS_SYNTH_E2E | 14/7/9 | yes | yes |  |
-| 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 71/4/2 | yes | yes |  |
+| 29 | `assignments.list` | assignments | A | yes | PASS_SYNTH_E2E | 13/6/9 | yes | yes |  |
+| 30 | `assignments.mine` | assignments | N | yes | PASS_SYNTH_E2E | 74/4/2 | yes | yes |  |
 | 31 | `assignments.create` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 32 | `assignments.update` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 33 | `assignments.setActive` | assignments | A | yes | PASS_SYNTH_E2E | 1/1/3 | yes | yes |  |
 | 34 | `nav.summary` | nav | G | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 35 | `record.edit` | record | O | yes | PASS_SYNTH_E2E | 1/1/1 | yes | no |  |
-| 36 | `record.cancel` | record | O | yes | PASS_SYNTH_E2E | 2/2/1 | yes | no |  |
-| 37 | `record.restore` | record | O | yes | PASS_SYNTH_E2E | 1/1/1 | yes | no |  |
+| 35 | `record.edit` | record | O | yes | PASS_SYNTH_E2E | 3/3/1 | yes | no |  |
+| 36 | `record.cancel` | record | O | yes | PASS_SYNTH_E2E | 3/3/1 | yes | no |  |
+| 37 | `record.restore` | record | O | yes | PASS_SYNTH_E2E | 1/1/2 | yes | no |  |
 | 38 | `record.history` | record | O | yes | PASS_SYNTH_E2E | 1/1/2 | yes | no |  |
 | 39 | `correction.request` | correction | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 40 | `correction.list` | correction | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
@@ -64,7 +64,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 53 | `fitness.addTable` | fitness | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 54 | `fitness.approve` | fitness | A | yes | PASS_SYNTH_E2E | 2/2/3 | yes | no |  |
 | 55 | `fitness.create` | fitness | O | yes | PASS_SYNTH_E2E | 2/2/7 | yes | no |  |
-| 56 | `fitness.preview` | fitness | N | yes | PASS_SYNTH_E2E | 11/11/4 | yes | no |  |
+| 56 | `fitness.preview` | fitness | N | yes | PASS_SYNTH_E2E | 12/12/4 | yes | no |  |
 | 57 | `fitness.reference` | fitness | N | yes | PASS_SYNTH_E2E | 3/3/1 | yes | no |  |
 | 58 | `fitness.list` | fitness | O | yes | PASS_SYNTH_E2E | 5/5/3 | yes | yes |  |
 | 59 | `fitness.summary` | fitness | G | yes | PASS_SYNTH_E2E | 3/1/1 | yes | no |  |
@@ -81,16 +81,16 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 70 | `exams.attempts` | exams | O | yes | PASS_SYNTH_E2E | 7/3/0 | yes | no |  |
 | 71 | `exams.meetings` | exams | O | yes | PASS_SYNTH_E2E | 7/3/0 | yes | no |  |
 | 72 | `exams.summary` | exams | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 73 | `acttypes.list` | acttypes | N | yes | PASS_SYNTH_E2E | 9/5/2 | yes | no |  |
+| 73 | `acttypes.list` | acttypes | N | yes | PASS_SYNTH_E2E | 13/9/2 | yes | no |  |
 | 74 | `acttypes.create` | acttypes | A | yes | PASS_SYNTH_E2E | 1/1/2 | yes | no |  |
 | 75 | `acttypes.rename` | acttypes | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 76 | `acttypes.setActive` | acttypes | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
-| 77 | `attendance.create` | attendance | O | yes | PASS_SYNTH_E2E | 1/1/3 | yes | no |  |
-| 78 | `attendance.events` | attendance | G | yes | PASS_SYNTH_E2E | 7/3/1 | yes | yes |  |
-| 79 | `attendance.roll` | attendance | O | yes | PASS_SYNTH_E2E | 1/1/1 | yes | no |  |
+| 77 | `attendance.create` | attendance | O | yes | PASS_SYNTH_E2E | 2/2/3 | yes | no |  |
+| 78 | `attendance.events` | attendance | G | yes | PASS_SYNTH_E2E | 203/91/3 | yes | yes |  |
+| 79 | `attendance.roll` | attendance | O | yes | PASS_SYNTH_E2E | 3/3/1 | yes | no |  |
 | 80 | `attendance.summary` | attendance | G | yes | PASS_SYNTH_E2E | 3/1/3 | yes | yes |  |
-| 81 | `marches.create` | marches | O | yes | PASS_SYNTH_E2E | 5/5/2 | yes | yes |  |
-| 82 | `marches.list` | marches | O | yes | PASS_SYNTH_E2E | 16/12/9 | yes | yes |  |
+| 81 | `marches.create` | marches | O | yes | PASS_SYNTH_E2E | 7/7/2 | yes | yes |  |
+| 82 | `marches.list` | marches | O | yes | PASS_SYNTH_E2E | 235/121/18 | yes | yes |  |
 | 83 | `marches.summary` | marches | G | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
 | 84 | `readiness.assess` | readiness | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 85 | `readiness.list` | readiness | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
@@ -114,16 +114,16 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 103 | `notes.list` | notes | P | yes | PASS_SYNTH_E2E | 22/20/0 | yes | yes |  |
 | 104 | `followups.create` | followups | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 105 | `followups.update` | followups | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 106 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 174/83/0 | yes | yes |  |
+| 106 | `followups.list` | followups | O | yes | PASS_SYNTH_E2E | 184/89/0 | yes | yes |  |
 | 107 | `favorites.toggle` | favorites | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | yes |  |
 | 108 | `favorites.list` | favorites | O | yes | PASS_SYNTH_E2E | 21/19/0 | yes | no |  |
 | 109 | `snote.add` | snote | O | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
-| 110 | `snote.list` | snote | O | yes | PASS_SYNTH_E2E | 9/9/0 | yes | no |  |
+| 110 | `snote.list` | snote | O | yes | PASS_SYNTH_E2E | 10/10/0 | yes | no |  |
 | 111 | `snote.cancel` | snote | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 112 | `alerts.refresh` | alerts | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
 | 113 | `alerts.list` | alerts | O | yes | PASS_SYNTH_E2E | 9/6/1 | yes | no |  |
 | 114 | `alerts.handle` | alerts | O | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 115 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 183/79/0 | yes | no |  |
+| 115 | `alerts.counts` | alerts | G | yes | PASS_SYNTH_E2E | 193/85/0 | yes | no |  |
 | 116 | `forms.generalLink` | forms | N | yes | PASS_SYNTH_E2E | 3/2/0 | yes | no |  |
 | 117 | `forms.createLink` | forms | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 118 | `forms.list` | forms | O | yes | PASS_SYNTH_E2E | 4/3/1 | yes | no |  |
@@ -134,7 +134,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 123 | `dash.compareCourses` | dash | G | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 124 | `dash.trends` | dash | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: owner charter 2026-11-20 (docs/OWNER_CURRENT_CHARTER_2026-11-20.md) allows group-level analytics only — no per-soldier trends. Backend route preserved for an owner-approved disposition; no native screen calls it. |
 | 125 | `dash.strengthsGaps` | dash | O | yes | PASS_SYNTH_E2E | 3/1/0 | yes | no |  |
-| 126 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 186/80/0 | yes | no |  |
+| 126 | `analytics.insights` | analytics | G | yes | PASS_SYNTH_E2E | 197/87/0 | yes | no |  |
 | 127 | `reports.build` | reports | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: returns per-soldier rows (names, personal numbers, individual scores); owner charter 2026-11-20 allows group-level reporting only (N>=5). The group-safe report is reports.preview. Not counted as completed. |
 | 128 | `reports.preview` | reports | G | yes | PASS_SYNTH_E2E | 6/2/1 | yes | no |  |
 | 129 | `reports.generate` | reports | O | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real PDF/XLSX, encrypted at rest): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md |
@@ -147,9 +147,9 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 136 | `import.commit` | import | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no |  |
 | 137 | `import.cancel` | import | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 138 | `import.jobs` | import | A | yes | PASS_SYNTH_E2E | 13/5/5 | yes | yes |  |
-| 139 | `docs.upload` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive file storage |
+| 139 | `docs.upload` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (content-guarded, encrypted, scope-checked): tests/documents_server.js + scripts/e2e_documents_browser.js, see docs/DOCUMENTS_TEST.md |
 | 140 | `docs.list` | docs | P | yes | PASS_SYNTH_E2E | 43/16/8 | yes | no |  |
-| 141 | `docs.download` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive file storage |
+| 141 | `docs.download` | docs | P | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (GET /api/download/document/:id, byte-identical): see docs/DOCUMENTS_TEST.md |
 | 142 | `docs.requestLink` | docs | P | yes | PASS_SYNTH_E2E | 2/2/0 | yes | no | UI flow click-tested on synthetic fixture rows (no upload/OCR provider connected) — proves the review/link logic, not a real file or OCR pipeline |
 | 143 | `docs.reviewLink` | docs | A | yes | PASS_SYNTH_E2E | 2/2/0 | yes | yes | UI flow click-tested on synthetic fixture rows (no upload/OCR provider connected) — proves the review/link logic, not a real file or OCR pipeline |
 | 144 | `docs.pendingLinks` | docs | A | yes | PASS_SYNTH_E2E | 12/4/0 | yes | yes | UI flow click-tested on synthetic fixture rows (no upload/OCR provider connected) — proves the review/link logic, not a real file or OCR pipeline |
@@ -164,15 +164,15 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 153 | `ai.draft` | ai | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: generates an individual per-soldier assessment, excluded from analytics by the owner charter 2026-11-20. Group-only insights stay in analytics.insights. Not counted as completed. |
 | 154 | `ai.drafts` | ai | O | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: lists per-soldier generated assessments (owner charter 2026-11-20). Not counted as completed. |
 | 155 | `ai.reviewDraft` | ai | A | no | POLICY_BLOCKED | 0/0/0 | no | no | POLICY_BLOCKED / NOT_EXPOSED_BY_DESIGN: would make an individual generated assessment official (owner charter 2026-11-20). Not counted as completed. |
-| 156 | `backup.create` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | needs Drive/Spreadsheet adapter |
+| 156 | `backup.create` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
 | 157 | `backup.list` | backup | A | yes | PASS_SYNTH_E2E | 11/4/1 | yes | no |  |
-| 158 | `backup.verify` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
-| 159 | `backup.plan` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | needs the private backup file (Drive adapter) — plan is read-only once storage is connected |
-| 160 | `backup.restore` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
-| 161 | `backup.recover` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
+| 158 | `backup.verify` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
+| 159 | `backup.plan` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
+| 160 | `backup.restore` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
+| 161 | `backup.recover` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
 | 162 | `preflight.run` | preflight | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 163 | `preflight.last` | preflight | A | yes | PASS_SYNTH_E2E | 11/4/0 | yes | yes |  |
-| 164 | `backup.prune` | backup | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | needs Drive adapter |
+| 164 | `backup.prune` | backup | A | yes | BLOCKED_NOT_CONNECTED | 0/0/0 | no | no | public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (admin-only; state + encrypted report files): tests/backup_restore.js + scripts/e2e_backup_restore_browser.js, see docs/BACKUP_RESTORE_TEST.md |
 | 165 | `migration.run` | migration | A | no | BLOCKED_NOT_CONNECTED | 0/0/0 | no | yes | mutating schema migration is NOT exposed from the UI in this release (manager gate: plan/dry-run only): needs an approved private server and a separately reviewed migration plan; the UI makes zero migration.run calls |
 | 166 | `meetings.list` | meetings | N | yes | PASS_SYNTH_E2E | 18/15/6 | yes | no |  |
 | 167 | `meetings.get` | meetings | N | yes | PASS_SYNTH_E2E | 9/9/3 | yes | no |  |
@@ -181,7 +181,7 @@ Markers: **PASS_SYNTH_E2E** = at least one successful API call made by the appli
 | 170 | `tasks.list` | tasks | N | yes | PASS_SYNTH_E2E | 23/19/6 | yes | no |  |
 | 171 | `tasks.get` | tasks | N | yes | PASS_SYNTH_E2E | 3/3/0 | yes | no |  |
 | 172 | `tasks.setStatus` | tasks | N | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
-| 173 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 183/79/0 | yes | no |  |
+| 173 | `tasks.indicators` | tasks | G | yes | PASS_SYNTH_E2E | 193/85/0 | yes | no |  |
 | 174 | `meetings.integrity` | meetings | N | yes | PASS_SYNTH_E2E | 12/7/1 | yes | no |  |
 | 175 | `meetings.auditRepair` | meetings | A | yes | PASS_SYNTH_E2E | 1/1/0 | yes | no |  |
 | 176 | `audit.list` | audit | A | yes | PASS_SYNTH_E2E | 7/3/5 | yes | yes |  |

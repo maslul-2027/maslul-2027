@@ -71,20 +71,24 @@ function gateway(opts) {
       if (ctx.role !== 'admin' && args.courseId !== undefined && !ctx.courseIds.includes(String(args.courseId))) { auth.authorize(ctx, 'read', { courseId: String(args.courseId) }); }   // fail closed on a foreign course before the engine is reached
       const u = state.users.find(x => x.id === ctx.userId);
       const body2 = opts.api.call({ userId: ctx.userId, role: ctx.role === 'user' ? 'commander' : ctx.role, name: u ? u.name : '', courseIds: ctx.courseIds }, method, args);
+      if ((method === 'backup.restore' || method === 'backup.recover') && body2 && body2.ok && body2.data && body2.data.restored) {      // a restore replaces the data every session was built on: ALL sessions end, everyone signs in again
+        const n = state.sessions.filter(x => !x.revoked).length; state.sessions.forEach(x => { x.revoked = true; }); auth.audit.push({ at: new Date((opts.now || Date.now)()).toISOString(), ev: 'sessions_revoked_after_restore', user: ctx.userId, revoked: n }); body2.data.sessions_revoked = true; }
       skipSave = !opts.api.dirty && !write;   // persist whenever the engine actually changed state, whatever the method is called
       return { status: 200, body: body2 };
     }
-    // ----- real file download (generated report). Session-authenticated GET; the ENGINE decides access (course/team scope, owner-or-admin, viewer denied) via reports.download. Binary response, never JSON-wrapped. -----
-    let dm;
-    if (m === 'GET' && (dm = /^\/api\/download\/report\/([A-Za-z0-9-]{3,64})$/.exec(p))) {
-      if (!opts.api || opts.api.classify('reports.download') !== 'read') throw new AuthError('NOT_FOUND', 'לא נמצא.');
+    // ----- real file download (generated report / stored document). Session-authenticated GET; the ENGINE decides access (reports.download: admin; docs.download: admin or the uploader inside course/team scope; viewer denied). Binary response, never JSON-wrapped. -----
+    let dm; const DL = { report: ['reports.download', 'maslul-report-', { pdf: 'application/pdf', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }], document: ['docs.download', 'maslul-doc-', { pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }] };
+    if (m === 'GET' && (dm = /^\/api\/download\/(report|document)\/([A-Za-z0-9-]{3,64})$/.exec(p))) {
+      const spec = DL[dm[1]], id = dm[2];
+      if (!opts.api || opts.api.classify(spec[0]) !== 'read') throw new AuthError('NOT_FOUND', 'לא נמצא.');
       const u = state.users.find(x => x.id === ctx.userId), at = new Date((opts.now || Date.now)()).toISOString();
-      const r = opts.api.call({ userId: ctx.userId, role: ctx.role === 'user' ? 'commander' : ctx.role, name: u ? u.name : '', courseIds: ctx.courseIds }, 'reports.download', { id: dm[1] });
-      if (!r || !r.ok || !r.data || (r.data.format !== 'pdf' && r.data.format !== 'xlsx')) { auth.audit.push({ at, ev: 'report_download_denied', user: ctx.userId, report: dm[1], code: r && r.code }); const c = r && r.code; return { status: c === 'FORBIDDEN' ? 403 : c === 'NOT_CONNECTED' ? 501 : 404, body: { ok: false, code: c || 'NOT_FOUND', message: c === 'NOT_CONNECTED' ? 'ייצוא קבצים אינו מחובר בסביבה זו.' : 'הדוח לא נמצא.' } }; }
-      const buf = Buffer.from(r.data.content_base64, 'base64'), pdf = r.data.format === 'pdf';
-      auth.audit.push({ at, ev: 'report_download', user: ctx.userId, report: dm[1], bytes: buf.length });
-      const fname = 'maslul-report-' + dm[1].slice(0, 8) + (pdf ? '.pdf' : '.xlsx');      // fixed ASCII name from a validated id: no user text ever reaches a header
-      return { status: 200, binary: buf, headers: { 'content-type': pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'content-disposition': 'attachment; filename="' + fname + '"; filename*=UTF-8\'\'' + fname, 'content-length': String(buf.length) } };
+      const r = opts.api.call({ userId: ctx.userId, role: ctx.role === 'user' ? 'commander' : ctx.role, name: u ? u.name : '', courseIds: ctx.courseIds }, spec[0], { id });
+      const fmtOf = r && r.ok && r.data ? (dm[1] === 'report' ? r.data.format : (/\.([A-Za-z0-9]{2,5})$/.exec(String(r.data.file_name || '')) || [])[1]) : '', ext = String(fmtOf || '').toLowerCase(), mime = spec[2][ext];
+      if (!r || !r.ok || !r.data || !mime || (dm[1] === 'document' && r.data.mime_type !== mime)) { auth.audit.push({ at, ev: dm[1] + '_download_denied', user: ctx.userId, [dm[1]]: id, code: r && r.code }); const c = r && r.code; return { status: c === 'FORBIDDEN' ? 403 : c === 'NOT_CONNECTED' ? 501 : 404, body: { ok: false, code: c || 'NOT_FOUND', message: c === 'NOT_CONNECTED' ? 'הורדת קבצים אינה מחוברת בסביבה זו.' : (dm[1] === 'report' ? 'הדוח לא נמצא.' : 'המסמך לא נמצא.') } }; }
+      const buf = Buffer.from(r.data.content_base64, 'base64');
+      auth.audit.push({ at, ev: dm[1] + '_download', user: ctx.userId, [dm[1]]: id, bytes: buf.length });
+      const fname = spec[1] + id.slice(0, 8) + '.' + (ext === 'jpeg' ? 'jpg' : ext);      // fixed ASCII name from a validated id + a whitelisted extension: no user text ever reaches a header
+      return { status: 200, binary: buf, headers: { 'content-type': mime, 'content-disposition': 'attachment; filename="' + fname + '"; filename*=UTF-8\'\'' + fname, 'content-length': String(buf.length), 'content-security-policy': "sandbox; default-src 'none'" } };
     }
     // ----- admin console -----
     if (p.startsWith('/admin/')) {
@@ -119,7 +123,8 @@ function gateway(opts) {
 }
 /** Minimal node:http adapter for the private TEST server. FAIL CLOSED: the protocol is taken ONLY from the socket (a real TLS socket = https). There is deliberately NO option to assume/force TLS — options passed here are ignored. HTTPS behind a reverse proxy is accepted solely by the gateway's own check: the TCP peer must be an explicitly configured trustedProxies IP AND send x-forwarded-proto: https. */
 function toHttp(gw) {
-  return (rq, rs) => { let raw = ''; rq.on('data', c => { raw += c; if (raw.length > 2e6) rq.destroy(); }); rq.on('end', async () => {
+  return (rq, rs) => { let raw = ''; const big = rq.method === 'POST' && String(rq.url).split('?')[0] === '/api' && /cookie/i.test(Object.keys(rq.headers).join(',')) && Number(rq.headers['content-length']) <= 12e6, cap = big ? 12e6 : 2e6;      // only an authenticated-looking /api POST may carry a document (base64 of up to 8 MB); everything else keeps the 2 MB cap
+    rq.on('data', c => { raw += c; if (raw.length > cap) rq.destroy(); }); rq.on('end', async () => {
     let body = {}; try { body = raw ? JSON.parse(raw) : {}; } catch (e) { rs.statusCode = 400; return rs.end('{"ok":false,"code":"INVALID"}'); }
     const r = await gw.handle({ method: rq.method, path: rq.url, headers: rq.headers, body, remoteAddr: rq.socket.remoteAddress, proto: rq.socket && rq.socket.encrypted ? 'https' : 'http' });
     if (r.binary) { rs.statusCode = r.status; rs.setHeader('cache-control', 'no-store'); rs.setHeader('x-content-type-options', 'nosniff'); Object.keys(r.headers || {}).forEach(k => rs.setHeader(k, r.headers[k])); return rs.end(r.binary); }
