@@ -18,6 +18,7 @@ on:
       - 'scripts/e2e_backup_restore_browser.js'
       - 'scripts/e2e_documents_browser.js'
       - 'scripts/e2e_native.js'
+      - 'scripts/e2e_upgrade_rollback_data.js'
       - 'scripts/e2e_native_domains.js'
       - 'scripts/e2e_native_roles.js'
       - 'scripts/e2e_native_home.js'
@@ -88,6 +89,10 @@ jobs:
         run: E2E_CALLS_OUT=artifacts/calls_native_marches.json node scripts/e2e_native_marches.js preview
       - name: Owner-acceptance regression (event edit-after-save, double submit, refresh persistence, commander/approval, foreign scope, offline, RTL 320-414, 200% zoom, keyboard, reduced motion)
         run: node scripts/e2e_native_acceptance.js preview
+      - name: Upgrade and rollback keep the owner's local data (baseline 7a81b07 -> candidate -> baseline, same origin)
+        run: |
+          git fetch -q --depth=1 origin 7a81b0794a83053c2d2db5ac217507c56cda44a5
+          node scripts/e2e_upgrade_rollback_data.js 7a81b0794a83053c2d2db5ac217507c56cda44a5 preview
       - name: Fitness regular-only entry, live preview, scoring reference (Issue #66)
         run: |
           node tests/fitness_regular.js

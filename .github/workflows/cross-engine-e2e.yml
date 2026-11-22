@@ -1,0 +1,38 @@
+name: Cross-engine browser E2E (WebKit = simulated Safari, Firefox smoke)
+# Real non-Chromium engines against the synthetic public-demo build. WebKit here is Playwright's WebKit with an iPhone-sized viewport: it is NOT a physical iPhone, iOS Safari or VoiceOver (those stay NOT_RUN).
+# Does not deploy anything and does not touch Pages.
+on:
+  pull_request:
+    paths:
+      - 'preview/**'
+      - 'native/**'
+      - 'scripts/e2e_cross_engine.js'
+      - '.github/workflows/cross-engine-e2e.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cross-engine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [webkit, firefox]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install --with-deps ${{ matrix.engine }}
+      - name: ${{ matrix.engine }} E2E (must run — NOT_RUN is a failure in CI)
+        run: node scripts/e2e_cross_engine.js ${{ matrix.engine }} preview artifacts/cross_engine_${{ matrix.engine }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cross-engine-${{ matrix.engine }}
+          path: artifacts/cross_engine_${{ matrix.engine }}
+          if-no-files-found: ignore

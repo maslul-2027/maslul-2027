@@ -1,0 +1,46 @@
+name: משוב בעלים על הדמו (Owner demo feedback)
+description: ממצא UX/תפקוד אחד בלבד מבדיקת הדמו הציבורי. נתונים סינתטיים בלבד.
+title: "[משוב דמו] <לשונית> — <תיאור קצר>"
+labels: ["owner-feedback"]
+body:
+  - type: checkboxes
+    id: synthetic
+    attributes:
+      label: אישור נתונים
+      options:
+        - label: כל מה שמופיע כאן סינתטי/דמו. אין שמות, מספרים אישיים או נתונים אמיתיים (גם לא בצילום מסך).
+          required: true
+  - type: dropdown
+    id: tab
+    attributes:
+      label: לשונית מדויקת
+      options: ["בית", "משימות", "אנשים", "עוד", "חלון/טופס שנפתח מתוך לשונית"]
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: סדר פעולות לשחזור
+      placeholder: "1. פתחתי בית  2. לחצתי על מסע  3. סימנתי שני חסרים  4. שמרתי  5. ..."
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: מה ציפית שיקרה }
+    validations: { required: true }
+  - type: textarea
+    id: actual
+    attributes: { label: מה קרה בפועל }
+    validations: { required: true }
+  - type: input
+    id: device
+    attributes:
+      label: מכשיר ודפדפן (למשל iPhone 14 / Safari)
+  - type: textarea
+    id: shot
+    attributes:
+      label: צילום מסך אחד
+      description: גרור קובץ אחד לכאן. צילום של המסך הרלוונטי בלבד.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: חומרה
+      options: ["חוסם עבודה", "מפריע אבל אפשר לעבוד", "שיפור/העדפה"]
