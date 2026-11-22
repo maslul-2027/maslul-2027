@@ -1,0 +1,13 @@
+'use strict';
+// The one-action synthetic smoke (launcher.js --smoke / SMOKE-TEST.cmd): passes end to end on a clean checkout, uses a throwaway folder, leaves nothing behind and never touches --data.
+const assert = require('assert/strict'), cp = require('child_process'), fs = require('fs'), os = require('os'), path = require('path'); const L = path.join(__dirname, '..', 'release', 'launcher.js');
+let pass = 0, fail = 0; const T = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } catch (e) { fail++; console.log('FAIL', n, '\n   ', String(e.message).split('\n').slice(0, 3).join(' | ')); } };
+const left = () => fs.readdirSync(os.tmpdir()).filter(x => x.startsWith('maslul-smoke-'));
+(async () => {
+  const before = left(), data = path.join(os.tmpdir(), 'maslul-smoke-data-guard-' + process.pid); let r;
+  await T('--smoke exits 0 and prints SMOKE PASS (7/7) with every step ticked', () => { r = cp.spawnSync(process.execPath, [L, '--smoke', '--data', data], { encoding: 'utf8', timeout: 90000 }); assert.equal(r.status, 0, r.stdout + r.stderr); assert.ok(/SMOKE PASS \(7\/7\)/.test(r.stdout), r.stdout); assert.equal((r.stdout.match(/✔/g) || []).length, 7); assert.ok(!/✘/.test(r.stdout)); });
+  await T('it says plainly what it is NOT (not the two-phone pilot, no real data) and leaks no PIN', () => { assert.ok(/NOT the two-phone pilot/.test(r.stdout)); assert.ok(/no real data/.test(r.stdout)); assert.ok(!/PIN \d{4}/.test(r.stdout)); });
+  await T('the --data folder is never created or written, and the temp folder is removed', () => { assert.equal(fs.existsSync(data), false, '--data was touched'); assert.deepEqual(left(), before); });
+  await T('a broken package fails the smoke with exit 1 instead of passing', () => { const t = fs.mkdtempSync(path.join(os.tmpdir(), 'maslul-smoke-broken-')); fs.cpSync(path.join(__dirname, '..', 'release'), path.join(t, 'release'), { recursive: true }); fs.cpSync(path.join(__dirname, '..', 'backend_next'), path.join(t, 'backend_next'), { recursive: true }); fs.cpSync(path.join(__dirname, '..', 'src'), path.join(t, 'src'), { recursive: true }); fs.writeFileSync(path.join(t, 'backend_next', 'test_server.js'), 'module.exports={start:async()=>{throw new Error("boom (test)")}};'); const x = cp.spawnSync(process.execPath, [path.join(t, 'release', 'launcher.js'), '--smoke'], { encoding: 'utf8', timeout: 60000 }); fs.rmSync(t, { recursive: true, force: true }); assert.equal(x.status, 1, x.stdout + x.stderr); assert.ok(/SMOKE FAIL/.test(x.stdout)); assert.ok(!/SMOKE PASS/.test(x.stdout)); });
+  console.log('LAUNCHER SMOKE TOTAL pass=' + pass + ' fail=' + fail); process.exit(fail ? 1 : 0);
+})();
