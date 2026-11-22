@@ -18,6 +18,7 @@ GET THE ZIP ONLY FROM THE APPROVED SOURCE
 HOW TO RUN (no commands to type)
   1. Right-click the ZIP -> "Extract All..." to a normal folder such as Documents. Do not run from inside the ZIP.
   2. Double-click  CHECK-ONLY.cmd   (checks Node, file integrity, folder, port; changes nothing).
+  2b. Optional quick self-test: double-click  SMOKE-TEST.cmd  (about 20 seconds; uses a temporary folder and deletes it; it does NOT touch your data folder and is NOT the two-phone pilot).
   3. Double-click  START-MASLUL-TEST.cmd . It first verifies every file against SHA256SUMS.txt and REFUSES to start if anything is missing, changed or extra.
      Then a window prints the link, https://localhost:8443/ , and opens your browser.
   4. The browser shows "Your connection is not private" once: this is a self-signed certificate for localhost only (nothing is installed in Windows). Compare the SHA-256 fingerprint
