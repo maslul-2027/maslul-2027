@@ -1,0 +1,6 @@
+# /etc/wireguard/wg0.conf — SERVER side. The server address 10.8.0.1 is the ONLY address the app binds. No forwarding, no NAT: peers can reach this host's wg0 address only.
+[Interface]
+Address = 10.8.0.1/24
+ListenPort = 51820
+PrivateKey = __SERVER_PRIVATE_KEY__
+# Peers (one per enrolled phone) are appended by add-phone.sh: [Peer] PublicKey = …, AllowedIPs = 10.8.0.N/32

@@ -1,0 +1,6 @@
+[Unit]
+Description=Renew the MASLUL TEST certificate (Let's Encrypt DNS-01)
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/maslul/acme.env
+ExecStart=/opt/acme.sh/acme.sh --home /opt/acme.sh --cron

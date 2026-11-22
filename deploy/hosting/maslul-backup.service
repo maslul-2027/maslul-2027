@@ -1,0 +1,12 @@
+[Unit]
+Description=MASLUL TEST encrypted backup
+[Service]
+Type=oneshot
+User=maslul
+Group=maslul
+ExecStart=/opt/maslul/deploy/hosting/backup.sh
+ReadWritePaths=/var/backups/maslul /var/lib/maslul
+ProtectSystem=strict
+NoNewPrivileges=true
+PrivateTmp=true
+UMask=0077
