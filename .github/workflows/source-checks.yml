@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Contract route parity (174 original routes preserved; only reviewed additions)
+        run: node scripts/check_contract_route_parity.js
       - name: Check repository hygiene (no credentials / local bindings)
         shell: bash
         run: |

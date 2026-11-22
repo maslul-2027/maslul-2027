@@ -8,7 +8,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), os = require('os'), crypto = require('crypto'), { spawnSync } = require('child_process');
 const { extractZip, walk } = require('./lib/zipnode');
-const EXP_NODE = 'v22.23.4', EXP_SUITES = 73, EXP_MUT = 167;
+const EXP_NODE = 'v22.23.4', EXP_SUITES = 76, EXP_MUT = 167;
 let [ZIP, SHA, MUT] = [process.argv[2] || '', process.argv[3] || '', process.argv[4] || ''];
 const ORIG = fs.realpathSync(process.cwd()), OUT = path.join(ORIG, 'return'), WORK = path.join(ORIG, 'work');
 if (ZIP && !path.isAbsolute(ZIP)) ZIP = path.join(ORIG, ZIP);
