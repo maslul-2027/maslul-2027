@@ -18,7 +18,7 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
   }
   const ORIGIN = new URL(BASE).origin; let ipn = 0;
   const doFetch = async (m, p, headers, bodyStr, label) => {
-    if (HTTP) { const r = await fetch(BASE + p, { method: m, headers, body: bodyStr }); return { status: r.status, headers: r.headers, text: await r.text() }; }
+    if (HTTP) { const r = await fetch(BASE + p, { method: m, headers, body: bodyStr, signal: AbortSignal.timeout(25000) }); return { status: r.status, headers: r.headers, text: await r.text() }; }
     db.resetInvocation(); const r = await W.handle(new Request(BASE + p, { method: m, headers, body: bodyStr }), env, nowMs), text = await r.text(), inv = db.resetInvocation();
     stats.maxStatements = Math.max(stats.maxStatements, inv.statements); stats.maxRowsRead = Math.max(stats.maxRowsRead, inv.rowsRead); stats.maxRowsWritten = Math.max(stats.maxRowsWritten, inv.rowsWritten);
     const k = label || (m + ' ' + p), o = stats.perRoute[k] || (stats.perRoute[k] = { n: 0, maxStatements: 0, maxRowsRead: 0, maxRowsWritten: 0 }); o.n++; o.maxStatements = Math.max(o.maxStatements, inv.statements); o.maxRowsRead = Math.max(o.maxRowsRead, inv.rowsRead); o.maxRowsWritten = Math.max(o.maxRowsWritten, inv.rowsWritten);

@@ -83,10 +83,17 @@ jobs:
           for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8787/auth/status && break; sleep 2; done
           curl -fsS http://127.0.0.1:8787/auth/status
       - name: Scenarios over HTTP against workerd (first-run bootstrap, login, approval, scope, march, revoke ...)
+        timeout-minutes: 12
         env:
           CF_BASE_URL: http://127.0.0.1:8787
         run: node tests/cf_worker.js
+      - name: Worker log (diagnostics)
+        if: always()
+        run: |
+          echo "--- wrangler dev log (first run) ---"; tail -n 120 "$RUNNER_TEMP/wrangler.log" || true
+          pgrep -af "wrangler|workerd" | head -5 || true
       - name: Two-phone browser E2E on the SAME database (fresh state)
+        timeout-minutes: 10
         env:
           CF_BASE_URL: http://127.0.0.1:8787
           NODE_PATH: ${{ runner.temp }}/pw/node_modules
@@ -95,7 +102,7 @@ jobs:
           pkill -f "wrangler dev" || true; sleep 2; rm -rf "$RUNNER_TEMP/d1"
           (cd cloudflare/free-shared-test && npx wrangler d1 migrations apply DB --local --persist-to "$RUNNER_TEMP/d1" >/dev/null && nohup npx wrangler dev --local --ip 127.0.0.1 --port 8787 --persist-to "$RUNNER_TEMP/d1" > "$RUNNER_TEMP/wrangler2.log" 2>&1 &)
           for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8787/auth/status && break; sleep 2; done
-          node scripts/e2e_cf_browser.js artifacts/cf_browser
+          node scripts/e2e_cf_browser.js artifacts/cf_browser || { echo "--- wrangler dev log (browser run) ---"; tail -n 120 "$RUNNER_TEMP/wrangler2.log"; exit 1; }
       - uses: actions/upload-artifact@v4
         if: always()
         with:
