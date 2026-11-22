@@ -41,6 +41,8 @@ on:
       - 'tests/fitness_regular.js'
       - 'scripts/e2e_native_tasks.js'
       - 'scripts/build_route_ledger.js'
+      - 'scripts/check_contract_route_parity.js'
+      - 'docs/capability-inventory.json'
       - 'scripts/check_route_ledger.js'
       - 'scripts/build_env_ledger.js'
       - 'docs/CAPABILITIES_BY_ENVIRONMENT.md'
@@ -133,6 +135,7 @@ jobs:
         run: |
           node scripts/check_route_ledger.js artifacts/ledger/route-evidence-ledger.json
           node scripts/check_route_ledger.js docs/route-evidence-ledger.json
+          node scripts/check_contract_route_parity.js
           node scripts/build_env_ledger.js --check
       - name: Design parity screenshots (original PR #10 vs native)
         run: |

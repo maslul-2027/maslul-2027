@@ -78,5 +78,11 @@
 | tasks | 4 | 4 | 1 |
 | users | 3 | 3 | 1 |
 
+## התאמה לחוזה המקורי (174 נתיבים) — נבדק אוטומטית
+- 174/174 preserved; additions fitness.preview, fitness.reference; current 176/176 classified
+- מקורות: `docs/capability-inventory.json` (174 נתיבי החוזה המקורי, לא נערך), `src/Code.gs` (רשימת API_) ו-`docs/route-evidence-ledger.json`. הבדיקה: `scripts/check_contract_route_parity.js` (נכשלת על נתיב חסר, כפול או תוספת לא מוצהרת).
+- התוספות המוצהרות והמאושרות בלבד: `fitness.preview`, `fitness.reference` (תכונת ציון הכושר הרגיל). הן מסווגות ואינן מוסתרות.
+- זו בדיקת סיווג בלבד: היא **אינה** טוענת ש-176 הנתיבים פעילים בכל סביבה; ראו טבלאות הסביבות למעלה.
+
 ## עדיין חסום (ללא שינוי)
 OCR (אין ספק/מנוע), הגירה (`migration.run`), חיבורי Drive/Google, טבלאות ניקוד כש״ג N1–N8 (DRAFT, לא מאושרות מקצועית), שרת פרטי מתארח.
