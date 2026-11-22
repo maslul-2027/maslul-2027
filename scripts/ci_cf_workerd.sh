@@ -4,7 +4,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; PKG="$ROOT/cloudflare/free-shared-test"; TMP="${RUNNER_TEMP:-/tmp}"; PORT=8787; BASE="http://127.0.0.1:$PORT"
 SERVER_PID=""
-stop() { if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; pkill -f workerd 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; SERVER_PID=""; fi; sleep 2; }
+stop() { if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; pkill -x workerd 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; SERVER_PID=""; fi; sleep 2; }
 trap stop EXIT
 start() {  # $1 = log file, $2 = persist dir (fresh)
   rm -rf "$2"; mkdir -p "$2"
