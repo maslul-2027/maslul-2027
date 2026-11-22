@@ -1,0 +1,39 @@
+name: Private TEST workflow E2E (real UI clicks over HTTPS, separate browser contexts)
+# Issue #43. Admin / team-1 commander / foreign team-2 commander / viewer in SEPARATE browser contexts against ONE local HTTPS test server and ONE persistent store,
+# including a server restart and a backup restore. Chromium = phone-sized viewport; WebKit = SIMULATED Safari (Playwright WebKit), NOT an iPhone. Synthetic data only, loopback only.
+# Nothing is deployed, no Pages change, no network exposure beyond the runner's loopback.
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+# Playwright 1.56.1 does not support ubuntu-latest (26.04): pinned to 24.04 on purpose.
+jobs:
+  workflows:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        engine: [chromium, webkit]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save --no-package-lock playwright@1.56.1
+      - run: npx playwright install --with-deps ${{ matrix.engine }}
+      - run: node scripts/build_native_app.js --server
+      - name: ${{ matrix.engine }} private workflows (must run; NOT_RUN is a failure in CI)
+        run: node scripts/e2e_private_workflows.js ${{ matrix.engine }} artifacts/private_workflows_${{ matrix.engine }}/shots artifacts/private_workflows_${{ matrix.engine }}/out
+      - name: Evidence matrix is current (chromium run is the reference; docs/PRIVATE_TEST_WORKFLOW_EVIDENCE.md)
+        if: matrix.engine == 'chromium'
+        run: node scripts/build_private_workflow_matrix.js artifacts/private_workflows_chromium/out --check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: private-workflows-${{ matrix.engine }}
+          path: artifacts/private_workflows_${{ matrix.engine }}
+          if-no-files-found: ignore
