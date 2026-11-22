@@ -34,7 +34,7 @@ MASLUL_SEED_ADMIN_PHONE=05XXXXXXXX MASLUL_SEED_ADMIN_PIN=<4 ספרות לא פש
 | אישור go-live | חתימת בעל המוצר ואבטחת מידע לפני כל נתון אמיתי |
 
 ## תיקוני ביקורת המנהל (PR #61 QA)
-- **P0-A** `backend_next/route_table.js`: טבלת נתיבים מפורשת (174 נתיבים = `src/Code.gs`, נבדק ב-`tests/route_table.js`). `dash.trends`, `reports.build`, `ai.draft/drafts/reviewDraft`, `migration.run` נחסמים בגבול הבקשה לכל התפקידים (כולל מנהל) עם `POLICY_BLOCKED` ורישום audit; נתיב לא ברשימה = נדחה.
+- **P0-A** `backend_next/route_table.js`: טבלת נתיבים מפורשת (176 נתיבים = `src/Code.gs`, נבדק ב-`tests/route_table.js`). `dash.trends`, `reports.build`, `ai.draft/drafts/reviewDraft`, `migration.run` נחסמים בגבול הבקשה לכל התפקידים (כולל מנהל) עם `POLICY_BLOCKED` ורישום audit; נתיב לא ברשימה = נדחה.
 - **P0-B** `src/Assistant.gs`: שאלה שמזכירה חניך (שם או מספר אישי) נדחית ללא עובדה אישית/הערכה, לכל התפקידים; Q&A קבוצתי נשאר (דיכוי N קיים בשכבת האנליטיקה; בדיקות N=2 / 5+2 ב-`tests/v1_assistant.js` ו-`tests/r5_privacy_subcohort.js`).
 - **P0-C** ה-regex הוחלף בטבלה מפורשת: קריאות שנראות ככתיבה (`settings.list`, `exams.attempts`, `assess.list`, `import.jobs`, `backup.list`, `ai.ask`) מותרות לצופה; כל כתיבה נדחית; ללא החזרת "הצלחה" על פעולה שבוטלה.
 - **P0-D** אישור/שינוי היקף אטומי: ולידציה קשיחה של הקורס/צוות/מחלקה, בדיקת תשובת המנוע ואימות ההיקף שנוצר; כל כשל מחזיר את המצב כולו (אין משתמש מאושר יתום, אין הרחבה שקטה).
