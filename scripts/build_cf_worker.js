@@ -1,4 +1,5 @@
 'use strict';
+const __fs = require('fs'); const __w = __fs.writeFileSync.bind(__fs); __fs.writeFileSync = function (f, d, o) { try { if (typeof f === 'string' && __fs.existsSync(f) && Buffer.compare(__fs.readFileSync(f), Buffer.from(d)) === 0) return; } catch (e) { /* fall through to a normal write */ } return __w(f, d, o); };   // unchanged output = no write (keeps a running `wrangler dev` from reloading)
 // Builds cloudflare/free-shared-test/src/engine.generated.js: the REAL server code (src/*.gs, harness order) wrapped as a static ES module function.
 // Workers forbid eval/new Function, so the engine is compiled into the bundle at build time instead of being constructed from a string at run time.
 // Usage: node scripts/build_cf_worker.js   (also the wrangler [build] command). SYNTHETIC DATA ONLY; Google services stay NOT_CONNECTED.

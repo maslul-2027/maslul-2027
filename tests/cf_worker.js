@@ -4,7 +4,7 @@
 //   CF_BASE_URL=… : the same assertions over HTTP against `wrangler dev` (workerd + local D1), see .github/workflows/cloudflare-free-test.yml
 // Two/three independent authenticated sessions (own cookie jars, own TOTP devices) read ONE database. SYNTHETIC DATA ONLY. No account, no network to Cloudflare.
 const assert = require('assert/strict'), path = require('path'), { pathToFileURL } = require('url');
-require('child_process').spawnSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'build_cf_worker.js')], { stdio: 'ignore' });   // generated engine + seed (gitignored build output) are always rebuilt from src/*.gs
+if (!process.env.CF_BASE_URL) require('child_process').spawnSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'build_cf_worker.js')], { stdio: 'ignore' });   // generated engine + seed (gitignored build output) are always rebuilt from src/*.gs
 const SRC = path.join(__dirname, '..', 'cloudflare', 'free-shared-test', 'src'), imp = f => import(pathToFileURL(path.join(SRC, f)).href);
 const HTTP = process.env.CF_BASE_URL || '', BOOT = process.env.CF_BOOTSTRAP_TOKEN || 'test-bootstrap-token-0123456789abcdef', SECRET = 'test-app-secret-0123456789abcdef0123456789abcdef';
 let pass = 0, fail = 0; const T = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } catch (e) { fail++; console.log('FAIL', n, '\n   ', String(e.stack || e.message).split('\n').slice(0, 4).join('\n    ')); } };
