@@ -1,0 +1,34 @@
+name: Hosting readiness (local proof of deploy/hosting, NO deployment)
+# Runs the real service definition from deploy/hosting/ on the runner: preflight, ExecStart, TLS chain+hostname validation, persistence, backup/restore, refusals.
+# Stand-ins (stated in the script): a throw-away CA instead of Let's Encrypt, a loopback address instead of WireGuard. Nothing is deployed, no secret is used, no network exposure.
+on:
+  pull_request:
+    paths:
+      - 'deploy/hosting/**'
+      - 'scripts/verify_hosting_local.js'
+      - 'backend_next/private_*.js'
+      - 'release/launcher.js'
+      - 'tests/hosting_templates.js'
+      - '.github/workflows/hosting-readiness.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hosting:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node scripts/build_native_app.js --server
+      - run: node tests/hosting_templates.js
+      - name: Private address stand-in (loopback alias) and name resolution
+        run: |
+          sudo ip addr add 10.77.0.1/32 dev lo
+          echo "10.77.0.1 maslul-test.lan.example # maslul-host-proof" | sudo tee -a /etc/hosts
+      - name: Local proof (must run; NOT_RUN is a failure in CI)
+        run: node scripts/verify_hosting_local.js

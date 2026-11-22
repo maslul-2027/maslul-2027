@@ -1,0 +1,37 @@
+[Unit]
+Description=MASLUL private TEST (SYNTHETIC DATA ONLY, WireGuard-private HTTPS)
+After=network-online.target wg-quick@wg0.service
+Wants=network-online.target
+Requires=wg-quick@wg0.service
+
+[Service]
+Type=simple
+User=maslul
+Group=maslul
+EnvironmentFile=/etc/maslul/maslul.env
+WorkingDirectory=/opt/maslul
+ExecStartPre=/opt/node/bin/node /opt/maslul/deploy/hosting/preflight.js
+ExecStart=/opt/node/bin/node /opt/maslul/backend_next/private_test_launch.js --name ${MASLUL_NAME} --bind ${MASLUL_BIND} --port ${MASLUL_PORT} --dir ${MASLUL_DATA_DIR} --cert ${MASLUL_TLS_CERT} --key ${MASLUL_TLS_KEY}
+Restart=on-failure
+RestartSec=5
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+ReadWritePaths=/var/lib/maslul
+ReadOnlyPaths=/etc/maslul /opt/maslul
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
