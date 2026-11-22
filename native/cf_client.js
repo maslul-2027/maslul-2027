@@ -8,7 +8,7 @@
   function idem(rk) { var n = Date.now(), e = IDEM[rk]; if (e && n - e.t < 60000) return e.k; var k = 'i' + n.toString(36) + Math.random().toString(36).slice(2, 12); IDEM[rk] = { k: k, t: n }; return k; }
   function http(method, path, body) {
     var h = { 'content-type': 'application/json' }; if (CSRF && method !== 'GET') h['x-csrf-token'] = CSRF;
-    return fetch(path, { method: method, credentials: 'same-origin', headers: h, body: method === 'GET' ? undefined : JSON.stringify(body || {}) }).then(function (r) { return r.json().catch(function () { return { ok: false, code: 'NETWORK', message: 'תשובה לא תקינה מהשרת.' }; }); }).catch(function () { return { ok: false, code: 'NETWORK', message: 'אין תקשורת עם השרת. נסו שוב.' }; });
+    return fetch(path, { method: method, credentials: 'same-origin', headers: h, body: method === 'GET' ? undefined : JSON.stringify(body || {}) }).then(function (r) { return r.json().catch(function () { return r.status >= 500 || r.status === 429 ? { ok: false, code: 'PLATFORM_LIMIT', message: 'השרת החינמי לא הצליח לעבד את הבקשה (מגבלת עיבוד או עומס של הפלטפורמה). המידע לא נפגע. נסו שוב בעוד רגע, או פתחו מסך קל יותר. אין צורך בשדרוג או תשלום.' } : { ok: false, code: 'NETWORK', message: 'תשובה לא תקינה מהשרת.' }; }); }).catch(function () { return { ok: false, code: 'NETWORK', message: 'אין תקשורת עם השרת. נסו שוב.' }; });
   }
   function expired(r) { if (r && r.code === 'UNAUTHENTICATED' && ME) { try { sessionStorage.removeItem(SK); } catch (e) {} location.reload(); } return r; }
   var client = { mode: 'server', cf: true, calls: calls,

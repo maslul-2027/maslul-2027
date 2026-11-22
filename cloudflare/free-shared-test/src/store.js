@@ -27,7 +27,7 @@ export function diff(loaded, mem, dirty) {
   }
   return ch;
 }
-const MAX_PARAM = 1500000;   // D1: a string/BLOB/row is limited to 2,000,000 bytes — stay well under it per bound value
+const MAX_PARAM = 900000;   // D1 limits page: a string/BLOB/row is limited to 1,000,000 bytes — stay under it per bound value value
 /** items are pre-serialised strings; returns JSON-array strings each below MAX_PARAM. */
 export function chunkJson(list) { const out = []; let cur = [], size = 2; for (const j of list) { if (j.length + 1 > MAX_PARAM) throw new Error('row too large for D1'); if (size + j.length + 1 > MAX_PARAM) { out.push('[' + cur.join(',') + ']'); cur = []; size = 2; } cur.push(j); size += j.length + 1; } if (cur.length) out.push('[' + cur.join(',') + ']'); return out; }
 export const upsertSql = "INSERT INTO rows (tbl, id, json) SELECT json_extract(value, '$.t'), json_extract(value, '$.j.id'), json_extract(value, '$.j') FROM json_each(?1) WHERE true ON CONFLICT (tbl, id) DO UPDATE SET json = excluded.json";

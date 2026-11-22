@@ -83,7 +83,7 @@ async function route(request, env, now) {
     if (kind !== 'read' && kind !== 'write') { await auth.audit('api_unknown_route', { user: ctx.userId, method }).run(); throw new AuthError('FORBIDDEN', 'פעולה לא מוכרת.'); }
     if (write && ctx.role === 'viewer') auth.authorize(ctx, 'write', { courseId: String(args.courseId || '') });
     if (ctx.role !== 'admin' && args.courseId !== undefined && !ctx.courseIds.includes(String(args.courseId))) auth.authorize(ctx, 'read', { courseId: String(args.courseId) });
-    if (FILE_ROUTES.has(method)) { if (ctx.role !== 'admin') throw new AuthError('FORBIDDEN', 'פעולה למנהל בלבד.'); return json(200, { ok: false, code: 'NOT_CONNECTED', message: 'גיבוי/שחזור וייצוא מלא דורשים אחסון קבצים שאינו מחובר בסביבת הבדיקה החינמית.' }); }   // would snapshot every table only to fail: refuse before spending CPU
+    if (FILE_ROUTES.has(method)) { if (ctx.role !== 'admin') throw new AuthError('FORBIDDEN', 'פעולה למנהל בלבד.'); return json(501, { ok: false, code: 'NOT_CONNECTED', message: 'גיבוי/שחזור וייצוא מלא דורשים אחסון קבצים שאינו מחובר בסביבת הבדיקה החינמית.' }); }   // would snapshot every table only to fail: refuse before spending CPU
     const em = await engineEmail(ctx.userId), tn = now ? now() : Date.now(); let ckey = '', cvers = '', ctabs = [];
     if (kind === 'read' && CACHEABLE.test(method) && hintFor(method).length) {
       ctabs = Array.from(new Set(hintFor(method).concat(['Users', 'Courses', 'CommanderAssignments']))).sort(); ckey = await sha256Hex(['v1', method, JSON.stringify(args), ctx.userId, ctx.role, ctx.courseIds.join(','), new Date(tn).toISOString().slice(0, 10)].join('|'));

@@ -1,4 +1,5 @@
 'use strict';
+const fs = require('fs');
 // Cloudflare Free shared-TEST: end-to-end through the REAL Worker code (fetch handler) with the REAL engine and a REAL SQL database.
 //   default       : Worker called in-process, D1 = node:sqlite shim (tests/lib/d1_shim.js)           -> `node tests/cf_worker.js`
 //   CF_BASE_URL=… : the same assertions over HTTP against `wrangler dev` (workerd + local D1), see .github/workflows/cloudflare-free-test.yml
@@ -143,13 +144,23 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
     if (!HTTP) { (await imp('schema.js')).resetSchemaCache(); } const fresh = client(); assert.ok((await login(fresh, B)).ok); const after = JSON.stringify((await fresh.api('marches.list', { courseId: cid, opts: { marchId: mid, includeRoster: true } })).data[0].roster.map(x => [x.id, x.present]).sort()); assert.equal(after, before); });
   await T('S17 unsupported features answer NOT_CONNECTED honestly (never a fake success): report file, document upload, backup file', async () => {
     const dl = await admin('GET', '/api/download/report/abcdef12'); assert.equal(dl._status, 501); assert.equal(dl.code, 'NOT_CONNECTED');
-    for (const [m, a] of [['docs.upload', { courseId: cid, data: { file_name: 'x.pdf', mime_type: 'application/pdf', content_base64: 'JVBERi0=', title: 't' } }], ['backup.create', { kind: 'manual' }], ['reports.generate', { courseId: cid, data: { kind: 'course', format: 'pdf' } }]]) { const r = await admin.api(m, a); assert.equal(r.ok, false, m + ' must not claim success: ' + JSON.stringify(r).slice(0, 160)); } });
+    for (const [m, a] of [['docs.upload', { courseId: cid, data: { file_name: 'x.pdf', mime_type: 'application/pdf', content_base64: 'JVBERi0=', title: 't' } }], ['backup.create', { kind: 'manual' }], ['reports.generate', { courseId: cid, data: { kind: 'course', format: 'pdf' } }]]) { const r = await admin.api(m, a); assert.equal(r.ok, false, m + ' must not claim success: ' + JSON.stringify(r).slice(0, 160)); }
+    // file-backed routes: HTTP 501 + ok:false + NOT_CONNECTED (a 200 would look like success to any client that checks only the status)
+    for (const [m, a] of [['backup.create', { kind: 'manual' }], ['backup.restore', { id: 'x' }], ['reports.fullExport', { courseId: cid }]]) { const r = await admin.api(m, a); assert.equal(r._status, 501, m + ' status'); assert.equal(r.ok, false); assert.equal(r.code, 'NOT_CONNECTED', m); }
+    const nonAdmin = await A.c.api('backup.create', { kind: 'manual' }); assert.equal(nonAdmin._status, 403, 'a commander is refused before anything else'); });
   await T('S18 security headers on API responses', async () => { const r = await admin('GET', '/auth/me'); for (const [k, v] of [['x-content-type-options', 'nosniff'], ['x-frame-options', 'DENY'], ['referrer-policy', 'no-referrer']]) assert.equal(r._h.get(k), v); assert.match(r._h.get('content-security-policy'), /default-src 'self'/); assert.match(r._h.get('strict-transport-security'), /max-age/); assert.equal(r._h.get('cache-control'), 'no-store'); });
   if (!HTTP) {
     await T('S19 Free-plan query budget: every request stays far below 50 D1 statements per invocation; row counts recorded', async () => {
       assert.ok(stats.maxStatements <= 25, 'max statements in one request = ' + stats.maxStatements); const top = Object.entries(stats.perRoute).sort((a, b) => b[1].maxRowsRead - a[1].maxRowsRead).slice(0, 6); console.log('     budget: max statements/request =', stats.maxStatements, ' max rows read =', stats.maxRowsRead, ' max rows written =', stats.maxRowsWritten); top.forEach(([k, v]) => console.log('     ', k.padEnd(28), JSON.stringify(v))); });
     await T('S20 expiry: idle (60 min) and absolute (12 h) session limits are enforced on the server', async () => {
       const l = client(); assert.ok((await login(l, B)).ok); assert.ok((await l.api('courses.list')).ok); clock += 61 * 60e3; assert.equal((await l.api('courses.list'))._status, 401, 'idle timeout'); assert.ok((await login(l, B)).ok); const t0 = clock; let denied = false; for (let i = 0; i < 20 && !denied; i++) { clock += 50 * 60e3; denied = (await l.api('courses.list'))._status === 401; if (!denied) assert.ok(clock - t0 < 12 * 3600e3, 'still valid past 12 h'); } assert.ok(denied && clock - t0 >= 12 * 3600e3 - 1, 'absolute 12 h limit enforced (elapsed ' + Math.round((clock - t0) / 60e3) + ' min)'); });
+    await T('S21 recovery runbook: after a (simulated) Time Travel restore, ops/post_restore.sql revokes every session and clears the cache; users log in again; audit records the operator action', async () => {
+      const l = client(); assert.ok((await login(l, B)).ok); assert.ok((await l.api('courses.list')).ok);
+      const sql = fs.readFileSync(path.join(__dirname, '..', 'cloudflare', 'free-shared-test', 'ops', 'post_restore.sql'), 'utf8').split('\n').filter(x => !/^\s*--/.test(x)).join('\n').split(';').map(x => x.trim()).filter(Boolean);
+      assert.ok(sql.length >= 4); for (const st of sql) await db.prepare(st).run();
+      assert.equal((await l.api('courses.list'))._status, 401, 'a session that existed before the restore must not survive it'); assert.equal((await admin.api('courses.list'))._status, 401, 'admin session too');
+      const again = client(); assert.ok((await login(again, B)).ok, 'login works again after the runbook'); assert.ok((await again.api('courses.list')).ok);
+      const ev = await db.prepare("SELECT count(*) n FROM audit WHERE ev = 'operator_post_restore'").first('n'); assert.equal(ev, 1); });
   }
   console.log('CLOUDFLARE FREE SHARED-TEST (' + (HTTP ? 'wrangler dev over HTTP' : 'in-process Worker + SQLite D1 shim') + ') TOTAL pass=' + pass + ' fail=' + fail);
   process.exit(fail ? 1 : 0);
