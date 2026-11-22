@@ -52,9 +52,10 @@
 | `tests/cf_static.js` (8) | `wrangler.toml` בצורת Free, בלי `eval`/fetch חיצוני, 176 נתיבים זהים לטבלה, אין נתיב PIN, `.gitignore` | PASS |
 | `tests/cf_worker.js` (22) | זרימת הבעלים מקצה לקצה על Worker אמיתי + D1 (shim) — כולל חוסר-הרשאה, ביטול, CSRF, פקיעה, תקציב שאילתות, **S15c: כתיבה עם מפתח אידמפוטנטיות** | PASS |
 | `scripts/e2e_cf_browser.js` (9) | **שני הקשרי Chromium (390×844)** על מסד אחד: הגדרה → הצטרפות → כניסה → מפקד רואה רק צוות → מסע נשמר ונקרא ע"י השני אחרי רענון → ביטול | PASS ×3 (יציב) |
-| CI `cloudflare-free-test.yml` | אותם תרחישים מול **workerd + D1 מקומי** (`wrangler dev --local`), `wrangler deploy --dry-run` | **ראו תוצאת CI בגוף ה-PR** |
+| CI `cloudflare-free-test.yml` (wrangler 4.166, workerd) | אותם 20 תרחישים (S19/S20 רק ב-shim) **ב-HTTP מול workerd + D1 מקומי**, 9 בדיקות דפדפן, ו-`wrangler deploy --dry-run` (חבילה 1181KiB / **184KiB gzip**, מגבלת Free 3MB gzip) | PASS על `a71fb0e` (הרצה 1 וניסיון חוזר 2): https://github.com/maslul-2027/maslul-2027/actions/runs/45056668856 |
 - באג אמיתי שנמצא ותוקן בדרך: כתיבה עם `idem_` לטבלה שעוד לא קיימת "הצליחה" בלי להישמר (מטמון זיכרון של המנוע שוחזר בסבב גילוי טבלאות). תוקן ע"י אידמפוטנטיות עמידה ב-D1 + מבחן רגרסיה S15c.
 - **NOT_RUN (דורש חשבון/מכשיר):** פריסה אמיתית, אכיפת CPU של Cloudflare, WebKit/iPhone אמיתי (עוגיית Secure על http), D1 מרוחק, Cloudflare Access.
+- ממצאי CI שתוקנו: (א) לולאת בנייה אינסופית ב-`wrangler dev` — ה-seed הכיל חותמות זמן ולכן השתנה בכל בנייה (כעת דטרמיניסטי + `watch_dir` למקורות בלבד); (ב) תהליך שרת ובדיקות רצים בקליפה אחת. עד התיקון הריצות על workerd היו לא יציבות — נרשם כדי שלא ייווצר רושם של יציבות שלא הייתה.
 - ה-shim של D1 מעל `node:sqlite` אינו הוכחה להתנהגות Cloudflare — לכן קיים ג'וב workerd ב-CI.
 
 ## 6. הפעולה היחידה של הבעלים (רק אחרי ש-QA של המנהל אישר את ה-CI)
