@@ -19,7 +19,7 @@ fs.writeFileSync(path.join(root, 'cloudflare', 'free-shared-test', 'src', 'route
   const dir = path.join(root, 'cloudflare', 'free-shared-test'), { pathToFileURL } = require('url');
   const { loadEngine } = await import(pathToFileURL(dst).href), seed = require('./lib/synthetic_seed.js'), nc = () => { throw new Error('NC'); }, gs = new Proxy({}, { get: () => nc });
   const X = loadEngine({ log() {}, warn() {}, info() {}, error() {} }, { getScriptCache: () => ({ get: () => null, put() {} }) }, { getScriptProperties: () => ({ getProperty: () => null }) }, gs, gs, gs, gs, gs, gs, gs);
-  const mem = {}, clone = o => JSON.parse(JSON.stringify(o)); let tick = 0; const base = Date.now(); X.Util._clock = () => new Date(Math.max(Date.now(), base) + (++tick));
+  const mem = {}, clone = o => JSON.parse(JSON.stringify(o)); let tick = 0; const base = Date.parse('2026-06-01T08:00:00.000Z'); X.Util._clock = () => new Date(base + (++tick));   // fixed clock => byte-identical output on every build (a changing seed file made `wrangler dev` rebuild forever)
   X.Db.use({ readAll: t => (mem[t] = mem[t] || []).map(clone), insert: (t, o) => { (mem[t] = mem[t] || []).push(clone(o)); return o; }, updateById: (t, id, p) => { Object.assign((mem[t] || []).find(x => String(x.id) === String(id)), clone(p)); }, replaceAll: (t, rows) => { mem[t] = rows.map(clone); }, prepare: () => true, ensureTable: () => ({}) });
   let seeding = true; X.Auth._emailProvider = () => seeding ? 'demo-admin@x.com' : 'x'; seed(X, mem, seed.NAMES, () => {}); seeding = false;
   const tables = Object.keys(mem).filter(t => mem[t].length), items = []; tables.forEach(t => mem[t].forEach(r => items.push('{"t":' + JSON.stringify(t) + ',"j":' + JSON.stringify(r) + '}')));

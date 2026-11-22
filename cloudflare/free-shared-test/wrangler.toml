@@ -7,6 +7,7 @@ workers_dev = true          # free https://maslul-test.<account>.workers.dev —
 preview_urls = false
 
 [build]
+watch_dir = ["../../src", "../../native", "../../backend_next"]   # NOT src/*.generated.js: build output must not retrigger the build
 # compiles the real engine (src/*.gs) + synthetic seed into the bundle (no eval at run time) and builds the 4-tab RTL app into ./public
 command = "node ../../scripts/build_cf_worker.js && node ../../scripts/build_native_app.js --cf"
 
