@@ -2,7 +2,7 @@
 'use strict';
 // MASLUL 2027 — one-action TEST launcher (Windows / macOS / Linux). SYNTHETIC DATA ONLY, LOOPBACK ONLY (https://localhost), single user, single machine.
 // This is NOT the two-phone / multi-user path: other devices cannot reach it (it binds 127.0.0.1 and refuses anything else). Nothing is installed, no firewall/hosts/registry/certificate-store change, no elevation, no network call.
-//   node release/launcher.js [--data DIR] [--port N] [--no-browser] [--check] [--backup] [--restore FILE]
+//   node release/launcher.js [--data DIR] [--port N] [--no-browser] [--check] [--smoke] [--backup] [--restore FILE]
 const fs = require('fs'), path = require('path'), net = require('net'), crypto = require('crypto'), cp = require('child_process');
 const root = path.join(__dirname, '..');
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : d; };
@@ -20,6 +20,20 @@ function preflight(port) {
   try { fs.mkdirSync(dataDir, { recursive: true }); const t = path.join(dataDir, '.w' + process.pid); fs.writeFileSync(t, 'x'); fs.unlinkSync(t); } catch (e) { out.push('Cannot write to the data folder ' + dataDir + ' (' + e.code + '). Move the package to a normal folder such as Documents (not Program Files / a read-only drive / a synced OneDrive "Files On-Demand" folder).'); }
   return out;
 }
+/** Environment checks (pure + injectable so CI can prove them on any OS). Problems block the start; warnings are printed and never bypass anything. Read-only. */
+function environmentChecks(env) {
+  const e = Object.assign({ platform: process.platform, release: require('os').release(), root, dataDir, freeBytes: null }, env || {}), problems = [], warnings = [], norm = x => String(x).replace(/\//g, '\\');
+  if (e.platform === 'win32') {
+    const m = /^(\d+)\.(\d+)\.(\d+)/.exec(e.release || ''); if (m && (Number(m[1]) < 10)) problems.push('Windows 10 or 11 is required (this is Windows NT ' + m[1] + '.' + m[2] + '). Use a newer computer for the TEST.');
+    const r = norm(e.root).toLowerCase();
+    if (/\\appdata\\local\\temp\\/.test(r) && /(\.zip|rar\$|7zo)/.test(r)) problems.push('The package is being run from inside a ZIP preview (a temporary folder). Right-click the ZIP → Extract All…, then open START-MASLUL-TEST.cmd from the extracted folder.');
+    if (norm(e.root).length > 150 || norm(e.dataDir).length > 180) problems.push('The folder path is too long for Windows (' + Math.max(norm(e.root).length, norm(e.dataDir).length) + ' characters). Extract the ZIP to a short folder such as C:\\MASLUL-TEST.');
+    if (/\\(onedrive|dropbox|google drive|icloud)[^\\]*\\/i.test(norm(e.dataDir) + '\\')) warnings.push('The data folder is inside a cloud-synced folder. The synthetic data and its local key would then be copied to that cloud account. Prefer a folder outside OneDrive/Dropbox/Drive (for example C:\\MASLUL-TEST\\data).');
+  }
+  if (typeof e.freeBytes === 'number' && e.freeBytes < 300 * 1024 * 1024) problems.push('Less than 300 MB free on the data drive (' + Math.floor(e.freeBytes / 1048576) + ' MB). Free some space or use --data on another drive.');
+  return { problems, warnings };
+}
+const freeBytesOf = d => { try { const s = fs.statfsSync(d); return Number(s.bavail) * Number(s.bsize); } catch (e) { return null; } };
 const freePort = p => new Promise(r => { const s = net.createServer(); s.once('error', () => r(false)); s.listen(p, '127.0.0.1', () => s.close(() => r(true))); });
 async function pickPort(start, tries) { for (let i = 0; i < tries; i++) if (await freePort(start + i)) return start + i; return 0; }
 const randomPin = () => { const { weakPin } = require(path.join(root, 'backend_next', 'pin_auth.js')); for (;;) { const p = Array.from(crypto.randomBytes(4), b => b % 10).join(''); if (new Set(p).size === 4 && !weakPin(p)) return p; } };   // the app's PIN is 4 digits by design (loopback synthetic test; real phone-OTP is an open gate)
@@ -77,12 +91,41 @@ function verifyPackage() {
   return { package: true, ok: bad.length === 0, lines: bad.length ? bad : ['All ' + listed.size + ' files match SHA256SUMS.txt (source commit ' + String(meta.source_commit || '?').slice(0, 7) + ').'] };
 }
 function verify() { const v = verifyPackage(); v.lines.forEach(l => say(v.ok ? l : ' ✗ ' + l)); if (!v.ok) say('\nIntegrity check FAILED — do not use this copy. Download the ZIP again from the approved source and compare its SHA-256 with the published digest.'); return v.ok ? 0 : 5; }
+/** One-action synthetic SMOKE: starts a THROWAWAY server (temp folder, 127.0.0.1 only, random synthetic admin PIN) and walks the core path over real HTTPS: login, march with two absent read back,
+ *  unauthenticated + no-CSRF refusals, logout, restart persistence. It never touches --data, binds nothing but loopback, installs nothing. It is a quick "does this copy work on this computer" check, NOT the two-phone pilot. */
+async function smoke() {
+  const https = require('https'), os = require('os'), tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'maslul-smoke-')), port = await pickPort(18900, 40), results = []; const pin = randomPin();
+  if (!port) { say('SMOKE FAIL: no free local port between 18900 and 18939.'); return 1; }
+  if (!fs.existsSync(path.join(root, 'server_public', 'index.html'))) { say('SMOKE FAIL: the app files are missing (server_public/index.html). In the ZIP package this means it was not fully extracted; in a source checkout run: node scripts/build_native_app.js --server'); try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* ignore */ } return 1; }
+  const origin = 'https://localhost:' + port, ts = require(path.join(root, 'backend_next', 'test_server.js')), start = seed => ts.start({ dir: tmp, port, host: '127.0.0.1', origin, seedAdmin: seed });
+  const client = () => { const jar = {}; const f = (m, p, b, noCsrf) => new Promise(res => { const h = { origin }; if (b) h['content-type'] = 'application/json'; if (jar.c) h.cookie = jar.c; if (jar.csrf && !noCsrf && m !== 'GET') h['x-csrf-token'] = jar.csrf; const q = https.request({ host: '127.0.0.1', port, path: p, method: m, rejectUnauthorized: false, headers: h }, rs => { const ch = []; rs.on('data', c => ch.push(c)); rs.on('end', () => { let j = {}; try { j = JSON.parse(Buffer.concat(ch).toString('utf8')); } catch (e) { /* not json */ } if (rs.headers['set-cookie']) jar.c = rs.headers['set-cookie'][0].split(';')[0]; if (j && j.csrf) jar.csrf = j.csrf; res(Object.assign({ _status: rs.statusCode, _headers: rs.headers }, j)); }); }); q.on('error', e => res({ ok: false, _status: 0, message: e.message })); q.end(b ? JSON.stringify(b) : undefined); }); f.api = (method, args, noCsrf) => f('POST', '/api', { method, args: args || {} }, noCsrf); return f; };
+  const step = async (name, fn) => { try { await fn(); results.push([true, name]); say('  ✔ ' + name); } catch (e) { results.push([false, name + ' — ' + e.message]); say('  ✘ ' + name + ' — ' + e.message); } };
+  const need = (c, m) => { if (!c) throw new Error(m || 'unexpected result'); };
+  say('SMOKE (temporary folder, this computer only, synthetic data; your real data folder is not touched)');
+  let s; try { s = await start({ fullName: 'מנהל סינתטי', phone: '0500000001', pin }); } catch (e) { say('SMOKE FAIL: the server could not start (' + e.message + ')'); try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (x) { /* ignore */ } return 1; }
+  const A = client(); let cid, mid;
+  try {
+    await step('HTTPS page is served with security headers', async () => { const r = await A('GET', '/'); need(r._status === 200, 'status ' + r._status); need(r._headers['strict-transport-security'] || r._headers['content-security-policy'], 'no security headers'); });
+    await step('unauthenticated API call is refused', async () => { const r = await client().api('courses.list'); need(r._status === 401 || r.ok === false, 'was answered: ' + r._status); });
+    await step('admin logs in with the synthetic PIN', async () => { const r = await A('POST', '/auth/login', { phone: '0500000001', pin }); need(r.ok, JSON.stringify(r).slice(0, 120)); const c = await A.api('courses.list'); need(c.ok && c.data.length, 'no course'); cid = c.data[0].id; });
+    await step('a march with TWO absent is saved and read back with exactly two missing', async () => { const sol = await A.api('soldiers.list', { courseId: cid, opts: {} }); need(sol.ok && sol.data.length >= 3, 'no trainees'); const r = await A.api('marches.create', { courseId: cid, data: { request_id: 'smoke-1', march_date: '2026-12-01', location: 'smoke', km_no_stretcher: 3, km_stretcher: 0, absent: sol.data.slice(0, 2).map(x => ({ soldier_id: x.id })) } }); need(r.ok, JSON.stringify(r).slice(0, 160)); mid = r.data.march.id; const l = await A.api('marches.list', { courseId: cid, opts: { marchId: mid, includeRoster: true } }); need(l.ok && l.data[0].roster.filter(x => !x.present).length === 2, 'roster does not show 2 missing'); });
+    await step('a request without the CSRF token is refused', async () => { const r = await A.api('courses.list', {}, true); need(r._status >= 400 || r.ok === false, 'was accepted'); });
+    await step('after logout the session is dead', async () => { await A('POST', '/auth/logout', {}); const r = await A.api('courses.list'); need(r.ok === false, 'still authenticated'); });
+    await s.close(); s = await start(undefined);
+    await step('after a server restart the data is still there and login works again', async () => { const B = client(); const r = await B('POST', '/auth/login', { phone: '0500000001', pin }); need(r.ok, 'login after restart failed'); const l = await B.api('marches.list', { courseId: cid, opts: { marchId: mid, includeRoster: true } }); need(l.ok && l.data[0] && l.data[0].roster.filter(x => !x.present).length === 2, 'march lost after restart'); });
+  } finally { try { await s.close(); } catch (e) { /* ignore */ } try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (e) { /* ignore */ } }
+  const bad = results.filter(r => !r[0]); say('');
+  if (bad.length) { say('SMOKE FAIL (' + bad.length + ' of ' + results.length + '): ' + bad.map(b => b[1]).join(' | ')); return 1; }
+  say('SMOKE PASS (' + results.length + '/' + results.length + ') — this copy starts, logs in, saves a march, enforces access and survives a restart on this computer. NOT the two-phone pilot; no real data used; nothing was installed or left behind.'); return 0;
+}
 async function main() {
   say('MASLUL 2027 — TEST launcher (synthetic data only · this computer only)');
   if (flag('verify')) return verify();
+  if (flag('smoke')) return smoke();
   if (flag('backup')) return backup();
   if (flag('restore')) return restore(arg('restore'));
   problems.push(...preflight());
+  { const env = environmentChecks({ freeBytes: freeBytesOf(fs.existsSync(dataDir) ? dataDir : path.dirname(dataDir)) }); problems.push(...env.problems); env.warnings.forEach(w => say('Warning: ' + w)); }
   { const v = verifyPackage(); if (!v.ok) problems.push('Integrity check failed (the package is incomplete, modified or has extra files): ' + v.lines.slice(0, 5).join('; ') + '. Download the ZIP again from the approved source and compare its SHA-256 with the published digest.'); else if (v.package) say(v.lines[0]); }
   const want = Number(arg('port', 8443)), port = problems.length ? 0 : await pickPort(want, 20);
   if (!problems.length && !port) problems.push('No free local port between ' + want + ' and ' + (want + 19) + '. Close the other program that uses them, or run with --port <number>.');
@@ -107,5 +150,5 @@ async function main() {
   process.on('SIGINT', stop); process.on('SIGTERM', stop); process.on('exit', () => { try { fs.unlinkSync(lockFile()); } catch (e) { /* ignore */ } });
   return null;   // keep serving
 }
-module.exports = { preflight, randomPin };
+module.exports = { preflight, randomPin, environmentChecks, REQUIRED };
 if (require.main === module) main().then(c => { if (c !== null) process.exit(c); }).catch(e => { console.error('Unexpected error: ' + e.message); process.exit(1); });

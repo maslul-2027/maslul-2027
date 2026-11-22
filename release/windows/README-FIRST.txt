@@ -18,6 +18,7 @@ GET THE ZIP ONLY FROM THE APPROVED SOURCE
 HOW TO RUN (no commands to type)
   1. Right-click the ZIP -> "Extract All..." to a normal folder such as Documents. Do not run from inside the ZIP.
   2. Double-click  CHECK-ONLY.cmd   (checks Node, file integrity, folder, port; changes nothing).
+  2b. Optional quick self-test: double-click  SMOKE-TEST.cmd  (about 20 seconds; uses a temporary folder and deletes it; it does NOT touch your data folder and is NOT the two-phone pilot).
   3. Double-click  START-MASLUL-TEST.cmd . It first verifies every file against SHA256SUMS.txt and REFUSES to start if anything is missing, changed or extra.
      Then a window prints the link, https://localhost:8443/ , and opens your browser.
   4. The browser shows "Your connection is not private" once: this is a self-signed certificate for localhost only (nothing is installed in Windows). Compare the SHA-256 fingerprint
@@ -38,3 +39,5 @@ WHAT IT DOES NOT DO
 
 IF IT DOES NOT START
   The window lists exactly what is missing (Node version, incomplete extraction, unwritable folder, busy port). Nothing is changed in that case.
+
+PREFLIGHT (double-click CHECK-ONLY.cmd first; it changes nothing): it checks Windows 10/11, that the ZIP was really extracted (not run from the ZIP preview), a short folder path, 300 MB free space, a free local port and that the data folder is writable. If the data folder is inside OneDrive/Dropbox/Google Drive it WARNS that the synthetic data and its local key would sync to that account; choose a folder outside it. It never asks you to turn off SmartScreen/Defender and never needs administrator rights.
