@@ -1,0 +1,8 @@
+{
+  "name": "maslul-free-shared-test",
+  "private": true,
+  "type": "module",
+  "description": "MASLUL shared TEST on Cloudflare Workers Free + D1 Free (synthetic data only). Workers Builds installs the wrangler version below.",
+  "scripts": { "build": "node ../../scripts/build_cf_worker.js && node ../../scripts/build_native_app.js --cf", "dev": "wrangler dev --local", "deploy:dry": "wrangler deploy --dry-run --outdir=dist" },
+  "devDependencies": { "wrangler": "^4.59.2" }
+}

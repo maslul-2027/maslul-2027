@@ -17,7 +17,7 @@
   /* connectivity: a saved-state is only ever shown after a real server answer; while offline say so, plainly */
   (function () { function sync() { var b = document.getElementById('offBar'); if (navigator.onLine === false) { if (!b) { b = document.createElement('div'); b.id = 'offBar'; b.setAttribute('role', 'status'); b.style.cssText = 'position:sticky;top:0;z-index:30;background:#9d202b;color:#fff;padding:8px 14px;text-align:center;font-size:14px'; b.textContent = 'אין חיבור — שינויים לא יישמרו עד שהחיבור יחזור'; document.body.prepend(b); } } else if (b) b.remove(); } window.addEventListener('offline', sync); window.addEventListener('online', sync); })();
   function toast(msg, kind) { var o = $('.toast'); if (o) o.remove(); var t = h('div', { class: 'toast', role: kind === 'err' ? 'alert' : 'status', text: msg }); if (kind === 'err') t.style.background = '#9d202b'; document.body.append(t); clearTimeout(toastT); toastT = setTimeout(function () { t.remove(); }, 3200); }
-  var GW = { pending: ['GET', '/admin/pending', 'pending'], users: ['GET', '/admin/users', 'users'], approve: ['POST', '/admin/approve'], reject: ['POST', '/admin/reject'], revoke: ['POST', '/admin/revoke'], 'set-scope': ['POST', '/admin/set-scope'], 'set-active': ['POST', '/admin/set-active'] };
+  var GW = { pending: ['GET', '/admin/pending', 'pending'], users: ['GET', '/admin/users', 'users'], approve: ['POST', '/admin/approve'], reject: ['POST', '/admin/reject'], revoke: ['POST', '/admin/revoke'], 'set-scope': ['POST', '/admin/set-scope'], 'set-active': ['POST', '/admin/set-active'], reset: ['POST', '/admin/reset'], seed: ['POST', '/admin/seed-synthetic'] };
   function api(m, a, src) { if (m.indexOf('gw:') === 0) { var g = GW[m.slice(3)]; return C.gw(g[0], g[1], a).then(function (r) { if (r && r.ok && g[2]) return { ok: true, data: r[g[2]] || [] }; return r; }); }
     return C.api(m, a, src).catch(function () { return { ok: false, code: 'NETWORK', message: 'אין תקשורת. נסו שוב.' }; }); }
   function msgOf(r) { return (r && r.message) || 'הפעולה נכשלה.'; }
@@ -72,7 +72,7 @@
     });
   }
   function ctxLine() { if (C.mode === 'server') return 'מסלול 2027 · סביבת בדיקה פרטית · נתונים סינתטיים' + (C.me && C.me.role === 'viewer' ? ' · צפייה בלבד' : ''); return 'פיילוט מסלול 2027 · סביבת תצוגה בלבד'; }
-  function depName(id) { var d = (S.org.departments || []).filter(function (x) { return x.id === id; })[0]; return d ? d.name.replace(/\s*\(זמני\)/, '') : ''; }
+  function depName(id) { var d = ((S.org || {}).departments || []).filter(function (x) { return x.id === id; })[0]; return d ? d.name.replace(/\s*\(זמני\)/, '') : ''; }
 
   /* ---------- HOME (smart) ---------- */
   /* insightProvider: replaceable generative layer — OFF by default. When enabled it may receive ONLY groupSafePayload(items) (titles/text/N/window of
@@ -166,7 +166,7 @@
     var q = h('input', { class: 'search', id: 'q', type: 'search', placeholder: 'חיפוש לפי שם, מספר אישי או מחלקה…', 'aria-label': 'חיפוש חניכים', autocomplete: 'off', value: S.q }), list = h('div', { id: 'people', 'aria-live': 'polite' }), count = h('span', { class: 'count', id: 'count', text: '' });
     var chips = h('div', { class: 'filters', role: 'group', 'aria-label': 'סינון לפי מחלקה' });
     function chip(label, val) { return h('button', { class: 'chip' + (S.filter === val ? ' active' : ''), type: 'button', 'aria-pressed': S.filter === val ? 'true' : 'false', onclick: function () { S.filter = val; chips.replaceChildren.apply(chips, mk()); draw(); } , text: label }); }
-    function mk() { return [chip('הכול', 'all')].concat((S.org.departments || []).map(function (d) { return chip(d.name.replace(/\s*\(זמני\)/, ''), d.id); })); }
+    function mk() { return [chip('הכול', 'all')].concat(((S.org || {}).departments || []).map(function (d) { return chip(d.name.replace(/\s*\(זמני\)/, ''), d.id); })); }
     chips.replaceChildren.apply(chips, mk());
     var head = h('div', { class: 'section' }, [h('h2', { text: 'חניכים' }), count]);
     mount('soldiers', [head, (C.mode === 'server' && !isAdmin()) ? null : h('div', { class: 'btns', style: 'margin:0 0 10px' }, [h('button', { class: 'primary', type: 'button', text: '+ הוספת חניך', onclick: function () { go('soldier-new'); } })]), q, chips, list], 'חניכים');
@@ -210,7 +210,7 @@
     if (isAdmin()) api('favorites.list', { courseId: cid }).then(function (r) { if (r.ok && (r.data || []).some(function (f) { return f.soldier_id === s.id; })) $('#favBtn').textContent = '★ מועדף'; });
     if (!cancelled) {
       bar.append(h('button', { class: 'secondary', type: 'button', text: 'שינוי שיוך', onclick: function () {
-        var dep = h('select', { id: 'rsDep' }, (S.org.departments || []).map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); })), team = h('select', { id: 'rsTeam' }), rs = h('input', { id: 'rsWhy' }), ex = h('input', { id: 'rsEx', type: 'checkbox', style: 'width:auto;min-height:24px' });
+        var dep = h('select', { id: 'rsDep' }, ((S.org || {}).departments || []).map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); })), team = h('select', { id: 'rsTeam' }), rs = h('input', { id: 'rsWhy' }), ex = h('input', { id: 'rsEx', type: 'checkbox', style: 'width:auto;min-height:24px' });
         function teams() { team.replaceChildren.apply(team, (S.org.teams || []).filter(function (t) { return t.department_id === dep.value; }).map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, '') }); })); } dep.value = s.department_id; dep.addEventListener('change', teams); teams(); team.value = s.team_id;
         dialog('שינוי שיוך חניך', [field('מחלקה', dep), field('צוות', team), field('סיבה (חובה)', rs), field('חריג מאושר (אחרי תחילת הקורס)', ex)], function (msg) { if (!rs.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } return api('soldiers.reassign', { id: s.id, target: { department_id: dep.value, team_id: team.value, approved_exception: ex.checked }, expected_updated_at: s.updated_at, reason: rs.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x) + (x.code === 'CONFLICT' ? ' — רעננו את הכרטיס.' : ''); msg.className = 'msg err'; return false; } cache.soldiers = null; toast('השיוך עודכן'); reload(); }); }, 'שמירה'); } }));
     }
@@ -232,7 +232,7 @@
     var edit = !!s, f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' });
     var name = h('input', { id: 'fName', value: s ? s.full_name : '', autocomplete: 'off' }), pn = h('input', { id: 'fPn', inputmode: 'numeric', dir: 'ltr', value: s ? s.personal_number : '', maxlength: '12' }), gender = h('select', { id: 'fGender' }, [h('option', { value: 'M', text: 'זכר' }), h('option', { value: 'F', text: 'נקבה' })]);
     if (s) gender.value = s.gender; var pakal = h('input', { id: 'fPakal', value: s ? s.pakal : '' }), reason = h('input', { id: 'fReason' });
-    var dep = h('select', { id: 'fDep' }, (S.org.departments || []).map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); })), team = h('select', { id: 'fTeam' });
+    var dep = h('select', { id: 'fDep' }, ((S.org || {}).departments || []).map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); })), team = h('select', { id: 'fTeam' });
     function teams() { team.replaceChildren.apply(team, (S.org.teams || []).filter(function (t) { return t.department_id === dep.value; }).map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, '') }); })); } dep.addEventListener('change', teams); teams();
     var fN = field('שם מלא', name), fP = field('מספר אישי', pn, 'ספרות בלבד, עד 12'), fG = field('מגדר', gender);
     f.append(fN, fP, h('div', { class: 'row2' }, [fG, field('פק״ל', pakal)]));
@@ -353,7 +353,9 @@
     if (curKey) scrollMem[curKey] = window.scrollY;
     navPop = !!(history.state && history.state.mv); try { history.replaceState({ mv: ++navSeq }, ''); } catch (e) {}
     var r = (location.hash || '#/home').replace(/^#\//, ''), top = $('#ctx'); if (top) top.textContent = ctxLine();
-    if (!S.course) { mount('home', [h('div', { class: 'empty', text: 'אין קורס. יש ליצור קורס במסך הניהול.' })]); return; }
+    if (!S.course) { var emp = [h('div', { class: 'empty', text: 'אין קורס. יש ליצור קורס במסך הניהול.' })];
+      if (C.cf && isAdmin()) emp.push(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי לבדיקה (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; api('gw:seed', {}).then(function (x) { if (!x.ok) { toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
+      mount('home', emp); return; }
     var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
   document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.go); }); });
