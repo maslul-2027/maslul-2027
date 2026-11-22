@@ -10,6 +10,7 @@ on:
       - 'scripts/build_cf_worker.js'
       - 'scripts/build_native_app.js'
       - 'scripts/cf_*.js'
+      - 'scripts/ci_cf_workerd.sh'
       - 'scripts/e2e_cf_browser.js'
       - 'scripts/lib/cf_harness.js'
       - 'tests/cf_*.js'
@@ -71,38 +72,11 @@ jobs:
         run: |
           npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/dryrun" 2>&1 | tee "$RUNNER_TEMP/dryrun.txt"
           grep -E "Total Upload" "$RUNNER_TEMP/dryrun.txt"
-      - name: Start workerd + local D1 (random secrets, loopback only)
-        working-directory: cloudflare/free-shared-test
-        run: |
-          BOOT="$(openssl rand -hex 24)"; SECRET="$(openssl rand -hex 32)"
-          echo "::add-mask::$BOOT"; echo "::add-mask::$SECRET"
-          printf 'APP_SECRET=%s\nBOOTSTRAP_TOKEN=%s\nALLOW_LOCAL_HTTP=1\n' "$SECRET" "$BOOT" > .dev.vars
-          echo "CF_BOOTSTRAP_TOKEN=$BOOT" >> "$GITHUB_ENV"
-          npx wrangler d1 migrations apply DB --local
-          nohup npx wrangler dev --local --ip 127.0.0.1 --port 8787 --persist-to "$RUNNER_TEMP/d1" > "$RUNNER_TEMP/wrangler.log" 2>&1 &
-          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8787/auth/status && break; sleep 2; done
-          curl -fsS http://127.0.0.1:8787/auth/status
-      - name: Scenarios over HTTP against workerd (first-run bootstrap, login, approval, scope, march, revoke ...)
-        timeout-minutes: 12
+      - name: workerd + local D1 - HTTP scenarios, then two-phone browser E2E (server and tests in one shell)
+        timeout-minutes: 20
         env:
-          CF_BASE_URL: http://127.0.0.1:8787
-        run: node tests/cf_worker.js
-      - name: Worker log (diagnostics)
-        if: always()
-        run: |
-          echo "--- wrangler dev log (first run) ---"; tail -n 120 "$RUNNER_TEMP/wrangler.log" || true
-          pgrep -af "wrangler|workerd" | head -5 || true
-      - name: Two-phone browser E2E on the SAME database (fresh state)
-        timeout-minutes: 10
-        env:
-          CF_BASE_URL: http://127.0.0.1:8787
           NODE_PATH: ${{ runner.temp }}/pw/node_modules
-        run: |
-          # a fresh database: stop, wipe the local D1, restart (bootstrap is single-use)
-          pkill -f "wrangler dev" || true; sleep 2; rm -rf "$RUNNER_TEMP/d1"
-          (cd cloudflare/free-shared-test && npx wrangler d1 migrations apply DB --local --persist-to "$RUNNER_TEMP/d1" >/dev/null && nohup npx wrangler dev --local --ip 127.0.0.1 --port 8787 --persist-to "$RUNNER_TEMP/d1" > "$RUNNER_TEMP/wrangler2.log" 2>&1 &)
-          for i in $(seq 1 60); do curl -fsS http://127.0.0.1:8787/auth/status && break; sleep 2; done
-          node scripts/e2e_cf_browser.js artifacts/cf_browser || { echo "--- wrangler dev log (browser run) ---"; tail -n 120 "$RUNNER_TEMP/wrangler2.log"; exit 1; }
+        run: bash scripts/ci_cf_workerd.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
