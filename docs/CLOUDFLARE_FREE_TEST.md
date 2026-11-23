@@ -85,6 +85,11 @@
 5. **Cloudflare → Workers & Pages → `maslul-test` → Settings → Variables and Secrets** → סוג Secret: `APP_SECRET`, `BOOTSTRAP_TOKEN` (כל אחד ≥32 תווים אקראיים ממנהל הסיסמאות; לא בצ'אט/GitHub) → Deploy. אז ב-GitHub: **Re-run all jobs** + Approve → מצופה `READY=true`.
 6. *(אחרי GO שלישי)* אייפון 1, חלון Private → הכתובת → "הגדרה ראשונית" (BOOTSTRAP_TOKEN) → אייפון 2 → "בקשת גישה" → אישור מנהל → כניסה.
 
+### 404 בהגדרות GitHub / יצירת ה-Environment דרך API (23.11.2026)
+- **מה נוסה מהסשן של Claude:** זהות `maslul-2027` (id 358894762) מאומתת ב-`gh api user`; אך ה-proxy של הסביבה חוסם `GET/PUT /repos/…/environments*`, `/collaborators/*/permission` ו-`/actions/variables` (HTTP 403 "not permitted through this proxy" — חסימת proxy, לא הרשאת GitHub). **לא בוצעה שום מוטציה; מצב ה-Environment: NOT_DONE / לא נבדק.**
+- **404 על `/settings/environments` כשיש admin** נובע בדרך כלל מהתחברות לחשבון GitHub אחר בדפדפן הפנימי של אפליקציה. מסלול אמין: **Safari** (לא דפדפן פנימי) → github.com → כניסה כ-`maslul-2027` (לוודא בתפריט הפרופיל) → אותיות aA בשורת הכתובת → **Request Desktop Website** → https://github.com/maslul-2027/maslul-2027/settings/environments/new → שם `cloudflare-test` → Required reviewers = `maslul-2027`, **Prevent self-review כבוי**, Deployment branches = Selected → `cloudflare/free-shared-test`. סודות Cloudflare לא מוגדרים בשלב זה; `CF_DEPLOY_ENABLED` לא מוגדר.
+- **אימות לאחר היצירה (למנהל, מכל מחשב מחובר כבעלים):** `gh api repos/maslul-2027/maslul-2027/environments/cloudflare-test --jq '{p:.protection_rules,b:.deployment_branch_policy}'` ו-`…/environments/cloudflare-test/deployment-branch-policies`.
+
 ### D1, מכסות, שחזור
 - **D1:** נוצר/נמצא אוטומטית על ידי ה-workflow (`maslul-test-db`, binding `DB`); הסכמה נוצרת על ידי ה-Worker בפנייה הראשונה. אם `d1 create` נכשל בהרשאה: Cloudflare → Storage & Databases → D1 → Create `maslul-test-db`, ואז Re-run.
 - **מכסות Free לאימות אחרי חיבור:** Worker 10ms CPU ו-100K בקשות/יום; D1 5M קריאות / 100K כתיבות ליום, 5GB לחשבון, 500MB למסד; חריגה נחסמת ואינה מחויבת. לבדוק בלוח Metrics של ה-Worker ושל D1 תוך כדי בדיקה סינתטית.
