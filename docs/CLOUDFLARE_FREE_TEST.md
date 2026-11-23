@@ -52,7 +52,7 @@
 ## 5. בדיקות והוכחות
 | בדיקה | מה מוכיח | הרצה מקומית |
 |---|---|---|
-| `tests/cf_static.js` (9) | `wrangler.toml` בצורת Free, בלי `eval`/fetch חיצוני, 176 נתיבים זהים לטבלה, אין נתיב PIN, `.gitignore` | PASS |
+| `tests/cf_static.js` (11) | `wrangler.toml` בצורת Free, בלי `eval`/fetch חיצוני, 176 נתיבים זהים לטבלה, אין נתיב PIN, `.gitignore` | PASS |
 | `tests/cf_worker.js` (23) | זרימת הבעלים מקצה לקצה על Worker אמיתי + D1 (shim) — כולל חוסר-הרשאה, ביטול, CSRF, פקיעה, תקציב שאילתות, **S15c: כתיבה עם מפתח אידמפוטנטיות** | PASS |
 | `scripts/e2e_cf_browser.js` (10 — כולל B7b: כתיבה שנשמרה בשרת אך התשובה אבדה) | **שני הקשרי Chromium (390×844)** על מסד אחד: הגדרה → הצטרפות → כניסה → מפקד רואה רק צוות → מסע נשמר ונקרא ע"י השני אחרי רענון → ביטול | PASS ×3 (יציב) |
 | CI `cloudflare-free-test.yml` (wrangler 4.166, workerd) | אותם 20 תרחישים (S19/S20 רק ב-shim) **ב-HTTP מול workerd + D1 מקומי**, 9 בדיקות דפדפן, ו-`wrangler deploy --dry-run` (חבילה 1181KiB / **184KiB gzip**, מגבלת Free 3MB gzip) | PASS על `a71fb0e` (הרצה 1 וניסיון חוזר 2): https://github.com/maslul-2027/maslul-2027/actions/runs/45056668856 |
@@ -61,29 +61,51 @@
 - ממצאי CI שתוקנו: (א) לולאת בנייה אינסופית ב-`wrangler dev` — ה-seed הכיל חותמות זמן ולכן השתנה בכל בנייה (כעת דטרמיניסטי + `watch_dir` למקורות בלבד); (ב) תהליך שרת ובדיקות רצים בקליפה אחת. עד התיקון הריצות על workerd היו לא יציבות — נרשם כדי שלא ייווצר רושם של יציבות שלא הייתה.
 - ה-shim של D1 מעל `node:sqlite` אינו הוכחה להתנהגות Cloudflare — לכן קיים ג'וב workerd ב-CI.
 
-## 6. חיבור Cloudflare Free — מדריך לבעלים (בלי קוד, בלי טרמינל, בלי תשלום)
-**אין "לחיצה אחת".** כפתור Deploy to Cloudflare דורש מאגר ציבורי ולכן לא מתאים (המאגר פרטי, הענף ייעודי). משתמשים ב-Workers Builds מתוך לוח הבקרה. כל מה שלהלן בלחיצות; הבעלים לא כותב קוד ולא מריץ פקודות.
+## 6. חיבור Cloudflare Free — GitHub Actions + Wrangler (ללא אפליקציית GitHub של Cloudflare)
+**למה:** בחירת המאגר באינטגרציית Cloudflare נתקעת על חשבון אחר (שינוי user-scoped picker מ-10.11.2026). המסלול הזה לא משתמש באינטגרציה: GitHub מריץ `wrangler` עם אסימון שהבעלים יוצר. **הכול בלחיצות בדפדפן — בלי קוד, בלי טרמינל, בלי תשלום.**
+**תיקון תיעוד:** המאגר `maslul-2027/maslul-2027` **ציבורי** (`private:false`, נבדק מול GitHub API) — קודם נכתב בטעות "פרטי". משמעות: הקוד גלוי לכולם, ולכן **רק נתונים סינתטיים**; הסודות לעולם לא במאגר. כפתור Deploy to Cloudflare אפשרי טכנית (מאגר ציבורי) אך לא נבחר — מסלול ה-Actions מבוקר יותר. לא משנים visibility ללא הוראה מפורשת.
 
-### בקשת אישור (נשלחת לבעלים ול-IT/אבטחת מידע — כתובה כך שאפשר לענות "מאשר")
-> **מאשר לחבר את מאגר GitHub הפרטי הקיים `maslul-2027/maslul-2027` לחשבון Cloudflare Free חדש, לצורך סביבת בדיקה סינתטית בלבד** (נתונים בדויים, בלי נתוני אמת, בלי כרטיס אשראי, בלי שירות בתשלום, בלי שינוי ב-main/Pages). זיהוי: אימייל שהמנהל מאשר + קוד גישה + אפליקציית אימות. שלב ההפעלה בפועל ובדיקת שני טלפונים — **באישור (GO) נפרד** אחרי החיבור.
+### מה נבנה (קוד בלבד, לא הופעל)
+- `.github/workflows/cloudflare-deploy-test.yml`. job `verify` רץ בכל push לענף `cloudflare/free-shared-test` — בנייה, בדיקות סטטיות ו-`wrangler deploy --dry-run`, **בלי סודות**. job `deploy` רץ **רק אם** כל השלושה: (1) משתנה מאגר `CF_DEPLOY_ENABLED=yes`, (2) Environment `cloudflare-test` עם הבעלים כמאשר חובה (לחיצת Approve), (3) שני סודות ה-Cloudflare קיימים **רק** כסודות של אותו Environment. פעולות צד-שלישי: אין (רק `actions/*`). `main`/Pages: לא נוגעים.
+- `scripts/cf_ci_deploy_prepare.js`: מוצא את D1 `maslul-test-db` או יוצר אותו (Free), ומזריק את המזהה לקובץ פריסה זמני בלבד — לא מסתמכים על הקצאה אוטומטית (בטא).
+- `APP_SECRET` ו-`BOOTSTRAP_TOKEN` **אינם** סודות GitHub: נשמרים רק ב-Cloudflare כ-Worker Secrets (פריסות לא מוחקות אותם).
+- **מגבלת GitHub:** כפתור "Run workflow" מופיע רק לקבצי workflow שנמצאים ב-default branch. כאן הקובץ בענף בלבד (אסור למזג ל-main), לכן הנתיב הוא ריצת ה-push עצמה: Actions → ההרצה האחרונה בענף → **Review deployments → Approve** (או Re-run all jobs אחרי הגדרת המשתנה). `gh workflow run --ref` עובד רק אחרי שהקובץ רץ פעם אחת בענף. אין פריסה אוטומטית מ-push בלי אישור אנושי.
 
-### שלב א — חשבון וחיבור (פעולת הבעלים)
-1. dash.cloudflare.com → Sign up עם אימייל. **תוכנית Free; לא מזינים כרטיס אשראי.** אם מוצגת בקשת תשלום/שדרוג — עוצרים ומדווחים.
-2. Workers & Pages → Create → **Import a repository** (GitHub) → Install/Authorize → **Only select repositories** → לבחור רק `maslul-2027/maslul-2027`.
-### שלב ב — הגדרת הבנייה (מתבצע בהכתבה, מסך משותף)
-3. שם Worker: `maslul-test` (חייב להיות זהה ל-`name` ב-`wrangler.toml`). **Root directory: `cloudflare/free-shared-test`**.
-4. **Production branch: `cloudflare/free-shared-test` — לא `main`.** (Settings → Build → Branch control.) **Builds for non-production branches: כבוי.** Build command: ברירת מחדל. Deploy command: `npx wrangler deploy` (ברירת מחדל).
-5. כתובת: `https://maslul-test.<חשבון>.workers.dev` (HTTPS כברירת מחדל; ללא דומיין מותאם, ללא תשלום). גרסת wrangler נקבעת מ-`package.json` (≥ 4.45).
-### שלב ג — מסד נתונים D1
-6. **מסלול רגיל:** ההגדרה `DB` ללא מזהה ב-`wrangler.toml` גורמת ל-wrangler (4.45+, בטא) ליצור את המסד `maslul-test-db` בפריסה הראשונה ולקשור אותו כ-`DB`. **NOT_RUN עד חשבון אמיתי.**
-7. **אם ההקצאה האוטומטית נכשלת (שגיאה בבנייה על D1/binding):** Storage & Databases → D1 SQL database → Create → שם `maslul-test-db` → Create. אחר כך Workers & Pages → `maslul-test` → Bindings → Add binding → D1 database → Variable name **`DB`** → המסד שנוצר → Deploy. הסכמה נוצרת על ידי ה-Worker בפנייה הראשונה (בלי מיגרציה ידנית).
-### שלב ד — סודות האימות (הבעלים בלבד; לא בצ'אט, לא ב-GitHub, לא אצלי)
-8. ליצור שני ערכים אקראיים של 40 תווים לפחות במחולל הסיסמאות של הבעלים (מנהל הסיסמאות בטלפון/דפדפן) ולשמור אותם שם.
-9. Worker `maslul-test` → Settings → Variables and Secrets → Add → סוג **Secret** (לא Text): שם `APP_SECRET` + ערך ראשון; שם `BOOTSTRAP_TOKEN` + ערך שני → Deploy. לוודא בלשונית Deployments שנוצרה פריסה חדשה (אחרת Builds → Retry build).
-### שלב ה — GO נפרד, ואז בדיקה
-10. **רק אחרי GO מפורש:** הבעלים פותח את הכתובת בטלפון 1 → "הגדרה ראשונית" → שם/אימייל/`BOOTSTRAP_TOKEN` → אפליקציית אימות. טלפון 2: "בקשת גישה" → המנהל מאשר ומעביר קישור חד-פעמי → כניסה.
-11. מדידות אחרי חיבור (נתונים סינתטיים בלבד): CPU אמיתי של Worker (לוח Metrics), מכסות D1 (Rows read/written, Storage), שגיאות 1102. חריגה = ירידת איכות מבוקרת, **לא שדרוג**.
-**עצירה מיידית** על: בקשת כרטיס/תשלום, גישת GitHub לכל המאגרים, או כל נתון אמיתי. לא ממזגים ל-`main`, לא נוגעים ב-Pages.
+### בקשת אישור (בעלים + IT/אבטחת מידע) — GO ראשון: הכנת חשבון בלבד
+> מאשר ליצור חשבון Cloudflare Free ולהגדיר בו אסימון פריסה מוגבל, ולאפשר ל-GitHub Actions של `maslul-2027/maslul-2027` לפרוס **סביבת בדיקה סינתטית בלבד** (נתונים בדויים, ללא נתוני אמת, ללא כרטיס אשראי/שירות בתשלום, ללא שינוי ב-main/Pages). זיהוי: אימייל שהמנהל מאשר + קוד גישה + אפליקציית אימות.
+**GO שני (נפרד, מפורש):** הפעלת `CF_DEPLOY_ENABLED=yes` ואישור הפריסה בפועל. **GO שלישי:** בדיקת שני טלפונים פיזיים.
+
+### פעולות הבעלים (בדפדפן; בשיחה אני מכתיב כל לחיצה)
+**א. Cloudflare (חשבון Free, ללא כרטיס):**
+1. Account ID: dash.cloudflare.com → Workers & Pages → בסרגל הצד "Account ID" → Copy.
+2. אסימון: My Profile → API Tokens → Create Token → תבנית **Edit Cloudflare Workers** → Use template → להוסיף הרשאה **Account · D1 · Edit** → Account Resources: **רק החשבון הזה** → Create → Copy (נראה פעם אחת).
+**ב. GitHub (מאגר `maslul-2027/maslul-2027` → Settings):**
+3. Environments → New environment → `cloudflare-test` → **Required reviewers**: הבעלים → **Deployment branches: Selected branches → `cloudflare/free-shared-test`** → בתוך ה-Environment: Add environment secret `CLOUDFLARE_ACCOUNT_ID` ו-`CLOUDFLARE_API_TOKEN` (הדבקה ישירה מהדפדפן; **לא בצ'אט**).
+**ג. רק אחרי GO שני:**
+4. Settings → Secrets and variables → Actions → Variables → New repository variable: `CF_DEPLOY_ENABLED` = `yes`.
+5. Actions → "Cloudflare TEST deploy" → הריצה האחרונה בענף → **Review deployments → cloudflare-test → Approve and deploy**. התוצאה (כתובת `workers.dev`) מופיעה בסיכום הריצה.
+**ד. Cloudflare — סודות האפליקציה (פעם אחת):**
+6. Workers & Pages → `maslul-test` → Settings → Variables and Secrets → Add → סוג **Secret**: `APP_SECRET` ו-`BOOTSTRAP_TOKEN`, כל אחד ≥ 32 תווים אקראיים ממחולל הסיסמאות של הבעלים (נשמרים אצלו; לא בצ'אט/מאגר/אצלי) → Deploy.
+**ה. אחרי GO שלישי:** אייפון 1 (חלון Private) → הכתובת → "הגדרה ראשונית" → אייפון 2 → "בקשת גישה" → המנהל מאשר → כניסה.
+
+### D1, מכסות, שחזור
+- **D1:** נוצר/נמצא אוטומטית על ידי ה-workflow (`maslul-test-db`, binding `DB`); הסכמה נוצרת על ידי ה-Worker בפנייה הראשונה. אם `d1 create` נכשל בהרשאה: Cloudflare → Storage & Databases → D1 → Create `maslul-test-db`, ואז Re-run.
+- **מכסות Free לאימות אחרי חיבור:** Worker 10ms CPU ו-100K בקשות/יום; D1 5M קריאות / 100K כתיבות ליום, 5GB לחשבון, 500MB למסד; חריגה נחסמת ואינה מחויבת. לבדוק בלוח Metrics של ה-Worker ושל D1 תוך כדי בדיקה סינתטית.
+- **Rollback:** Worker → Deployments → גרסה קודמת → Rollback (לחיצות). מסד: Time Travel (§6א). **כיבוי חירום:** למחוק את המשתנה `CF_DEPLOY_ENABLED`, לבטל את האסימון ב-Cloudflare, או למחוק את ה-Worker.
+
+### GO / NO-GO לפריסת TEST חיצונית (סינתטית בלבד)
+| תנאי | מי |
+|---|---|
+| חשבון Free ללא כרטיס; אסימון בהיקף החשבון בלבד | בעלים |
+| אישור ארגוני/IT-InfoSec לשימוש בענן חיצוני לנתונים **סינתטיים** | בעלים + InfoSec |
+| זהות אימייל מאושרת-מנהל מתקבלת (§2) | בעלים + InfoSec |
+| CI ירוק על ה-SHA המדויק (כולל `verify`) | מנהל QA |
+| אין נתוני אמת; main/Pages ללא שינוי | כולם |
+**NO-GO אוטומטי:** בקשת תשלום/כרטיס, אסימון בהיקף רחב מהחשבון, או כל נתון אמיתי.
+**לא הורץ (NOT_RUN):** פריסה בפועל, `d1 list/create` ו-`whoami` בחשבון אמיתי, מדידת CPU/D1 מרוחקת, שני טלפונים פיזיים.
+
+### חלופה: אינטגרציית Cloudflare ל-GitHub (Workers Builds)
+אם הבעלים מעדיף לנסות שוב: חלון Private באייפון המחובר ל-GitHub **רק** כ-`maslul-2027`, Import a repository, Root `cloudflare/free-shared-test`, ענף ייצור `cloudflare/free-shared-test`, שם `maslul-test`. אם הבורר שוב בוחר חשבון אחר — עוברים למסלול ה-Actions למעלה (אין לחזור על סבבי כניסה/ביטול).
 
 ## 6א. שחזור והתאוששות (Time Travel החינמי של D1)
 | יכולת | מצב |
