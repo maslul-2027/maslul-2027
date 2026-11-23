@@ -8,7 +8,7 @@ const assert = require('assert/strict'), path = require('path'), { pathToFileURL
 if (!process.env.CF_BASE_URL) require('child_process').spawnSync(process.execPath, [path.join(__dirname, '..', 'scripts', 'build_cf_worker.js')], { stdio: 'ignore' });   // generated engine + seed (gitignored build output) are always rebuilt from src/*.gs
 const SRC = path.join(__dirname, '..', 'cloudflare', 'free-shared-test', 'src'), imp = f => import(pathToFileURL(path.join(SRC, f)).href);
 const HTTP = process.env.CF_BASE_URL || '', BOOT = process.env.CF_BOOTSTRAP_TOKEN || 'test-bootstrap-token-0123456789abcdef', SECRET = 'test-app-secret-0123456789abcdef0123456789abcdef';
-let pass = 0, fail = 0; const T = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } catch (e) { fail++; console.log('FAIL', n, '\n   ', String(e.stack || e.message).split('\n').slice(0, 4).join('\n    ')); } };
+let pass = 0, fail = 0; const T = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } catch (e) { fail++; console.log('FAIL', n, '\n   ', String(e.stack || e.message).split("\n").slice(0, 9).join('\n    ')); } };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, v = 0; const o = []; for (const ch of s) { v = (v << 5) | A.indexOf(ch); bits += 5; if (bits >= 8) { o.push((v >>> (bits - 8)) & 255); bits -= 8; } } return new Uint8Array(o); }
 (async () => {
@@ -161,6 +161,17 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
       assert.equal((await l.api('courses.list'))._status, 401, 'a session that existed before the restore must not survive it'); assert.equal((await admin.api('courses.list'))._status, 401, 'admin session too');
       const again = client(); assert.ok((await login(again, B)).ok, 'login works again after the runbook'); assert.ok((await again.api('courses.list')).ok);
       const ev = await db.prepare("SELECT count(*) n FROM audit WHERE ev = 'operator_post_restore'").first('n'); assert.equal(ev, 1); });
+    await T('S22 first deploy BEFORE the Worker secrets exist: /auth/status answers (configured:false), every other door fails closed (503), the deploy smoke test reports NOT READY (not "finished"); with the secrets it reports READY; an open data route makes it fail', async () => {
+      const L = require('../scripts/cf_local_server.js'), cp = require('child_process'), smoke = u => new Promise(res => { cp.execFile(process.execPath, [path.join(__dirname, '..', 'scripts', 'cf_ci_smoke.js'), u], { encoding: 'utf8' }, (err, stdout) => res({ status: err ? err.code : 0, stdout })); });
+      const none = await L.start({ appSecret: '', bootstrapToken: '' }); try {
+        const st = await (await fetch(none.origin + '/auth/status')).json(); assert.equal(st.ok, true); assert.equal(st.configured, false); assert.deepEqual(st.missing.sort(), ['APP_SECRET', 'BOOTSTRAP_TOKEN']);
+        for (const [p0, m0] of [['/api', 'POST'], ['/auth/login', 'POST'], ['/auth/bootstrap', 'POST'], ['/auth/me', 'GET']]) { const r = await fetch(none.origin + p0, { method: m0, headers: { 'content-type': 'application/json', origin: none.origin }, body: m0 === 'POST' ? '{"token":"x","method":"courses.list","args":{}}' : undefined }); assert.equal(r.status, 503, p0 + ' must fail closed while unconfigured'); }
+        const r1 = await smoke(none.origin); assert.equal(r1.status, 0, r1.stdout); assert.match(r1.stdout, /STAGE 1 OK.*NOT CONFIGURED.*NOT READY/); assert.match(r1.stdout, /READY=false/); assert.doesNotMatch(r1.stdout, /READY=true/);
+      } finally { await none.close(); }
+      const half = await L.start({ bootstrapToken: '' }); try { const st = await (await fetch(half.origin + '/auth/status')).json(); assert.equal(st.configured, false); assert.deepEqual(st.missing, ['BOOTSTRAP_TOKEN']); } finally { await half.close(); }
+      const full = await L.start({}); try { const r2 = await smoke(full.origin); assert.equal(r2.status, 0, r2.stdout); assert.match(r2.stdout, /STAGE 2 OK.*READY/); assert.match(r2.stdout, /READY=true/); } finally { await full.close(); }
+      const http = require('http'), open = http.createServer((q, s) => { s.setHeader('content-type', 'application/json'); s.end(q.url === '/auth/status' ? '{"ok":true,"configured":true,"needsSetup":false}' : '{"ok":true,"data":[]}'); }); await new Promise(r => open.listen(0, '127.0.0.1', r));
+      try { const r3 = await smoke('http://127.0.0.1:' + open.address().port); assert.equal(r3.status, 1, 'an open data route must fail the smoke test'); assert.match(r3.stdout, /SMOKE FAIL/); } finally { open.close(); } });
   }
   console.log('CLOUDFLARE FREE SHARED-TEST (' + (HTTP ? 'wrangler dev over HTTP' : 'in-process Worker + SQLite D1 shim') + ') TOTAL pass=' + pass + ' fail=' + fail);
   process.exit(fail ? 1 : 0);

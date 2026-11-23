@@ -69,24 +69,21 @@
 - `.github/workflows/cloudflare-deploy-test.yml`. job `verify` רץ בכל push לענף `cloudflare/free-shared-test` — בנייה, בדיקות סטטיות ו-`wrangler deploy --dry-run`, **בלי סודות**. job `deploy` רץ **רק אם** כל השלושה: (1) משתנה מאגר `CF_DEPLOY_ENABLED=yes`, (2) Environment `cloudflare-test` עם הבעלים כמאשר חובה (לחיצת Approve), (3) שני סודות ה-Cloudflare קיימים **רק** כסודות של אותו Environment. פעולות צד-שלישי: אין (רק `actions/*`). `main`/Pages: לא נוגעים.
 - `scripts/cf_ci_deploy_prepare.js`: מוצא את D1 `maslul-test-db` או יוצר אותו (Free), ומזריק את המזהה לקובץ פריסה זמני בלבד — לא מסתמכים על הקצאה אוטומטית (בטא).
 - `APP_SECRET` ו-`BOOTSTRAP_TOKEN` **אינם** סודות GitHub: נשמרים רק ב-Cloudflare כ-Worker Secrets (פריסות לא מוחקות אותם).
-- **מגבלת GitHub:** כפתור "Run workflow" מופיע רק לקבצי workflow שנמצאים ב-default branch. כאן הקובץ בענף בלבד (אסור למזג ל-main), לכן הנתיב הוא ריצת ה-push עצמה: Actions → ההרצה האחרונה בענף → **Review deployments → Approve** (או Re-run all jobs אחרי הגדרת המשתנה). `gh workflow run --ref` עובד רק אחרי שהקובץ רץ פעם אחת בענף. אין פריסה אוטומטית מ-push בלי אישור אנושי.
+- - **פריסה ראשונה בשלבים (תוקן אחרי הערת המנהל):** ה-Worker בלי סודות אפליקציה **לא קורס ולא "מוכן"**: `GET /auth/status` עונה `{configured:false, missing:[…]}` (שמות בלבד), ו-`/api`, `/auth/login`, `/auth/bootstrap` נסגרים ב-503. `scripts/cf_ci_smoke.js` מדפיס בשלב 1 `NOT READY` (+ אזהרה וסיכום ריצה "DEPLOYED BUT NOT READY") ויוצא 0 — פריסה ראשונה **אינה מוצגת כגמורה**. אחרי הוספת הסודות ב-Cloudflare מריצים שוב (Re-run all jobs) ומקבלים שלב 2: `READY=true` (בקשת נתונים בלי התחברות = 401, כותרות אבטחה). פתוח ללא הגנה → הבדיקה נכשלת. נבדק: S22 ב-`tests/cf_worker.js` (בלי סודות / סוד אחד חסר / מלא / שרת פתוח מדומה).
+- **Environment ואישור עצמי:** לפי תיעוד GitHub, כשמופעל **Prevent self-review** — מי שיזם את הריצה (ה-push) **לא יכול לאשר** אותה גם אם הוא Reviewer. לכן בחשבון בודד **חובה להשאיר Prevent self-review כבוי** (או Reviewer נוסף). חשבון Free + מאגר ציבורי תומכים ב-Environments, סודות וחוקי הגנה לפי התיעוד; המאגר שייך למשתמש (לא ארגון) ופרטי=false (נבדק). **לא נבדק בפועל** (אין לי גישת API ליצירת Environment): התנהגות האישור-העצמי בחשבון הבעלים — זה שלב אימות ראשון בטלפון (§GO).
+- **מגבלת GitHub:** כפתור "Run workflow" מופיע רק לקובצי workflow ב-default branch; כאן הקובץ בענף בלבד (אסור למזג ל-main). הנתיב: **ריצת ה-push** → Actions → "Cloudflare TEST deploy" → ההרצה האחרונה בענף → job `deploy` ממתין → **Review deployments → cloudflare-test → Approve and deploy**. אחרי שינוי משתנה/סוד: **Re-run all jobs** (המשתנה נקרא מחדש בתחילת ה-job). ריצת `verify` על ה-push אומתה ב-CI (ראו PR); הלחיצות של Approve/Re-run עצמן NOT_RUN עד לחשבון אמיתי. `gh workflow run --ref` עובד רק אחרי שהקובץ רץ פעם בענף.
 
 ### בקשת אישור (בעלים + IT/אבטחת מידע) — GO ראשון: הכנת חשבון בלבד
 > מאשר ליצור חשבון Cloudflare Free ולהגדיר בו אסימון פריסה מוגבל, ולאפשר ל-GitHub Actions של `maslul-2027/maslul-2027` לפרוס **סביבת בדיקה סינתטית בלבד** (נתונים בדויים, ללא נתוני אמת, ללא כרטיס אשראי/שירות בתשלום, ללא שינוי ב-main/Pages). זיהוי: אימייל שהמנהל מאשר + קוד גישה + אפליקציית אימות.
 **GO שני (נפרד, מפורש):** הפעלת `CF_DEPLOY_ENABLED=yes` ואישור הפריסה בפועל. **GO שלישי:** בדיקת שני טלפונים פיזיים.
 
-### פעולות הבעלים (בדפדפן; בשיחה אני מכתיב כל לחיצה)
-**א. Cloudflare (חשבון Free, ללא כרטיס):**
-1. Account ID: dash.cloudflare.com → Workers & Pages → בסרגל הצד "Account ID" → Copy.
-2. אסימון: My Profile → API Tokens → Create Token → תבנית **Edit Cloudflare Workers** → Use template → להוסיף הרשאה **Account · D1 · Edit** → Account Resources: **רק החשבון הזה** → Create → Copy (נראה פעם אחת).
-**ב. GitHub (מאגר `maslul-2027/maslul-2027` → Settings):**
-3. Environments → New environment → `cloudflare-test` → **Required reviewers**: הבעלים → **Deployment branches: Selected branches → `cloudflare/free-shared-test`** → בתוך ה-Environment: Add environment secret `CLOUDFLARE_ACCOUNT_ID` ו-`CLOUDFLARE_API_TOKEN` (הדבקה ישירה מהדפדפן; **לא בצ'אט**).
-**ג. רק אחרי GO שני:**
-4. Settings → Secrets and variables → Actions → Variables → New repository variable: `CF_DEPLOY_ENABLED` = `yes`.
-5. Actions → "Cloudflare TEST deploy" → הריצה האחרונה בענף → **Review deployments → cloudflare-test → Approve and deploy**. התוצאה (כתובת `workers.dev`) מופיעה בסיכום הריצה.
-**ד. Cloudflare — סודות האפליקציה (פעם אחת):**
-6. Workers & Pages → `maslul-test` → Settings → Variables and Secrets → Add → סוג **Secret**: `APP_SECRET` ו-`BOOTSTRAP_TOKEN`, כל אחד ≥ 32 תווים אקראיים ממחולל הסיסמאות של הבעלים (נשמרים אצלו; לא בצ'אט/מאגר/אצלי) → Deploy.
-**ה. אחרי GO שלישי:** אייפון 1 (חלון Private) → הכתובת → "הגדרה ראשונית" → אייפון 2 → "בקשת גישה" → המנהל מאשר → כניסה.
+### פעולות הבעלים מהאייפון (6 מסכים)
+1. **Cloudflare → Account ID** (dash.cloudflare.com → Workers & Pages → Account ID → Copy).
+2. **Cloudflare → API Tokens** → Create Token → תבנית **Edit Cloudflare Workers** + הוספת **Account · D1 · Edit** → Account Resources: רק החשבון הזה → Copy (פעם אחת).
+3. **GitHub → Settings → Environments → New → `cloudflare-test`**: Required reviewers = הבעלים; **Prevent self-review = כבוי**; Deployment branches = Selected → `cloudflare/free-shared-test`; Add environment secret: `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (הדבקה; לא בצ'אט).
+4. *(רק אחרי GO שני)* **Settings → Secrets and variables → Actions → Variables**: `CF_DEPLOY_ENABLED` = `yes` → Actions → "Cloudflare TEST deploy" → הריצה האחרונה → **Re-run all jobs** → **Review deployments → Approve**. תוצאה צפויה: כתובת `workers.dev` + **"DEPLOYED BUT NOT READY"** (תקין, שלב 1).
+5. **Cloudflare → Workers & Pages → `maslul-test` → Settings → Variables and Secrets** → סוג Secret: `APP_SECRET`, `BOOTSTRAP_TOKEN` (כל אחד ≥32 תווים אקראיים ממנהל הסיסמאות; לא בצ'אט/GitHub) → Deploy. אז ב-GitHub: **Re-run all jobs** + Approve → מצופה `READY=true`.
+6. *(אחרי GO שלישי)* אייפון 1, חלון Private → הכתובת → "הגדרה ראשונית" (BOOTSTRAP_TOKEN) → אייפון 2 → "בקשת גישה" → אישור מנהל → כניסה.
 
 ### D1, מכסות, שחזור
 - **D1:** נוצר/נמצא אוטומטית על ידי ה-workflow (`maslul-test-db`, binding `DB`); הסכמה נוצרת על ידי ה-Worker בפנייה הראשונה. אם `d1 create` נכשל בהרשאה: Cloudflare → Storage & Databases → D1 → Create `maslul-test-db`, ואז Re-run.

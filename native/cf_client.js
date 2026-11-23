@@ -80,7 +80,7 @@
   window.addEventListener('hashchange', function () { if (/^#enroll=/.test(location.hash)) route(); });   // a link opened in an already-open tab
   function route() { var m = /^#enroll=([A-Za-z0-9_-]{20,80})$/.exec(location.hash || ''); if (m) { var t = m[1]; try { history.replaceState(null, '', location.pathname); } catch (e) {} enrollUI(t); return true; } return false; }
   client.ready = http('GET', '/auth/me').then(function (r) {
-    if (!r.ok) { if (route()) return new Promise(function () {}); return http('GET', '/auth/status').then(function (st) { loginUI(!!(st && st.needsSetup)); return new Promise(function () {}); }); }
+    if (!r.ok) { if (route()) return new Promise(function () {}); return http('GET', '/auth/status').then(function (st) { loginUI(!!(st && st.needsSetup)); if (st && st.configured === false) { var mm = document.getElementById('auMsg'); if (mm) { mm.className = 'msg err'; mm.textContent = 'השרת נפרס אך עדיין לא הוגדר (חסרים סודות אבטחה ב-Cloudflare). כניסה והרשמה חסומות עד שהבעלים משלים את ההגדרה.'; } var gb = document.getElementById('auGo'); if (gb) gb.disabled = true; } return new Promise(function () {}); }); }
     CSRF = r.csrf || CSRF; try { sessionStorage.setItem(SK, CSRF); } catch (e) {} ME = r; return http('POST', '/api', { method: 'whoAmI', args: {} }).then(function (w) { if (w && w.ok) ME = Object.assign({}, r, { name: w.data.displayName, readOnly: !!w.data.readOnly }); });
   });
   window.appClient = client;

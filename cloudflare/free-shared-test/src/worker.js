@@ -54,7 +54,13 @@ async function route(request, env, now) {
   if (!db) throw new AuthError('MISCONFIGURED', 'מסד הנתונים (D1) לא מחובר.');
   const local = env.ALLOW_LOCAL_HTTP === '1' && /^(localhost|127\.0\.0\.1)$/.test(url.hostname);
   if (url.protocol !== 'https:' && !local) throw new AuthError('TLS_REQUIRED', 'HTTPS בלבד.');
-  await ensureSchema(db); const auth = authFor(env, db, now), ip = request.headers.get('cf-connecting-ip') || 'local';
+  await ensureSchema(db);
+  // Staged first deploy: GET /auth/status must answer BEFORE the Worker secrets exist (authFor throws MISCONFIGURED without them). It says whether the Worker is READY; it never opens anything.
+  if (request.method === 'GET' && url.pathname === '/auth/status') {
+    const n = await db.prepare('SELECT COUNT(*) AS n FROM users').first(), needsSetup = n.n === 0, pep = String(env.APP_SECRET || '').length >= 32, boot = String(env.BOOTSTRAP_TOKEN || '').length >= 32, configured = pep && (!needsSetup || boot);
+    return json(200, { ok: true, needsSetup, configured, missing: configured ? [] : [].concat(pep ? [] : ['APP_SECRET'], needsSetup && !boot ? ['BOOTSTRAP_TOKEN'] : []) });
+  }
+  const auth = authFor(env, db, now), ip = request.headers.get('cf-connecting-ip') || 'local';
   const len = Number(request.headers.get('content-length') || 0); let body = {};
   if (m !== 'GET' && m !== 'HEAD') {
     if (len > 1.2e6) throw new AuthError('TOO_LARGE', 'הבקשה גדולה מדי.');
@@ -63,7 +69,6 @@ async function route(request, env, now) {
     if (request.headers.get('origin') !== url.origin) throw new AuthError('CSRF', 'מקור הבקשה לא תקין.');   // exact Origin on every state-changing request
   }
   const ok = (b, extra) => json(200, Object.assign({ ok: true }, b || {}), extra);
-  if (m === 'GET' && p === '/auth/status') { const n = await db.prepare('SELECT COUNT(*) AS n FROM users').first(); return ok({ needsSetup: n.n === 0 }); }
   if (m === 'POST' && p === '/auth/bootstrap') return ok(await auth.bootstrap(body, ip));
   if (m === 'POST' && p === '/auth/register') return ok(await auth.register(body, ip));
   if (m === 'POST' && p === '/auth/enroll/start') return ok(await auth.enrollStart(body, ip));

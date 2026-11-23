@@ -88,14 +88,17 @@ jobs:
           URL="$(grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.txt" | head -1)"
           [ -n "$URL" ] || { echo "::error::could not find the workers.dev URL in the deploy output"; exit 1; }
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-      - name: Smoke test (read-only; no data is written)
+      - name: Smoke test (read-only; two stages; no data is written)
         env:
           URL: ${{ steps.deploy.outputs.url }}
         run: |
-          curl -fsS "$URL/auth/status"; echo
-          code="$(curl -s -o /dev/null -w '%{http_code}' -X POST "$URL/api" -H 'content-type: application/json' -H "origin: $URL" -d '{"method":"courses.list","args":{}}')"
-          [ "$code" = "401" ] || { echo "::error::an unauthenticated data request must be 401, got $code"; exit 1; }
-          curl -sI "$URL/" | grep -iE 'strict-transport-security|content-security-policy|x-frame-options' | cut -c1-60
-          out="$(curl -s -X POST "$URL/auth/login" -H 'content-type: application/json' -H "origin: $URL" -d '{}')"
-          echo "$out" | grep -q MISCONFIGURED && echo "::notice::the Worker application secrets are not set yet - add the two Worker secrets in the Cloudflare dashboard (owner guide step 8), then redeploy or wait for the next version."
-          echo "Deployed (synthetic TEST only): $URL" >> "$GITHUB_STEP_SUMMARY"
+          # Stage 1 = first deploy, Worker secrets not set yet: expected, fails closed, reported as NOT READY (never as finished).
+          # Stage 2 = secrets set (re-run this workflow): data routes need a session, headers present, reported as READY.
+          node scripts/cf_ci_smoke.js "$URL" | tee smoke.txt
+          if grep -q 'READY=true' smoke.txt; then
+            echo "Deployed and configured (synthetic TEST only): $URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::DEPLOYED BUT NOT READY - the Worker secrets are not set yet. Set them in the Cloudflare dashboard (owner guide), then re-run this workflow to get READY."
+            echo "### NOT READY - first deploy, Worker secrets missing" >> "$GITHUB_STEP_SUMMARY"
+            echo "$URL is deployed but fails closed until the two Worker secrets are added in Cloudflare. Then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+          fi
