@@ -15,7 +15,7 @@ command = "node ../../scripts/build_cf_worker.js && node ../../scripts/build_nat
 directory = "./public"
 binding = "ASSETS"
 # only API/auth/admin paths run Worker code (and count toward the 100,000 requests/day); the static app shell is served by the asset layer
-run_worker_first = ["/api/*", "/auth/*", "/admin/*", "/audit"]
+run_worker_first = ["/api", "/api/*", "/auth/*", "/admin/*", "/audit"]
 
 # D1 database: no id here on purpose — wrangler's automatic provisioning creates it on the first deploy. The Worker creates its own tables on first use.
 [[d1_databases]]
