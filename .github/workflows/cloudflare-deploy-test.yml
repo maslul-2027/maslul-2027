@@ -18,7 +18,14 @@ on:
       - 'backend_next/**'
       - 'scripts/build_cf_worker.js'
       - 'scripts/build_native_app.js'
-      - 'scripts/cf_ci_deploy_prepare.js'
+      - 'scripts/cf_*.js'
+      - 'scripts/e2e_cf_browser.js'
+      - 'scripts/ci_cf_workerd.sh'
+      - 'scripts/lib/cf_harness.js'
+      - 'tests/cf_*.js'
+      - 'tests/lib/d1_shim.js'
+      - 'docs/CLOUDFLARE_FREE_TEST.md'
+      - 'docs/CLOUDFLARE_ROUTE_COVERAGE.md'
       - '.github/workflows/cloudflare-deploy-test.yml'
 permissions:
   contents: read
