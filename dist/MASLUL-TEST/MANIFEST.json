@@ -1,0 +1,12 @@
+{
+ "product": "MASLUL 2027 TEST package (single Windows computer, loopback, synthetic only)",
+ "source_commit": "7a81b0794a83053c2d2db5ac217507c56cda44a5",
+ "files": 76,
+ "node_required": "22 (not bundled)",
+ "not_included": [
+  "real data",
+  "secrets",
+  "multi-device access",
+  "installer / machine-wide changes"
+ ]
+}

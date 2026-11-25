@@ -30,6 +30,9 @@ on:
       - 'scripts/e2e_native_sheets.js'
       - 'scripts/e2e_native_bulk_nav.js'
       - 'scripts/e2e_native_bulk_modules.js'
+      - 'scripts/e2e_native_mgmt.js'
+      - 'scripts/test_hebrew_lint.js'
+      - 'native/mgmt.js'
       - 'scripts/e2e_native_qa.js'
       - 'scripts/e2e_native_batch6.js'
       - 'scripts/e2e_native_batch7.js'
@@ -131,6 +134,8 @@ jobs:
       - run: node scripts/e2e_native_sheets.js preview
       - run: BULK_OUT=artifacts/bulk_nav_metrics.json node scripts/e2e_native_bulk_nav.js preview artifacts/bulk_screens
       - run: node scripts/e2e_native_bulk_modules.js preview
+      - run: node scripts/test_hebrew_lint.js
+      - run: node scripts/e2e_native_mgmt.js preview
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
         run: |
           node tests/selfsigned.js

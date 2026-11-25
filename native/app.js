@@ -170,7 +170,7 @@
       if (gen) upd.textContent = 'עודכן ' + hhmm(gen);
       /* ONE contextual next action (counts are the same group/role-scoped numbers shown in the tiles above; no names, no per-person data) */
       (function () { var b = $('#heroCta'), w = $('#heroWhy'); if (!b) return; var t = null;
-        if (st.overdue > 0) t = { why: st.overdue + ' משימות באיחור דורשות טיפול.', text: 'לטיפול במשימות באיחור ←', go: 'tasks' };
+        if (st.overdue > 0) t = { why: st.overdue + ' משימות באיחור דורשות טיפול.', text: 'לטיפול במשימות באיחור ←', go: 'mgmt' };
         else if (st.follow + st.tasks > 0) t = { why: 'יש ' + (st.follow + st.tasks) + ' מעקבים/משימות פתוחים.', text: 'לטיפול במעקבים הפתוחים ←', go: 'tasks' };
         else if (st.alerts > 0) t = { why: st.alerts + ' התראות פתוחות.', text: 'לצפייה בהתראות ←', go: 'd/alerts' };
         if (!t) return; b.textContent = t.text; b.onclick = function () { go(t.go); }; if (w) w.textContent = t.why; })();
@@ -315,37 +315,19 @@
 
   /* ---------- FOLLOW-UPS & TASKS ---------- */
   function Tasks() {
-    var seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'סוג מעקב' }), body = h('div', { 'aria-live': 'polite' });
-    function setSeg(v) { S.seg = v; seg.replaceChildren.apply(seg, segBtns()); load(); }
-    function segBtns() { return [['tasks', 'משימות מישיבות'], ['follow', 'מעקבים אישיים']].map(function (p) { return h('button', { type: 'button', 'aria-pressed': S.seg === p[0] ? 'true' : 'false', text: p[1], onclick: function () { setSeg(p[0]); } }); }); }
-    seg.replaceChildren.apply(seg, segBtns());
-    var flt = h('div', { class: 'seg', role: 'group', 'aria-label': 'סינון משימות' }), FL = S.tfilter || 'all';
-    function fltBtns() { return [['all', 'הכול'], ['mine', 'שלי'], ['overdue', 'באיחור']].map(function (p) { return h('button', { type: 'button', 'aria-pressed': FL === p[0] ? 'true' : 'false', text: p[1], onclick: function () { FL = S.tfilter = p[0]; flt.replaceChildren.apply(flt, fltBtns()); load(); } }); }); }
-    flt.replaceChildren.apply(flt, fltBtns());
-    var fab = canCreateTasks() ? h('button', { class: 'fab', type: 'button', id: 'taskFab', 'aria-label': 'הוספת משימה חדשה', 'aria-haspopup': 'dialog', text: '+', onclick: function (e) { openQuickTask(e.currentTarget); } }) : null;
-    mount('tasks', [sectionHead('מעקבים', 'נתונים סינתטיים'), seg, body].concat(fab ? [fab] : []), 'מעקבים'); S.reloadTasks = function () { if (S.seg !== 'follow') load(); };
+    /* The "מעקבים" tab shows ONLY trainee follow-ups. Management tasks live in "ניהול וישיבות" (#/mgmt) and never mix with trainee data. */
+    var body = h('div', { 'aria-live': 'polite', id: 'fuBody' });
+    mount('tasks', [sectionHead('מעקבי חניכים', 'נתונים סינתטיים'), body], 'מעקבי חניכים'); S.reloadTasks = function () { load(); };
     function load() {
-      if (fab) fab.hidden = S.seg === 'follow';
-      document.getElementById('view').classList.toggle('has-fab', !!fab && S.seg !== 'follow');
       body.replaceChildren(skeleton(3));
-      if (S.seg === 'follow') {
-        Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), cache.soldiers ? Promise.resolve({ ok: true, data: cache.soldiers }) : api('soldiers.list', { courseId: S.course.id, opts: {} })]).then(function (r) {
-          if (!r[0].ok) { body.replaceChildren(errBox(r[0], load)); return; } if (r[1].ok) cache.soldiers = r[1].data; var by = {}; (cache.soldiers || []).forEach(function (x) { by[x.id] = x; });
-          var add = h('button', { class: 'primary', type: 'button', text: '+ מעקב חדש', onclick: function () { FollowForm(); } }), rows = r[0].data;
-          body.replaceChildren(h('div', { class: 'btns', style: 'margin-top:0' }, [add]));
-          if (!rows.length) { body.append(emptyBox('אין מעקבים אישיים. אפשר ליצור את הראשון.')); return; }
-          rows.forEach(function (f) { var who = by[f.soldier_id], st = f.status === 'open' ? status('פתוח', true) : status(f.status === 'done' ? 'הושלם' : 'בוטל');
+      Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), cache.soldiers ? Promise.resolve({ ok: true, data: cache.soldiers }) : api('soldiers.list', { courseId: S.course.id, opts: {} })]).then(function (r) {
+        if (!r[0].ok) { if (r[0].code === 'FORBIDDEN') { body.replaceChildren(emptyBox('מעקבי חניכים זמינים לבעלי הרשאה מתאימה בלבד. המשימות שלך מופיעות ב״ניהול וישיבות״.'), h('div', { class: 'btns' }, [h('button', { class: 'primary', type: 'button', id: 'fuToMgmt', text: 'מעבר ל״ניהול וישיבות״', onclick: function () { go('mgmt'); } })])); return; } body.replaceChildren(errBox(r[0], load)); return; } if (r[1].ok) cache.soldiers = r[1].data; var by = {}; (cache.soldiers || []).forEach(function (x) { by[x.id] = x; });
+        var add = h('button', { class: 'primary', type: 'button', id: 'fuAdd', text: '+ מעקב חדש', onclick: function () { FollowForm(); } }), rows = r[0].data;
+        body.replaceChildren(h('div', { class: 'btns', style: 'margin-top:0' }, [add]));
+        if (!rows.length) { body.append(emptyBox('אין מעקבים אישיים. אפשר ליצור את הראשון.')); return; }
+        rows.forEach(function (f) { var who = by[f.soldier_id], st = f.status === 'open' ? status('פתוח', true) : status(f.status === 'done' ? 'הושלם' : 'בוטל');
             body.append(card(f.what_to_check, (who ? who.full_name : 'חניך') + (f.due_date ? ' · עד ' + f.due_date : ''), st, f.status === 'open' ? function () { dialog('עדכון מעקב', [h('p', { text: f.what_to_check, class: 'muted' })], function (msg) { return api('followups.update', { id: f.id, patch: { status: 'done' } }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('המעקב סומן כהושלם'); load(); }); }, 'סימון כהושלם'); } : null)); });
         });
-      } else {
-        api('tasks.list', { courseId: S.course.id, opts: {} }).then(function (r) {
-          if (!r.ok) { body.replaceChildren(errBox(r, load)); return; } var rows = r.data.tasks || []; body.replaceChildren();
-          body.append(h('p', { class: 'muted', text: 'פתוחות ' + r.data.counts.open + ' · בטיפול ' + r.data.counts.in_progress + ' · באיחור ' + r.data.counts.overdue }), flt);
-          var me = String((S.who || {}).email || '').toLowerCase(), all = rows; rows = rows.filter(function (t) { return FL === 'mine' ? String(t.assignee_email).toLowerCase() === me : FL === 'overdue' ? t.overdue : true; });
-          if (!rows.length) { body.append(emptyBox(all.length ? 'אין משימות בסינון הזה.' : 'אין משימות עדיין. הוסיפו משימה עם כפתור ה־+ או בסיכום ישיבה.')); return; }
-          rows.forEach(function (t) { body.append(card(t.title, (t.assignee_name || t.assignee_email || '') + (t.due_date ? ' · ' + t.due_date : '') + (t.meeting_subject ? ' · ' + t.meeting_subject : ''), status(taskLabel(t.status), t.status === 'open' || t.overdue), function () { TaskStatus(t); })); });
-        });
-      }
     }
     load();
   }
@@ -368,7 +350,7 @@
 
   /* ---------- MORE ---------- */
   var DOMAINS = [
-    ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבים ומשימות', 'מעקבים אישיים, משימות מישיבות', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'd/alerts', true], ['🗓', 'ישיבות ומשימות', 'סיכומי ישיבה ויצירת משימות', 'd/meetings', true], ['📊', 'לוח קורס', 'סקירה קבוצתית, מחלקות/צוותים והשוואת קורסים', 'd/dash', true], ['🧠', 'תמונת מצב קבוצתית', 'מדדים ותובנות ברמת קבוצה בלבד', 'd/insights', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
+    ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבי חניכים', 'מעקבים אישיים של חניכים', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'd/alerts', true], ['🗓', 'ניהול וישיבות', 'סיכומי ישיבות, כל המשימות ומשימות באחריותי', 'mgmt', true], ['📊', 'לוח קורס', 'סקירה קבוצתית, מחלקות/צוותים והשוואת קורסים', 'd/dash', true], ['🧠', 'תמונת מצב קבוצתית', 'מדדים ותובנות ברמת קבוצה בלבד', 'd/insights', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
     ['דוחות ונתונים', [['📄', 'דוחות וייצוא', 'תצוגה קבוצתית בלבד (N≥5); ייצוא חסום', 'd/reports', true], ['📎', 'ייבוא ומסמכים', 'ייבוא CSV עם תצוגה מקדימה, אישור וביטול', 'd/imports', true], ['📑', 'מסמכים וקישורים', 'בקשות קישור, אישורן וראיות להסמכות', 'd/docs', true], ['ℹ️', 'אודות / מידע מקצועי', 'טבלאות ניקוד כש״ג — לקריאה בלבד', 'd/fitref', true], ['🔎', 'OCR לבדיקה', 'טיוטות חילוץ ואישור שורה-שורה (מנהל)', 'd/ocr', true], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', 'd/forms', true], ['✔', 'תיקונים', 'בקשות תיקון ואישורן', 'd/corrections', true]]],
     ['ניהול', [['🏫', 'קורסים', 'יצירה, ארכוב, פתיחה מחדש', null, false], ['🔐', 'משתמשים וקורסים', 'משתמשים, תפקידים וקורס חדש', 'd/admin', true], ['🧩', 'שיוך מפקדים', 'שיוך מפקד לקורס, מחלקה או צוות', 'd/assign', true], ['🏷', 'שמות מחלקות וצוותים', 'שינוי שמות יחידות', 'd/org', true], ['⚙', 'הגדרות', 'פרמטרים מקצועיים והיסטוריה', 'd/settings', true], ['💾', 'גיבוי ובדיקות מערכת', 'גיבוי, Preflight', 'd/backup', true], ['📜', 'יומן פעולות', 'Audit', 'd/audit', true], ['📈', 'סיכומי תחומים', 'סיכומים קבוצתיים לכל תחום', 'd/summaries', true], ['🧮', 'גרסאות ניקוד כש״ג', 'טיוטה, אימות ואישור טבלאות', 'd/fitadmin', true], ['📥', 'ייבוא ו-OCR', 'ייבוא קבצים וטיוטות OCR', null, false]]]
   ];
@@ -420,7 +402,7 @@
       if (adm) { emp[0].append(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; this.setAttribute('aria-busy', 'true'); var b = this; api('gw:seed', {}).then(function (x) { if (!x.ok) { b.disabled = false; b.removeAttribute('aria-busy'); toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
         emp.push(sectionHead('מה יקרה אחרי הטעינה', null), card('חניכים וצוותים', 'רשימה, חיפוש וסינון לפי מחלקה', null), card('מעקבים ומסעות', 'משימות, מסע עם חסרים ועריכת משתתפים אחרי שמירה', null), card('הזמנת מפקדים', 'בלשונית "עוד" → אישור בקשות; כל מפקד רואה רק את הצוות שלו', null)); }
       mount('home', emp); return; }
-    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
+    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
   /* Read warm-up (server mode only): the data a tab needs is requested on touch-down (before the click completes) and once when the app is ready; the client's short read memo hands it over, so the screen paints real content instead of a skeleton. Reads only, same arguments as the screens use. */
   var WARM = { soldiers: [['soldiers.list', { opts: {} }]], tasks: [['followups.list', { opts: {} }], ['tasks.list', { opts: {} }], ['soldiers.list', { opts: {} }]] };

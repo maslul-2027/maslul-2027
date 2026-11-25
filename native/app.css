@@ -116,3 +116,8 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
 @media(max-width:759px){.be-head{display:none}}
 @media(min-width:760px){.app:has(.be-list){max-width:1040px}.be-row{grid-template-columns:minmax(150px,230px) minmax(0,1fr) 130px minmax(120px,190px);align-items:center;padding:6px 12px;border-radius:12px;margin:4px 0}.be-who{grid-column:1;position:sticky;inset-inline-start:0}.be-cells{grid-column:2;grid-template-columns:repeat(var(--be-n,3),minmax(80px,1fr))}.be-head{display:grid;grid-template-columns:minmax(150px,230px) minmax(0,1fr) 130px minmax(120px,190px);gap:8px;padding:6px 12px;font-size:12px;color:#5d6a70;font-weight:700;position:sticky;top:0;background:#f6f8f9;z-index:2}.be-head .be-cells{grid-template-columns:repeat(var(--be-n,3),minmax(80px,1fr));display:grid;gap:8px}.be-head .be-cells span{text-align:center}.be-lab{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.be-state{grid-column:3}.be-msg{grid-column:4}.be-name{min-height:36px;font-size:15px}.be-in{min-height:40px;font-size:16px}}
 @media(prefers-reduced-motion:reduce){.be-bar span{transition:none}}
+/* meeting reading screen + management module */
+.mv-sec{margin:18px 0}.mv-sec>h2{font-size:1.05rem;margin:0 0 8px}.mv-text{white-space:pre-wrap;line-height:1.7;margin:0;overflow-wrap:anywhere}
+.mv-task{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:start;margin:8px 0}.mv-task h3{margin:0 0 4px;font-size:1rem;overflow-wrap:anywhere}.mv-task p{margin:2px 0}
+.mv-task.is-done h3{text-decoration:line-through;opacity:.75}.mv-btns{grid-column:1/-1;margin:0}.mv-msg{grid-column:1/-1}.mv-msg:empty{display:none}
+@media (max-width:420px){.mv-task{grid-template-columns:1fr}}

@@ -13,7 +13,7 @@ const gone = (p, ms) => p.waitForFunction(() => !document.querySelector('dialog'
   const open = async (role, w) => { const c = await b.newContext({ viewport: { width: w || 390, height: 800 }, hasTouch: true }); const p = await c.newPage(); p.on('pageerror', e => errs.push(e.message)); if (role) await p.addInitScript(r => { try { localStorage.setItem('maslul_native_role', r); } catch (e) {} }, role); await p.goto(base + '/'); await p.waitForSelector('#k1'); await p.waitForFunction(() => window.__app.state.course); return p; };
   const p = await open(), cid = await p.evaluate(() => window.__app.state.course.id), sol = (await API(p, 'soldiers.list', { courseId: cid, opts: {} })).data, S0 = sol[0], S1 = sol[1], S2 = sol[2];
   const card = async (pg, id) => { await pg.evaluate(() => { location.hash = '#/home'; }); await pg.waitForTimeout(80); await pg.evaluate(i => { location.hash = '#/soldier/' + i; }, id); await pg.waitForSelector('dl.kv'); };
-  const sheet = async (pg) => { await pg.evaluate(() => { location.hash = '#/tasks'; }); await pg.waitForSelector('#taskFab'); await pg.click('#taskFab'); await pg.waitForSelector('dialog[open] #qtTitle'); };
+  const sheet = async (pg) => { await pg.evaluate(() => { location.hash = '#/mgmt'; }); await pg.waitForSelector('#taskFab'); await pg.click('#mgSeg_all'); await pg.click('#taskFab'); await pg.waitForSelector('dialog[open] #qtTitle'); };
 
   // ---------- 1. sheets ----------
   await t('every sheet has a fixed, labelled X in its header (44px target) — task sheet, soldier dialogs', async () => {
@@ -23,7 +23,7 @@ const gone = (p, ms) => p.waitForFunction(() => !document.querySelector('dialog'
     for (const how of ['x', 'esc', 'backdrop', 'back', 'cancel']) {
       await sheet(p); if (how === 'x') await p.click('dialog[open] .dlg-x'); if (how === 'esc') await p.keyboard.press('Escape'); if (how === 'backdrop') await p.mouse.click(4, 4); if (how === 'back') await p.goBack(); if (how === 'cancel') await p.click('dialog[open] button:has-text("סגירה")');
       await gone(p); assert.equal(await p.locator('.dlg-confirm').count(), 0, how + ' asked although nothing changed'); }
-    assert.ok(await p.evaluate(() => /#\/tasks/.test(location.hash)), 'still on the tasks screen after Back closed the sheet (Back did not leave the page)'); });
+    assert.ok(await p.evaluate(() => /#\/mgmt/.test(location.hash)), 'still on the management screen after Back closed the sheet (Back did not leave the page)'); });
   await t('a click INSIDE the sheet (title, field, text, padding) never closes it', async () => {
     await sheet(p); await p.click('dialog[open] h2'); await p.click('dialog[open] #qtTitle'); await p.click('dialog[open] label >> nth=0'); await p.locator('dialog[open]').click({ position: { x: 6, y: 80 } }); await p.waitForTimeout(250); assert.equal(await p.locator('dialog[open]').count(), 1); await p.click('dialog[open] .dlg-x'); await gone(p); });
   await t('unsaved changes: X / Esc / backdrop / device Back ask first; "continue editing" keeps the typed text; "close without saving" discards it', async () => {
@@ -32,15 +32,15 @@ const gone = (p, ms) => p.waitForFunction(() => !document.querySelector('dialog'
       await p.waitForSelector('.dlg-confirm'); assert.equal(await p.locator('dialog[open]').count(), 1, how + ' closed without asking'); assert.equal(await p.inputValue('#qtTitle'), 'טיוטה-' + how);
       await p.click('.dlg-confirm button:has-text("המשך עריכה")'); await p.waitForTimeout(150); assert.equal(await p.locator('.dlg-confirm').count(), 0); assert.equal(await p.inputValue('#qtTitle'), 'טיוטה-' + how, 'text survived');
       await p.click('dialog[open] .dlg-x'); await p.waitForSelector('.dlg-confirm'); await p.click('.dlg-confirm button:has-text("סגירה בלי לשמור")'); await gone(p);
-      assert.ok(await p.evaluate(() => /#\/tasks/.test(location.hash))); }
+      assert.ok(await p.evaluate(() => /#\/mgmt/.test(location.hash))); }
     await sheet(p); assert.equal(await p.inputValue('#qtTitle'), '', 'a reopened sheet starts empty'); await p.click('dialog[open] .dlg-x'); await gone(p); });
   await t('device Back after "continue editing" still works (stays on the page, asks again); Back with a clean sheet does not leave the screen; no leftover history entries', async () => {
     const h0 = await p.evaluate(() => history.length); await sheet(p); await p.fill('#qtTitle', 'x'); await p.goBack(); await p.waitForSelector('.dlg-confirm'); await p.click('.dlg-confirm button:has-text("המשך עריכה")'); await p.goBack(); await p.waitForSelector('.dlg-confirm'); await p.click('.dlg-confirm button:has-text("סגירה בלי לשמור")'); await gone(p);
-    await p.waitForTimeout(300); assert.ok(/#\/tasks/.test(await p.evaluate(() => location.hash))); assert.ok((await p.evaluate(() => history.length)) - h0 <= 2, 'history growth ' + ((await p.evaluate(() => history.length)) - h0)); });
+    await p.waitForTimeout(300); assert.ok(/#\/mgmt/.test(await p.evaluate(() => location.hash))); assert.ok((await p.evaluate(() => history.length)) - h0 <= 2, 'history growth ' + ((await p.evaluate(() => history.length)) - h0)); });
   await t('page scroll position is untouched by opening/closing a sheet (long list, scrolled)', async () => {
     await p.evaluate(() => { location.hash = '#/soldiers'; }); await p.waitForSelector('#people .card'); await p.evaluate(() => window.scrollTo(0, 500)); await p.locator('#people .card').nth(8).scrollIntoViewIfNeeded(); await p.waitForTimeout(250); const y0 = await p.evaluate(() => window.scrollY); assert.ok(y0 > 200, 'scrolled ' + y0);
     await p.locator('#people .card').nth(8).click(); await p.waitForSelector('dl.kv'); await p.goBack(); await p.waitForSelector('#people .card'); await p.waitForTimeout(600); const y1 = await p.evaluate(() => window.scrollY); assert.ok(Math.abs(y1 - y0) < 30, y0 + ' → ' + y1);
-    await p.evaluate(() => { location.hash = '#/tasks'; }); await p.waitForSelector('#taskFab'); await p.evaluate(() => window.scrollTo(0, 120)); const ys = await p.evaluate(() => window.scrollY); await p.click('#taskFab'); await p.waitForSelector('dialog[open]'); await p.keyboard.press('Escape'); await gone(p); await p.waitForTimeout(200); assert.ok(Math.abs((await p.evaluate(() => window.scrollY)) - ys) < 10, 'scroll kept'); });
+    await p.evaluate(() => { location.hash = '#/mgmt'; }); await p.waitForSelector('#taskFab'); await p.evaluate(() => window.scrollTo(0, 120)); const ys = await p.evaluate(() => window.scrollY); await p.click('#taskFab'); await p.waitForSelector('dialog[open]'); await p.keyboard.press('Escape'); await gone(p); await p.waitForTimeout(200); assert.ok(Math.abs((await p.evaluate(() => window.scrollY)) - ys) < 10, 'scroll kept'); });
   await t('very long content: the X stays reachable (sticky header), the sheet scrolls inside itself, bottom actions reachable, on a small phone', async () => {
     const q = await open(null, 320); await q.setViewportSize({ width: 320, height: 520 }); await card(q, S0.id); await q.click('text=+ הערה פרטית'); await q.waitForSelector('dialog[open] .dlg-x');
     await q.evaluate(() => { const f = document.querySelector('dialog[open] form'); const big = document.createElement('div'); big.id = 'bigfill'; big.style.height = '2400px'; big.textContent = 'x'; f.insertBefore(big, f.querySelector('.btns')); });
