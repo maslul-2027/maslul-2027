@@ -14,11 +14,11 @@ export const SCHEMA = [
   'CREATE TABLE IF NOT EXISTS schema_version (id INTEGER PRIMARY KEY CHECK (id = 1), v INTEGER NOT NULL)',
   'INSERT OR IGNORE INTO schema_version (id, v) VALUES (1, ' + SCHEMA_VERSION + ')',
 ];
-let ready = false;
+let ready = new WeakSet();
 export async function ensureSchema(db) {
-  if (ready) return;
+  if (ready.has(db)) return;   // per database binding (one in production; several in local tests)
   let v = 0; try { const r = await db.prepare('SELECT v FROM schema_version WHERE id = 1').first(); v = r ? r.v : 0; } catch (e) { v = 0; }
   if (v < SCHEMA_VERSION) await db.batch(SCHEMA.map(s => db.prepare(s)));
-  ready = true;
+  ready.add(db);
 }
-export const resetSchemaCache = () => { ready = false; };
+export const resetSchemaCache = () => { ready = new WeakSet(); };

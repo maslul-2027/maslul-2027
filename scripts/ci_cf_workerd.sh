@@ -26,4 +26,6 @@ stop
 echo "== 2/2 two-phone browser E2E on one database (fresh state) =="
 start "$TMP/wrangler2.log" "$TMP/d1b" || exit 1
 ( cd "$ROOT" && CF_BASE_URL="$BASE" timeout 600 node scripts/e2e_cf_browser.js artifacts/cf_browser ) || { RC=1; echo "--- wrangler log ---"; tail -n 120 "$TMP/wrangler2.log"; }
+echo "== auth screen: 5 viewports x 3 modes + not-configured state (screenshots, layout, keyboard, reduced motion) =="
+( cd "$ROOT" && timeout 300 node scripts/cf_auth_screens.js artifacts/cf_screens ) || RC=1
 exit $RC

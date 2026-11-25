@@ -69,6 +69,21 @@ dialog.sheet{max-height:92vh;overflow:auto}
 .taskrow input,.taskrow select{width:100%;border:1px solid #dce3e6;background:#fff;border-radius:13px;min-height:48px;padding:12px;font:inherit;color:inherit}.taskrow input:focus-visible,.taskrow select:focus-visible{outline:3px solid #009fa4;outline-offset:1px}.taskrow.err input{border-color:var(--red)}
 .taskrow .errmsg{color:var(--red);font-size:13px;margin-top:6px}
 
+/* ---- Auth screen (same tokens as the 4-tab shell: white / graphite / turquoise; no new hues) ---- */
+.auth-shell{position:fixed;inset:0;z-index:50;background:#f6f8f9;overflow:auto;display:flex;align-items:center;justify-content:center;padding:max(20px,env(safe-area-inset-top)) 16px max(20px,env(safe-area-inset-bottom))}
+.auth-card{width:100%;max-width:420px;background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px 20px 22px;box-shadow:0 10px 30px #0b1a2012;margin:auto}
+.auth-brand{margin:0 0 2px;font-size:26px;font-weight:900;letter-spacing:.2px;color:#161b20}.auth-brand span{color:var(--teal)}
+.auth-env{display:inline-block;margin:0 0 16px;font-size:12px;color:#68747a}
+.auth-card .seg{margin:0 0 10px}.auth-card .seg button{font-size:14px;padding:0 6px}
+.auth-hint{margin:0 0 16px;font-size:14px;line-height:1.6;color:#3d484e;min-height:3.2em}
+.auth-card .field input{font-size:16px}.auth-card .field input:focus-visible{outline:3px solid #7fd1d2;outline-offset:1px;border-color:var(--teal)}
+.auth-card input.pin-input{text-align:center;letter-spacing:.6em;font-size:22px;font-weight:800;padding-inline-start:.6em}
+.auth-card .primary{width:100%;min-height:50px;font-size:16px;background:var(--teal);color:#fff;margin-top:6px}.auth-card .primary:disabled{background:#9fb4b6;color:#fff;cursor:not-allowed}
+.auth-card .primary[aria-busy=true]::after{content:"…"}
+.auth-card .msg{margin:14px 0 0}.auth-card h2{font-size:16px;margin:18px 0 6px}
+@media (min-width:720px){.auth-card{padding:32px 30px 28px}}
+@media (prefers-reduced-motion:reduce){.auth-card *,.auth-shell *{transition:none!important;animation:none!important}}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="tasks"><i>☑</i>מעקבים</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
