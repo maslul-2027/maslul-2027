@@ -33,9 +33,9 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
     f.jar = jar; f.api = (method, args) => f('POST', '/api', { method, args: args || {} }); return f;
   }
   /** TOTP device: picks the next unused 30-s step (login accepts a step once), waiting only when all three drift-window steps are used. */
-  const device = secret => ({ last: 0, async code() { let s = Math.max(this.last + 1, Math.floor(nowMs() / 30000) - 1); while (s > Math.floor(nowMs() / 30000) + 1) { if (HTTP) await sleep(1000); else clock += 30000; } this.last = s; return U.hotp(secret, s); }, async wrong() { return String((Number(await U.hotp(secret, Math.floor(nowMs() / 30000))) + 111111) % 1000000).padStart(6, '0'); } });
+  const device = () => ({ async code() { return ''; }, async wrong() { return ''; } });   // no authenticator any more (owner decision 25.11.2026: PIN only, synthetic pilot); inert stub
   const admin = client(), anon = client(), people = {};
-  async function enroll(c, token, pin) { pin = pin || '4826'; const s = await c('POST', '/auth/enroll/start', { token }); if (!s.ok) return s; const dev = device(unb32(s.totpSecret)), cf = await c('POST', '/auth/enroll/confirm', { token, pin, code: await U.hotp(unb32(s.totpSecret), Math.floor(nowMs() / 30000)) }); s.accessCode = pin; return Object.assign({ dev, start: s, confirm: cf }, cf); }
+  async function enroll(c, token, pin) { pin = pin || '4826'; const s = await c('POST', '/auth/enroll/start', { token }); if (!s.ok) return s; const dev = device(), cf = await c('POST', '/auth/enroll/confirm', { token, pin }); s.accessCode = pin; return Object.assign({ dev, start: s, confirm: cf }, cf); }
   async function login(c, p) { return c('POST', '/auth/login', { email: p.email, pin: p.accessCode, code: await p.dev.code() }); }
   async function addPerson(key, name, email, grant) { const c = client(); const r = await c('POST', '/auth/register', { fullName: name, email }); assert.ok(r.ok, JSON.stringify(r)); const pend = (await admin('GET', '/admin/pending')).pending, row = pend.find(x => x.email === email); assert.ok(row, 'pending request visible to admin'); const ap = await admin('POST', '/admin/approve', { requestId: row.id, grant }); assert.ok(ap.ok, JSON.stringify(ap));
     const e = await enroll(c, ap.enrollToken); assert.ok(e.ok, JSON.stringify(e.confirm || e)); const p = { c, email, accessCode: e.start.accessCode, dev: e.dev, id: row.id, name }; people[key] = p; const l = await login(c, p); assert.ok(l.ok, JSON.stringify(l)); return p; }
@@ -45,22 +45,22 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
     assert.equal((await anon('GET', '/auth/status')).needsSetup, true); const bad = await anon('POST', '/auth/bootstrap', { token: 'wrong-wrong-wrong-wrong', fullName: 'מנהל סינתטי', email: 'admin@example.test' }); assert.equal(bad.ok, false); assert.equal(bad._status, 403);
     assert.equal((await anon.api('courses.list'))._status, 401); assert.equal((await anon('GET', '/auth/me'))._status, 401); assert.equal((await anon('GET', '/admin/users'))._status, 401); });
   let adminDev, adminAcc;
-  await T('S2 first admin: bootstrap token + enrolment link + authenticator code; a second bootstrap is refused', async () => {
+  await T('S2 first admin: bootstrap token + enrolment link + PIN; wrong deployment token refused', async () => {
     const b = await admin('POST', '/auth/bootstrap', { token: BOOT, fullName: 'מנהל סינתטי', email: 'admin@example.test' }); assert.ok(b.ok, JSON.stringify(b)); assert.ok(b.enrollToken.length >= 40);
-    assert.equal((await anon('POST', '/auth/bootstrap', { token: BOOT, fullName: 'x y', email: 'other@example.test' }))._status, 403, 'only while there is no user');
+    assert.equal((await anon('POST', '/auth/bootstrap', { token: 'y'.repeat(40), fullName: 'x y', email: 'other@example.test' }))._status, 403, 'wrong deployment token');
     assert.equal((await anon('POST', '/auth/enroll/start', { token: 'nope' }))._status, 400);
-    const s = await admin('POST', '/auth/enroll/start', { token: b.enrollToken }); assert.ok(s.ok); assert.equal(s.accessCode, undefined, 'the server no longer generates an access code: the person chooses a 4-digit PIN'); s.accessCode = '4826'; assert.match(s.otpauth, /^otpauth:\/\/totp\//); assert.equal(s.email, 'admin@example.test');
-    assert.equal((await admin('POST', '/auth/enroll/confirm', { token: b.enrollToken, code: '000000' }))._status, 400, 'wrong authenticator code does not activate the account');
+    const s = await admin('POST', '/auth/enroll/start', { token: b.enrollToken }); assert.ok(s.ok); assert.equal(s.accessCode, undefined, 'the server no longer generates an access code: the person chooses a 4-digit PIN'); s.accessCode = '4826'; assert.equal(s.totpSecret, undefined, 'no authenticator secret any more'); assert.equal(s.email, 'admin@example.test');
+    assert.equal((await admin('POST', '/auth/enroll/confirm', { token: b.enrollToken }))._status, 400, 'no PIN -> the account is not activated');
     assert.equal((await admin('POST', '/auth/login', { email: 'admin@example.test', pin: s.accessCode, code: '123456' }))._status, 401, 'not active before confirmation');
-    adminDev = device(unb32(s.totpSecret)); adminAcc = s.accessCode; const c = await admin('POST', '/auth/enroll/confirm', { token: b.enrollToken, pin: s.accessCode, code: await U.hotp(unb32(s.totpSecret), Math.floor(nowMs() / 30000)) }); assert.ok(c.ok, JSON.stringify(c));
-    assert.equal((await anon('POST', '/auth/enroll/confirm', { token: b.enrollToken, code: await U.hotp(unb32(s.totpSecret), Math.floor(nowMs() / 30000)) }))._status, 400, 'enrolment link is single-use'); });
-  await T('S3 login needs BOTH the access code and a fresh authenticator code; errors are generic; a code is single-use', async () => {
+    adminDev = device(); adminAcc = s.accessCode; const c = await admin('POST', '/auth/enroll/confirm', { token: b.enrollToken, pin: s.accessCode }); assert.ok(c.ok, JSON.stringify(c));
+    assert.equal((await anon('POST', '/auth/enroll/confirm', { token: b.enrollToken, pin: '4826' }))._status, 400, 'enrolment link is single-use'); });
+  await T('S3 login = e-mail + PIN; errors are generic and identical for unknown / wrong PIN; session cookie is __Host-, HttpOnly, Secure, SameSite=Strict', async () => {
     const em = 'admin@example.test', l1 = await admin('POST', '/auth/login', { email: em, pin: '9137', code: await adminDev.code() }); assert.equal(l1._status, 401);
-    const l2 = await admin('POST', '/auth/login', { email: em, pin: adminAcc, code: await adminDev.wrong() }); assert.equal(l2._status, 401); assert.equal(l1.message, l2.message, 'same message for wrong code and wrong access code');
+    const l2 = await admin('POST', '/auth/login', { email: em, pin: '9138' }); assert.equal(l2._status, 401); assert.equal(l1.message, l2.message, 'same message for two wrong PINs');
     const l0 = await admin('POST', '/auth/login', { email: 'nobody@example.test', pin: adminAcc, code: '123456' }); assert.equal(l0.message, l1.message, 'unknown account looks the same');
     const code = await adminDev.code(), l3 = await admin('POST', '/auth/login', { email: em, pin: adminAcc, code }); assert.ok(l3.ok, JSON.stringify(l3)); assert.ok(l3.csrf && l3.role === 'admin');
     const sc = l3._h.get('set-cookie'); assert.match(sc, /^__Host-maslul_sid=/); assert.match(sc, /HttpOnly/); assert.match(sc, /Secure/); assert.match(sc, /SameSite=Strict/); assert.match(sc, /Path=\//);
-    const replay = await client()('POST', '/auth/login', { email: em, pin: adminAcc, code }); assert.equal(replay._status, 401, 'the same authenticator code cannot log in twice'); });
+    const again = await client()('POST', '/auth/login', { email: em, pin: adminAcc }); assert.ok(again.ok, 'returning login (second device/session) works with e-mail + PIN'); });
   await T('S4 session rules: CSRF header and exact Origin are required; role in the body is ignored; viewer/unknown/blocked routes denied', async () => {
     const me = await admin('GET', '/auth/me'); assert.equal(me.role, 'admin'); const noCsrf = await admin('POST', '/api', { method: 'courses.list', args: {} }, { 'x-csrf-token': 'x' }); assert.equal(noCsrf._status, 403);
     const badOrigin = await admin('POST', '/api', { method: 'courses.list', args: {} }, { origin: 'https://evil.example' }); assert.equal(badOrigin._status, 403);
@@ -113,19 +113,32 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
     assert.equal((await A.c.api('soldiers.list', { courseId: cid, opts: {} }))._status, 401, 'sessions are revoked on a scope change'); assert.ok((await login(A.c, A)).ok);
     const all = (await admin.api('soldiers.list', { courseId: cid, opts: {} })).data, a = await A.c.api('soldiers.list', { courseId: cid, opts: {} }); assert.deepEqual(a.data.map(y => y.id).sort(), all.filter(y => y.team_id === t2.id).map(y => y.id).sort());
     const back = await admin('POST', '/admin/set-scope', { targetUserId: A.id, grant: { role: 'commander', courseIds: [cid], unitIds: [], scope: { type: 'team', id: t1.id } } }); assert.ok(back.ok); assert.ok((await login(A.c, A)).ok); });
-await T('S24 personal 4-digit PIN: exactly 4 digits, weak PINs refused WITHOUT consuming the enrolment link, PIN alone / TOTP alone / wrong PIN never log in, the PIN is chosen once and the person can come back (re-login) with PIN + current authenticator code', async () => {
+await T('S24 PIN-only pilot login: exactly 4 digits; weak PINs refused WITHOUT consuming the link; wrong/missing PIN never logs in; locked after 5 wrong PINs (423, even with the right PIN); the PIN is chosen once and the person can return from another device', async () => {
       const em = 'pin.user@example.test', c = client(); await c('POST', '/auth/register', { fullName: 'בודק PIN', email: em }); const row = (await admin('GET', '/admin/pending')).pending.find(x => x.email === em); const ap = await admin('POST', '/admin/approve', { requestId: row.id, grant: { role: 'viewer', courseIds: [cid], unitIds: [] } }); assert.ok(ap.ok, JSON.stringify(ap));
-      const st = await c('POST', '/auth/enroll/start', { token: ap.enrollToken }); assert.ok(st.ok); assert.equal(st.accessCode, undefined); const dev = device(unb32(st.totpSecret)), code = () => U.hotp(unb32(st.totpSecret), Math.floor(nowMs() / 30000));
-      for (const bad of ['', '123', '12345', 'abcd', '12a4', '0000', '1111', '1234', '4321', '2580']) { const r = await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: bad, code: await code() }); assert.equal(r._status, 400, 'PIN "' + bad + '" must be refused'); }
-      const none = await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, code: await code() }); assert.equal(none._status, 400, 'a missing PIN is refused');
-      const ok = await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: '7391', code: await code() }); assert.ok(ok.ok, 'link still valid after refused PINs: ' + JSON.stringify(ok));
-      assert.equal((await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: '7391', code: await code() }))._status, 400, 'the enrolment link is single-use');
-      const L = (b) => client()('POST', '/auth/login', Object.assign({ email: em }, b));
-      assert.equal((await L({ code: await dev.code() }))._status, 401, 'TOTP alone is not enough'); assert.equal((await L({ pin: '7391', code: '000000' }))._status, 401, 'PIN alone is not enough'); assert.equal((await L({ pin: '7392', code: await dev.code() }))._status, 401, 'wrong PIN');
-      const in1 = await L({ pin: '7391', code: await dev.code() }); assert.ok(in1.ok, JSON.stringify(in1)); const in2 = await L({ pin: '7391', code: await dev.code() }); assert.ok(in2.ok, 're-login on another device works'); });
+      const st = await c('POST', '/auth/enroll/start', { token: ap.enrollToken }); assert.ok(st.ok); assert.equal(st.accessCode, undefined); assert.equal(st.totpSecret, undefined);
+      for (const bad of ['', '123', '12345', 'abcd', '12a4', '0000', '1111', '1234', '4321', '2580']) { const r = await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: bad }); assert.equal(r._status, 400, 'PIN "' + bad + '" must be refused'); }
+      assert.equal((await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken }))._status, 400, 'a missing PIN is refused');
+      const ok = await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: '7391' }); assert.ok(ok.ok, 'link still valid after refused PINs: ' + JSON.stringify(ok));
+      assert.equal((await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: '7391' }))._status, 400, 'the enrolment link is single-use');
+      const L = b => client()('POST', '/auth/login', Object.assign({ email: em }, b));
+      assert.equal((await L({}))._status, 401, 'no PIN'); assert.equal((await L({ pin: '7392' }))._status, 401, 'wrong PIN');
+      const in1 = await L({ pin: '7391' }); assert.ok(in1.ok, JSON.stringify(in1)); const in2 = await L({ pin: '7391' }); assert.ok(in2.ok, 're-login on another device works');
+      for (let i = 0; i < 5; i++) await L({ pin: '1357' }); const lk = await L({ pin: '7391' }); assert.equal(lk._status, 423, 'locked temporarily even with the right PIN'); });
+  await T('S25 interrupted first-admin set-up can be RESUMED: same account, nothing deleted, fresh link, old link void; needs the deployment token; not possible once an admin is active', async () => {
+      const LS = require('../scripts/cf_local_server.js'), srv = await LS.start({}); try {
+        const call = async (m, p0, body) => { const r = await fetch(srv.origin + p0, { method: m, headers: { 'content-type': 'application/json', origin: srv.origin }, body: m === 'POST' ? JSON.stringify(body || {}) : undefined }); const j = await r.json().catch(() => ({})); j._status = r.status; return j; };
+        const b1 = await call('POST', '/auth/bootstrap', { token: 'local-bootstrap-token-0123456789', fullName: 'מנהל ראשון', email: 'first@example.test' }); assert.ok(b1.ok && b1.enrollToken, JSON.stringify(b1));
+        assert.equal((await call('GET', '/auth/status')).needsSetup, true); assert.ok((await call('POST', '/auth/enroll/start', { token: b1.enrollToken })).ok);   // the owner reached the last step and stopped
+        assert.equal((await call('POST', '/auth/bootstrap', { token: 'x'.repeat(40), fullName: 'x y', email: 'first@example.test' }))._status, 403, 'resume still needs the deployment token');
+        const b2 = await call('POST', '/auth/bootstrap', { token: 'local-bootstrap-token-0123456789', fullName: 'שם אחר', email: 'first@example.test' }); assert.ok(b2.ok && b2.resumed === true && b2.enrollToken && b2.enrollToken !== b1.enrollToken, JSON.stringify(b2));
+        assert.equal((await call('POST', '/auth/enroll/confirm', { token: b1.enrollToken, pin: '8264' }))._status, 400, 'the old link is void');
+        const done = await call('POST', '/auth/enroll/confirm', { token: b2.enrollToken, pin: '8264' }); assert.ok(done.ok, JSON.stringify(done));
+        const li = await call('POST', '/auth/login', { email: 'first@example.test', pin: '8264' }); assert.ok(li.ok && li.role === 'admin', 'the SAME first-admin account signs in: ' + JSON.stringify(li));
+        assert.equal((await call('GET', '/auth/status')).needsSetup, false); assert.equal((await call('POST', '/auth/bootstrap', { token: 'local-bootstrap-token-0123456789', fullName: 'x y', email: 'third@example.test' }))._status, 403, 'no resume / no new bootstrap once an admin is active');
+      } finally { await srv.close(); } });
     await T('S13 lockout: 5 wrong authenticator codes lock the account (even a correct code is then refused); admin reset issues a new enrolment link and voids old credentials', async () => {
     const x = await addPerson('X', 'משתמש נעילה', 'x-' + stamp + '@example.test', { role: 'viewer', courseIds: [cid], unitIds: [] }); const cc = client();
-    for (let i = 0; i < 5; i++) assert.equal((await cc('POST', '/auth/login', { email: x.email, pin: x.accessCode, code: await x.dev.wrong() }))._status, 401);
+    for (let i = 0; i < 5; i++) assert.equal((await cc('POST', '/auth/login', { email: x.email, pin: '9130' }))._status, 401);
     const locked = await cc('POST', '/auth/login', { email: x.email, pin: x.accessCode, code: await x.dev.code() }); assert.equal(locked._status, 423);
     const rs = await admin('POST', '/admin/reset', { targetUserId: x.id }); assert.ok(rs.ok && rs.enrollToken); assert.equal((await x.c.api('courses.list'))._status, 401, 'old session void'); const e = await enroll(cc, rs.enrollToken, '5937'); assert.ok(e.ok, JSON.stringify(e.confirm));
     assert.equal((await cc('POST', '/auth/login', { email: x.email, pin: x.accessCode, code: await x.dev.code() }))._status, 401, 'old access code/device no longer valid'); const np = { email: x.email, accessCode: e.start.accessCode, dev: e.dev }; assert.ok((await login(cc, np)).ok); });

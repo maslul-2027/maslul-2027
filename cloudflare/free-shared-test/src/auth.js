@@ -1,8 +1,8 @@
-// Identity for the shared TEST: admin approval + one-time enrolment link + personal 4-digit PIN (chosen by the person at enrolment, stored only as a pepper-keyed HMAC, never leaves the device after that) + TOTP authenticator (2nd factor) + per-account lockout + IP rate limit. NO client-supplied role/identity.
+// Identity for the shared TEST: admin approval + one-time enrolment link + personal 4-digit PIN (chosen by the person at enrolment, stored only as a pepper-keyed HMAC). SYNTHETIC PILOT ONLY (owner decision 25.11.2026): NO TOTP / e-mail code; compensating server controls = per-account staged lockout + IP rate limit + single-use admin-approved enrolment link + weak-PIN refusal + audit. NOT acceptable for real data. NO client-supplied role/identity.
 // Why not a password hash: Workers Free allows 10 ms CPU per request; every credential here is random and high-entropy (60-bit code, 160-bit TOTP seed, 256-bit tokens),
 // so keyed HMAC-SHA-256 is the right primitive and costs microseconds. Brute force is stopped by per-user lockout (5 fails => 15 min, doubling, max 24 h) and per-IP limits.
 const WEAK_PIN = d => /^(\d)\1{3}$/.test(d) || '01234567890'.includes(d) || '09876543210'.includes(d) || ['1212','2121','1122','2580','0852','1004','2000','2024','2025','2026','2027'].includes(d);
-import { b64u, randToken, sha256Hex, hmacHex, eq, seal, open, base32, totpMatch, rand, newAccessCode, normCode, normEmail } from './util.js';
+import { b64u, randToken, sha256Hex, hmacHex, eq, normCode, normEmail } from './util.js';
 export const ROLES = ['admin', 'commander', 'user', 'viewer'];
 export const CFG = { maxFails: 5, lockMs: 15 * 60e3, lockMaxMs: 24 * 3600e3, ipWindowMs: 10 * 60e3, ipMax: 30, sessionAbsMs: 12 * 3600e3, sessionIdleMs: 3600e3, touchMs: 60e3, enrollTtlMs: 24 * 3600e3, maxPending: 100 };
 export class AuthError extends Error { constructor(code, msg) { super(msg || code); this.code = code; } }
@@ -24,6 +24,9 @@ export function authFor(env, db, now) {
       await A.rate(ip, 'boot', 10); const bt = String(env.BOOTSTRAP_TOKEN || '');
       if (bt.length < 32 || !eq(String(p.token || ''), bt)) { await A.audit('bootstrap_denied', {}).run(); throw new AuthError('FORBIDDEN', 'לא מורשה.'); }
       const email = normEmail(p.email), name = String(p.fullName || '').trim(); if (!email || name.length < 2 || name.length > 80) throw new AuthError('INVALID', 'שם ואימייל תקינים נדרשים.');
+      // RESUME: a first admin that was created but never finished enrolment (no active user yet) gets a FRESH link; nothing is deleted, no second account is created.
+      const pend = (await db.prepare("SELECT id FROM users WHERE status = 'invited' AND role = 'admin'").all()).results, act = await db.prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'active'").first();
+      if (pend.length === 1 && act.n === 0) { const rid = pend[0].id, rtok = randToken(32); await db.batch([db.prepare('UPDATE enroll SET used = 1 WHERE user_id = ?1 AND used = 0').bind(rid), db.prepare('INSERT INTO enroll (h, user_id, exp) VALUES (?1, ?2, ?3)').bind(await sha256Hex('enroll|' + rtok), rid, t() + CFG.enrollTtlMs), A.audit('bootstrap_resume', { user: rid })]); return { enrollToken: rtok, resumed: true }; }
       const id = crypto.randomUUID(), tok = randToken(32), th = await sha256Hex('enroll|' + tok), eh = await emailH(email);
       const res = await db.batch([
         db.prepare("INSERT INTO users (id, email_h, email, name, role, grant_json, status, active, created_at) SELECT ?1, ?2, ?3, ?4, 'admin', ?5, 'invited', 1, ?6 WHERE NOT EXISTS (SELECT 1 FROM users)").bind(id, eh, email, name, JSON.stringify({ role: 'admin', courseIds: ['*'], unitIds: [] }), t()),
@@ -45,18 +48,14 @@ export function authFor(env, db, now) {
     async enrollStart(p, ip) {
       await A.rate(ip, 'enr', 20); const th = await sha256Hex('enroll|' + String(p.token || '')), e = await db.prepare('SELECT e.user_id, e.exp, e.used, u.name, u.email, u.status FROM enroll e JOIN users u ON u.id = e.user_id WHERE e.h = ?1').bind(th).first();
       if (!e || e.used || e.exp < t() || e.status !== 'invited') throw new AuthError('BAD_TOKEN', 'הקישור אינו תקף (פג תוקף, נוצל או בוטל). בקשו קישור חדש מהמנהל.');
-      const secret = rand(20);
-      await db.batch([db.prepare('UPDATE enroll SET totp_box = ?2 WHERE h = ?1').bind(th, await seal(pepper, 'totp|' + e.user_id, secret)), A.audit('enroll_start', { user: e.user_id })]);
-      const label = encodeURIComponent('MASLUL TEST:' + e.email), b32 = base32(secret);
-      return { name: e.name, email: e.email, totpSecret: b32, otpauth: 'otpauth://totp/' + label + '?secret=' + b32 + '&issuer=' + encodeURIComponent('MASLUL TEST') + '&algorithm=SHA1&digits=6&period=30' };
+      await A.audit('enroll_start', { user: e.user_id }).run();
+      return { name: e.name, email: e.email };
     },
     async enrollConfirm(p, ip) {
-      await A.rate(ip, 'enr', 20); const th = await sha256Hex('enroll|' + String(p.token || '')), e = await db.prepare('SELECT user_id, exp, used, totp_box, access_h FROM enroll WHERE h = ?1').bind(th).first();
-      if (!e || e.used || e.exp < t() || !e.totp_box) throw new AuthError('BAD_TOKEN', 'הקישור אינו תקף. התחילו את ההרשמה מחדש.');
+      await A.rate(ip, 'enr', 20); const th = await sha256Hex('enroll|' + String(p.token || '')), e = await db.prepare('SELECT user_id, exp, used FROM enroll WHERE h = ?1').bind(th).first();
+      if (!e || e.used || e.exp < t()) throw new AuthError('BAD_TOKEN', 'הקישור אינו תקף (פג תוקף או נוצל). בקשו קישור חדש מהמנהל.');
       const pin = String(p.pin == null ? '' : p.pin); if (!/^\d{4}$/.test(pin)) throw new AuthError('INVALID', 'הקוד האישי (PIN) חייב להיות בדיוק 4 ספרות.'); if (WEAK_PIN(pin)) throw new AuthError('INVALID', 'ה-PIN קל מדי לניחוש (ספרות חוזרות או רצף). בחרו אחר.');
-      const secret = await open(pepper, 'totp|' + e.user_id, e.totp_box);
-      if ((await totpMatch(secret, p.code, t())) < 0) { await A.audit('enroll_bad_code', { user: e.user_id }).run(); throw new AuthError('BAD_CODE', 'הקוד מהאפליקציה שגוי. בדקו את השעה בטלפון ונסו שוב.'); }
-      const res = await db.batch([db.prepare("UPDATE users SET totp_box = ?2, access_h = ?3, status = 'active', active = 1, fails = 0, locked_until = 0, lock_count = 0, totp_last = 0 WHERE id = ?1 AND status = 'invited'").bind(e.user_id, e.totp_box, await accessH(e.user_id, pin)),
+      const res = await db.batch([db.prepare("UPDATE users SET access_h = ?2, status = 'active', active = 1, fails = 0, locked_until = 0, lock_count = 0 WHERE id = ?1 AND status = 'invited'").bind(e.user_id, await accessH(e.user_id, pin)),
         db.prepare('UPDATE enroll SET used = 1 WHERE h = ?1').bind(th), db.prepare('UPDATE sessions SET revoked = 1 WHERE user_id = ?1').bind(e.user_id), A.audit('enroll_done', { user: e.user_id })]);
       if (!res[0].meta.changes) throw new AuthError('BAD_TOKEN', 'הקישור אינו תקף.');
       return { ok: true };
@@ -64,15 +63,15 @@ export function authFor(env, db, now) {
     async login(p, ip) {
       await A.rate(ip, 'login'); const email = normEmail(p.email), tt = t(); const eh = await emailH(email || 'x'), u = email ? await db.prepare('SELECT * FROM users WHERE email_h = ?1').bind(eh).first() : null;
       const uid = u ? u.id : '00000000-0000-0000-0000-000000000000', want = u && u.access_h ? u.access_h : await hmacHex(pepper, 'dummy'), got = await accessH(uid, p.pin);   // equal work for unknown accounts: no timing oracle
-      if (!u || u.status !== 'active' || !u.active || !u.totp_box) { await A.audit('login_fail', { reason: 'unknown_or_inactive' }).run(); throw GENERIC(); }
+      if (!u || u.status !== 'active' || !u.active) { await A.audit('login_fail', { reason: 'unknown_or_inactive' }).run(); throw GENERIC(); }
       if (u.locked_until > tt) { await A.audit('login_locked', { user: u.id }).run(); throw new AuthError('LOCKED', 'החשבון ננעל זמנית. נסו מאוחר יותר או פנו למנהל.'); }
-      const step = (await totpMatch(await open(pepper, 'totp|' + u.id, u.totp_box), p.code, tt)), good = eq(got, want) && step >= 0 && step > u.totp_last;   // a TOTP step can be used once (replay-proof)
+      const good = eq(got, want);
       if (!good) {
         let fails = u.fails + 1, lockedUntil = u.locked_until, lc = u.lock_count; if (fails >= CFG.maxFails) { lc++; lockedUntil = tt + Math.min(CFG.lockMs * Math.pow(2, lc - 1), CFG.lockMaxMs); fails = 0; }
         await db.batch([db.prepare('UPDATE users SET fails = ?2, locked_until = ?3, lock_count = ?4 WHERE id = ?1').bind(u.id, fails, lockedUntil, lc), A.audit(lockedUntil !== u.locked_until ? 'lockout' : 'login_fail', { user: u.id })]); throw GENERIC();
       }
       const tok = randToken(32), csrf = randToken(24);
-      await db.batch([db.prepare('UPDATE users SET fails = 0, lock_count = 0, totp_last = ?2 WHERE id = ?1').bind(u.id, step), db.prepare('INSERT INTO sessions (h, user_id, csrf, created, last) VALUES (?1, ?2, ?3, ?4, ?4)').bind(await sessH(tok), u.id, csrf, tt), A.audit('login_ok', { user: u.id })]);
+      await db.batch([db.prepare('UPDATE users SET fails = 0, lock_count = 0 WHERE id = ?1').bind(u.id), db.prepare('INSERT INTO sessions (h, user_id, csrf, created, last) VALUES (?1, ?2, ?3, ?4, ?4)').bind(await sessH(tok), u.id, csrf, tt), A.audit('login_ok', { user: u.id })]);
       return { token: tok, csrf, role: u.role, name: u.name };
     },
     /** @returns {userId, role, name, courseIds, unitIds, csrf, sid} or null. Idle/absolute expiry and deactivation are enforced here on every request. */

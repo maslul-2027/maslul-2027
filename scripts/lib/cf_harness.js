@@ -14,8 +14,8 @@ async function boot() {
     f.api = (method, args) => f('POST', '/api', { method, args: args || {} }); f.jar = jar; return f;
   }
   let step = Math.floor(clock / 30000) - 1; const code = secret => U.hotp(secret, ++step);
-  const admin = client(); const b = await admin('POST', '/auth/bootstrap', { token: BOOT, fullName: 'מנהל סינתטי', email: 'admin@example.test' }), s = await admin('POST', '/auth/enroll/start', { token: b.enrollToken }), sec = unb32(s.totpSecret);
-  await admin('POST', '/auth/enroll/confirm', { token: b.enrollToken, pin: '4826', code: await U.hotp(sec, Math.floor(clock / 30000)) }); const l = await admin('POST', '/auth/login', { email: 'admin@example.test', pin: '4826', code: await code(sec) }); if (!l.ok) throw new Error('admin login failed ' + JSON.stringify(l));
+  const admin = client(); const b = await admin('POST', '/auth/bootstrap', { token: BOOT, fullName: 'מנהל סינתטי', email: 'admin@example.test' }), s = await admin('POST', '/auth/enroll/start', { token: b.enrollToken });
+  await admin('POST', '/auth/enroll/confirm', { token: b.enrollToken, pin: '4826' }); const l = await admin('POST', '/auth/login', { email: 'admin@example.test', pin: '4826' }); if (!l.ok) throw new Error('admin login failed ' + JSON.stringify(l));
   const seed = await admin('POST', '/admin/seed-synthetic', {}); if (!seed.ok) throw new Error('seed failed ' + JSON.stringify(seed));
   return { W, H, U, db, env, client, admin, startupMs, clock: () => clock, advance: ms => { clock += ms; }, code, unb32 };
 }

@@ -57,7 +57,7 @@ async function route(request, env, now) {
   await ensureSchema(db);
   // Staged first deploy: GET /auth/status must answer BEFORE the Worker secrets exist (authFor throws MISCONFIGURED without them). It says whether the Worker is READY; it never opens anything.
   if (request.method === 'GET' && url.pathname === '/auth/status') {
-    const n = await db.prepare('SELECT COUNT(*) AS n FROM users').first(), needsSetup = n.n === 0, pep = String(env.APP_SECRET || '').length >= 32, boot = String(env.BOOTSTRAP_TOKEN || '').length >= 32, configured = pep && (!needsSetup || boot);
+    const n = await db.prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'active' AND role = 'admin'").first(), needsSetup = n.n === 0, pep = String(env.APP_SECRET || '').length >= 32, boot = String(env.BOOTSTRAP_TOKEN || '').length >= 32, configured = pep && (!needsSetup || boot);
     return json(200, { ok: true, needsSetup, configured, missing: configured ? [] : [].concat(pep ? [] : ['APP_SECRET'], needsSetup && !boot ? ['BOOTSTRAP_TOKEN'] : []) });
   }
   const auth = authFor(env, db, now), ip = request.headers.get('cf-connecting-ip') || 'local';
