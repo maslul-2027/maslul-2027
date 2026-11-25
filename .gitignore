@@ -18,3 +18,9 @@ synthetic_app/
 
 .test-server/
 server_public/
+
+# generated test/package output — never commit
+dist/
+dist2/
+artifacts/
+first.sha256
