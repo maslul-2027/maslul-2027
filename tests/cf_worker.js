@@ -169,6 +169,11 @@ function unb32(s) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, 
         const r1 = await smoke(none.origin); assert.equal(r1.status, 0, r1.stdout); assert.match(r1.stdout, /STAGE 1 OK.*NOT CONFIGURED.*NOT READY/); assert.match(r1.stdout, /READY=false/); assert.doesNotMatch(r1.stdout, /READY=true/);
       } finally { await none.close(); }
       const half = await L.start({ bootstrapToken: '' }); try { const st = await (await fetch(half.origin + '/auth/status')).json(); assert.equal(st.configured, false); assert.deepEqual(st.missing, ['BOOTSTRAP_TOKEN']); } finally { await half.close(); }
+      const shortToken = '0123456789abcdef', short = await L.start({ bootstrapToken: shortToken }); try {
+        const st = await (await fetch(short.origin + '/auth/status')).json(); assert.equal(st.configured, false, '16-char bootstrap token cannot mark production ready');
+        const denied = await fetch(short.origin + '/auth/bootstrap', { method: 'POST', headers: { 'content-type': 'application/json', origin: short.origin }, body: JSON.stringify({ token: shortToken, email: 'test@example.invalid', fullName: 'Synthetic Test Admin' }) });
+        assert.equal(denied.status, 403, '16-char bootstrap token must not create an admin');
+      } finally { await short.close(); }
       const full = await L.start({}); try { const r2 = await smoke(full.origin); assert.equal(r2.status, 0, r2.stdout); assert.match(r2.stdout, /STAGE 2 OK.*READY/); assert.match(r2.stdout, /READY=true/); } finally { await full.close(); }
       const http = require('http'), open = http.createServer((q, s) => { s.setHeader('content-type', 'application/json'); s.end(q.url === '/auth/status' ? '{"ok":true,"configured":true,"needsSetup":false}' : '{"ok":true,"data":[]}'); }); await new Promise(r => open.listen(0, '127.0.0.1', r));
       try { const r3 = await smoke('http://127.0.0.1:' + open.address().port); assert.equal(r3.status, 1, 'an open data route must fail the smoke test'); assert.match(r3.stdout, /SMOKE FAIL/); } finally { open.close(); } });
