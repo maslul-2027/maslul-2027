@@ -14,7 +14,7 @@ Chromium: pass=18 fail=0 — Chromium, phone-sized viewport (390x800) — NOT a 
 ## כניסה, אישור משתמשים והיקף
 - **מה נבדק בממשק:** הרשמה בממשק (ממתין, לא נכנס) → אישור חד-פעמי על ידי מנהל בממשק (מפקד צוות 1, מפקד צוות 2, צופה) → כניסה, היקף צוות נשמר אחרי יציאה וכניסה, צופה לקריאה בלבד
 - **התמדה:** מצב ההרשמה/אישור/סשנים בקובץ המצב המוצפן של השרת
-- **נתיבי API שהממשק עצמו קרא (UI-origin):** `alerts.counts`, `analytics.insights`, `assignments.mine`, `attendance.events`, `courses.list`, `courses.org`, `followups.list`, `marches.list`, `soldiers.list`, `tasks.indicators`, `whoAmI`
+- **נתיבי API שהממשק עצמו קרא (UI-origin):** `alerts.counts`, `analytics.insights`, `assignments.mine`, `attendance.events`, `courses.list`, `courses.org`, `followups.list`, `marches.list`, `soldiers.list`, `tasks.indicators`, `tasks.list`, `whoAmI`
 - **נתיבים שהבדיקה קראה ישירות (אימות/ניסיונות אסורים, לא קליק):** `marches.create`, `soldiers.list`
 - **ניסיונות ישירים אסורים שנדחו:**
   - viewer marches.create → denied
@@ -23,7 +23,7 @@ Chromium: pass=18 fail=0 — Chromium, phone-sized viewport (390x800) — NOT a 
 ## מסע, נוכחות ותיקון משתתף
 - **מה נבדק בממשק:** מפקד יוצר מסע עם שני חסרים בממשק; מנהל בהקשר נפרד קורא אותו; מנהל מתקן אחד עם סיבה; שני הצדדים רואים חסר אחד אחרי רענון; מפקד צוות זר לא רואה; צופה לא משנה; מפקד רק מבקש תיקון והמנהל מאשר
 - **התמדה:** שורות המסע והנוכחות בקובץ המצב; יומן ביקורת מנוע + שער
-- **נתיבי API שהממשק עצמו קרא (UI-origin):** `alerts.counts`, `analytics.insights`, `assignments.mine`, `attendance.events`, `correction.request`, `courses.list`, `courses.org`, `followups.list`, `marches.create`, `marches.list`, `record.edit`, `soldiers.list`, `tasks.indicators`, `whoAmI`
+- **נתיבי API שהממשק עצמו קרא (UI-origin):** `alerts.counts`, `analytics.insights`, `assignments.mine`, `attendance.events`, `correction.request`, `courses.list`, `courses.org`, `followups.list`, `marches.create`, `marches.list`, `record.edit`, `soldiers.list`, `tasks.indicators`, `tasks.list`, `whoAmI`
 - **נתיבים שהבדיקה קראה ישירות (אימות/ניסיונות אסורים, לא קליק):** `audit.list`, `correction.list`, `correction.request`, `correction.review`, `marches.list`, `record.edit`, `record.history`
 - **ניסיונות ישירים אסורים שנדחו:**
   - foreign commander record.edit → NOT_FOUND
