@@ -102,17 +102,18 @@ jobs:
           URL="$(grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.txt" | head -1)"
           [ -n "$URL" ] || { echo "::error::could not find the workers.dev URL in the deploy output"; exit 1; }
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-      - name: Smoke test (read-only; two stages; no data is written)
+      - name: Smoke test (read-only; fail-closed; READY / NOT_READY_EXPECTED / FAIL)
         env:
           URL: ${{ steps.deploy.outputs.url }}
         run: |
-          # Stage 1 = first deploy, Worker secrets not set yet: expected, fails closed, reported as NOT READY (never as finished).
-          # Stage 2 = secrets set (re-run this workflow): data routes need a session, headers present, reported as READY.
+          set -euo pipefail
+          # RESULT=READY | RESULT=NOT_READY_EXPECTED (200 + configured:false, first deploy) | RESULT=FAIL (any 404/5xx/fake 200/open route -> this step and the job FAIL).
           node scripts/cf_ci_smoke.js "$URL" | tee smoke.txt
-          if grep -q 'READY=true' smoke.txt; then
-            echo "Deployed and configured (synthetic TEST only): $URL" >> "$GITHUB_STEP_SUMMARY"
+          if grep -q '^RESULT=READY$' smoke.txt; then
+            echo "### READY - deployed and configured (synthetic TEST only): $URL" >> "$GITHUB_STEP_SUMMARY"
+          elif grep -q '^RESULT=NOT_READY_EXPECTED$' smoke.txt; then
+            echo "::warning::DEPLOYED BUT NOT READY - the Worker secrets are not set yet. Set them (owner), then re-run this workflow to get READY."
+            echo "### NOT READY (expected on first deploy) - $URL fails closed until the two Worker secrets exist, then re-run." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "::warning::DEPLOYED BUT NOT READY - the Worker secrets are not set yet. Set them in the Cloudflare dashboard (owner guide), then re-run this workflow to get READY."
-            echo "### NOT READY - first deploy, Worker secrets missing" >> "$GITHUB_STEP_SUMMARY"
-            echo "$URL is deployed but fails closed until the two Worker secrets are added in Cloudflare. Then re-run this workflow." >> "$GITHUB_STEP_SUMMARY"
+            echo "### FAIL - smoke test did not end in READY or NOT_READY_EXPECTED: $URL" >> "$GITHUB_STEP_SUMMARY"; exit 1
           fi

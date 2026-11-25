@@ -20,6 +20,7 @@ RC=0
 echo "== 1/2 scenarios over HTTP against workerd =="
 start "$TMP/wrangler.log" "$TMP/d1a" || exit 1
 curl -fsS "$BASE/auth/status"; echo
+node "$ROOT/scripts/cf_ci_smoke.js" "$BASE" | tee "$TMP/smoke_local.txt"; grep -q '^RESULT=READY$' "$TMP/smoke_local.txt" || { echo "local workerd smoke is not READY"; RC=1; }
 ( cd "$ROOT" && CF_BASE_URL="$BASE" timeout 600 node tests/cf_worker.js ) || { RC=1; echo "--- wrangler log ---"; tail -n 120 "$TMP/wrangler.log"; }
 stop
 echo "== 2/2 two-phone browser E2E on one database (fresh state) =="
