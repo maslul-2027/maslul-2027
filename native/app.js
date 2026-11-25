@@ -28,7 +28,9 @@
   function status(text, warn) { return h('span', { class: 'status' + (warn ? ' warn' : ''), text: text }); }
   function emptyBox(t) { return h('div', { class: 'empty', text: t }); }
   function errBox(r, retry) { return h('div', {}, [h('div', { class: 'msg err', role: 'alert', text: msgOf(r) }), retry ? h('button', { class: 'secondary', type: 'button', onclick: retry, text: 'נסו שוב' }) : null]); }
-  function go(route) { if (location.hash !== '#/' + route) location.hash = '#/' + route; else { forceTop = true; render(); } }
+  function go(route) { if (bulkLeave && bulkLeave.dirty()) { leaveAsk(function () { bulkLeave = null; go(route); }); return; } if (location.hash !== '#/' + route) location.hash = '#/' + route; else { forceTop = true; render(); } }
+  function leaveAsk(cont) { dialog('שינויים שלא נשמרו', [h('p', { text: 'הוזנו נתונים שעדיין לא נשמרו. לעזוב את המסך בלי לשמור?' })], function () { cont(); return true; }, 'עזיבה בלי לשמור', true); }
+  window.addEventListener('beforeunload', function (e) { if (bulkLeave && bulkLeave.dirty()) { e.preventDefault(); e.returnValue = ''; } });
   function setTab(name) { document.querySelectorAll('.tab').forEach(function (b) { if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); }
   /* gentle scroll reveal for content BELOW the fold only (never hides what is already visible; fail-safe un-hides everything after 1.5 s; none under reduced motion) */
   var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, rvIO = null, rvT = null;
@@ -37,28 +39,75 @@
     clearTimeout(rvT); rvT = setTimeout(function () { [].slice.call(view.querySelectorAll('.rv-init')).forEach(function (el) { el.classList.add('rv-in'); }); }, 1500); }
   /* Navigation feel: per-route scroll memory (back / tab return restore, a new screen starts at the top), route-enter only for deeper screens, reveal wired once per mount (no observers on every DOM change). */
   var scrollMem = Object.create(null), curKey = null, navPop = false, forceTop = false, userScrolled = false, ROOTS = /^#\/(home|soldiers|tasks|more)?$/;
-  var navSeq = 0;   // a fragment navigation also fires popstate, so traversal (Back/Forward) is detected from history.state: entries we have already rendered carry {mv}, a freshly pushed one has none
+  var navSeq = 0, riT = null, wasMounted = false;   // a fragment navigation also fires popstate, so traversal (Back/Forward) is detected from history.state: entries we have already rendered carry {mv}, a freshly pushed one has none
   ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { userScrolled = true; }, { passive: true }); });
   function restoreScroll(y) { userScrolled = false; var n = 0; (function step() { if (userScrolled) return; window.scrollTo(0, y); if (++n < 5 && Math.abs(window.scrollY - y) > 2) setTimeout(step, n * 120); })(); }
   function mount(tab, nodes, title) {
     var key = location.hash || '#/home', changed = key !== curKey, deeper = /^#\/(soldier|d)\//.test(key), pop = navPop, top = forceTop, keep = window.scrollY; navPop = false; forceTop = false;
+    bulkLeave = null;   // a group-entry screen re-arms its own guard right after mounting
     document.querySelectorAll('dialog.closing').forEach(function (x) { if (x._rawClose) x._rawClose(); });   // a sheet that was closing for a route change must not keep the page inert (modal) after the new screen is in
     view.replaceChildren.apply(view, nodes.filter(Boolean)); setTab(tab); document.title = (title ? title + ' · ' : '') + 'MASLUL 2027'; var hd = view.querySelector('h1,h2'); if (hd) { hd.setAttribute('tabindex', '-1'); hd.focus({ preventScroll: true }); }
     if (changed || top) { var y = !top && (pop || ROOTS.test(key)) ? scrollMem[key] || 0 : 0; window.scrollTo(0, 0); if (y > 0) restoreScroll(y); }
     else if (keep > 0) restoreScroll(keep);   // same route re-rendered in place (reload after a save / a filter): keep the position while the async content grows back
     curKey = key;
-    view.classList.remove('route-in'); if (changed && deeper && !pop && !REDUCED) { void view.offsetWidth; view.classList.add('route-in'); setTimeout(function () { view.classList.remove('route-in'); }, 260); }
+    view.classList.remove('route-in', 'rt-push', 'rt-pop', 'rt-tab'); clearTimeout(riT);
+    /* ONE uniform, direction-aware route motion (transform-only, never a blank/translucent frame): push into a deeper screen / back out of it / switch tab. The first paint and an in-place re-render (same route) never animate. */
+    if (changed && !top && wasMounted && !REDUCED) { void view.offsetWidth; view.classList.add('route-in', pop ? 'rt-pop' : deeper ? 'rt-push' : 'rt-tab'); riT = setTimeout(function () { view.classList.remove('route-in', 'rt-push', 'rt-pop', 'rt-tab'); }, 280); }
+    wasMounted = true;
     if (!REDUCED) requestAnimationFrame(reveal);
   }
   function field(label, input, hint) { var id = input.id || (input.id = 'f' + Math.random().toString(36).slice(2, 8)); return h('div', { class: 'field' }, [h('label', { for: id, text: label }), input, hint ? h('div', { class: 'hint', text: hint }) : null]); }
   function fieldErr(f, text) { f.classList.add('err'); var e = f.querySelector('.errmsg'); if (!e) { e = h('div', { class: 'errmsg', role: 'alert' }); f.append(e); } e.textContent = text; }
   function clearErr(form) { form.querySelectorAll('.field.err').forEach(function (f) { f.classList.remove('err'); var e = f.querySelector('.errmsg'); if (e) e.remove(); }); }
   function busy(btn, on, label) { btn.disabled = on; if (label) btn.textContent = on ? 'שומר…' : label; btn.setAttribute('aria-busy', on ? 'true' : 'false'); }
+  /* ---------- sheets / dialogs: ONE close contract for every popup (X, backdrop, Esc, device Back, Cancel; unsaved-change guard; scroll position untouched) ---------- */
+  var dlgSeq = 0;
+  function dlgHead(h2, d) { return h('div', { class: 'dlg-head' }, [h2, h('button', { class: 'dlg-x', type: 'button', 'aria-label': 'סגירת החלון', text: '✕', onclick: function () { d._req(); } })]); }
+  function dlgKit(d, f, lockBtn) {
+    var edited = false, asking = false, downOut = false, bar = null;
+    function fields() { return [].slice.call(f.elements).filter(function (el) { return /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) && el.type !== 'hidden' && el.type !== 'button' && el.type !== 'submit'; }); }
+    function snap() { return fields().map(function (el) { return el.type === 'checkbox' || el.type === 'radio' ? (el.checked ? 1 : 0) : el.value; }).join('\u0001'); }
+    var base = snap();
+    ['pointerdown', 'focusin', 'keydown'].forEach(function (ev) { f.addEventListener(ev, function () { if (!edited) base = snap(); }, true); });   // the baseline is the state just before the person's first edit (fields may arrive asynchronously)
+    ['input', 'change'].forEach(function (ev) { f.addEventListener(ev, function () { edited = true; }, true); });
+    function dirty() { return edited && snap() !== base; }
+    d._clean = function () { edited = false; base = snap(); };
+    function out(e) { var r = d.getBoundingClientRect(); return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom; }
+    function ask() {
+      if (asking) return; asking = true; var keep = h('button', { type: 'button', class: 'primary', text: 'המשך עריכה' }), drop = h('button', { type: 'button', class: 'secondary', text: 'סגירה בלי לשמור' });
+      bar = h('div', { class: 'dlg-confirm', role: 'alertdialog', 'aria-label': 'שינויים שלא נשמרו' }, [h('p', { text: 'יש שינויים שלא נשמרו. לסגור בלי לשמור?' }), h('div', { class: 'btns' }, [keep, drop])]);
+      var btns = f.querySelector(':scope > .btns'); if (btns) f.insertBefore(bar, btns); else f.append(bar);
+      keep.onclick = function () { asking = false; bar.remove(); bar = null; var first = fields()[0]; if (first) first.focus({ preventScroll: true }); };
+      drop.onclick = function () { asking = false; if (bar) bar.remove(); bar = null; d._edited = false; d.close(); };
+      try { bar.scrollIntoView({ block: 'nearest' }); } catch (e) {} keep.focus({ preventScroll: true });
+    }
+    d._req = function () { if (lockBtn && lockBtn.disabled) return; if (asking) return; if (dirty()) ask(); else d.close(); };
+    d.addEventListener('cancel', function (e) { e.preventDefault(); d._req(); });   // Escape
+    d.addEventListener('pointerdown', function (e) { downOut = e.target === d && out(e); });
+    d.addEventListener('click', function (e) { if (e.target === d && downOut && out(e)) d._req(); downOut = false; });   // backdrop only; a click inside never closes
+    d._hash = location.hash;
+  }
+  /* device Back while a sheet is open: no extra history entry is ever added (so no race with programmatic navigation). Back lands on the previous entry; we put the person straight back
+     (forward) without re-rendering the route, then close the sheet or ask about unsaved changes. */
+  var dlgGuard = { skip: 0, rev: false, idx: null, mv: 0 };
+  function entryIdx() { try { return window.navigation && navigation.currentEntry ? navigation.currentEntry.index : null; } catch (e) { return null; } }
+  window.addEventListener('popstate', function () {
+    var d = document.querySelector('dialog[open]'), now = entryIdx(), was = dlgGuard.idx, st = history.state; dlgGuard.idx = now;
+    if (dlgGuard.rev) { dlgGuard.rev = false; return; }
+    var back0 = now !== null && was !== null ? now < was : !!(st && st.mv && st.mv < dlgGuard.mv);
+    if (!d && bulkLeave && bulkLeave.dirty() && back0) { var target = location.hash; dlgGuard.skip = 2; dlgGuard.rev = true; setTimeout(function () { dlgGuard.skip = 0; dlgGuard.rev = false; }, 700); try { history.forward(); } catch (e) { dlgGuard.skip = 0; dlgGuard.rev = false; } leaveAsk(function () { bulkLeave = null; location.hash = target; }); return; }
+    if (!d || !d._req) return;
+    var back = now !== null && was !== null ? now < was : !!(st && st.mv && st.mv < dlgGuard.mv);   // a fragment navigation (link / go()) also fires popstate: only a real step BACK is the device Back button
+    if (!back) return;
+    if (location.hash !== d._hash) { dlgGuard.skip = 2; dlgGuard.rev = true; setTimeout(function () { dlgGuard.skip = 0; dlgGuard.rev = false; }, 700); try { history.forward(); } catch (e) { dlgGuard.skip = 0; dlgGuard.rev = false; } }
+    d._req();
+  });
   function dialog(title, bodyNodes, onOk, okLabel, danger) {
     var opener = document.activeElement, d = h('dialog', { 'aria-labelledby': 'dlgT' }), f = h('form', { method: 'dialog' }), msg = h('div', { role: 'alert' });
-    var ok = h('button', { class: danger ? 'danger' : 'primary', type: 'submit', text: okLabel || 'אישור' }), cancel = h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { d.close(); } });
-    f.append(h('h2', { id: 'dlgT', text: title }), h('div', {}, bodyNodes), msg, h('div', { class: 'btns' }, [ok, cancel])); d.append(f); document.body.append(d);
-    var rawClose = d.close.bind(d); d._rawClose = rawClose; d.close = function () { if (REDUCED || !d.open || d.classList.contains('closing')) return rawClose(); d.classList.add('closing'); setTimeout(rawClose, 110); }; d.addEventListener('cancel', function (e) { e.preventDefault(); d.close(); });
+    var ok = h('button', { class: danger ? 'danger' : 'primary', type: 'submit', text: okLabel || 'אישור' }), cancel = h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { d._req(); } });
+    f.append(dlgHead(h('h2', { id: 'dlgT', text: title }), d), h('div', {}, bodyNodes), msg, h('div', { class: 'btns' }, [ok, cancel])); d.append(f); document.body.append(d);
+    var rawClose = d.close.bind(d); d._rawClose = rawClose; d.close = function () { if (REDUCED || !d.open || d.classList.contains('closing')) return rawClose(); d.classList.add('closing'); setTimeout(rawClose, 110); };
+    dlgKit(d, f, ok);
     f.addEventListener('submit', function (e) { e.preventDefault(); msg.textContent = ''; msg.className = ''; busy(ok, true); Promise.resolve(onOk(msg)).then(function (done) { if (done === false) busy(ok, false); else d.close(); }); });
     d.addEventListener('close', function () { d.remove(); if (opener && opener.isConnected && typeof opener.focus === 'function') { try { opener.focus({ preventScroll: true }); } catch (e) {} } }); d.showModal(); return d;
   }
@@ -198,7 +247,7 @@
       else btns.append(h('button', { class: 'danger', type: 'button', text: 'ביטול חניך', onclick: function () { reasonDialog('ביטול חניך', true, function (reason, msg) { return api('soldiers.cancel', { id: s.id, reason: reason }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('החניך בוטל'); SoldierCard(s.id); }); }); } }));
       var nav = c.navigation, extra = [];
       if (nav && nav.count !== undefined) extra.push(h('div', { class: 'card' }, [h('div', {}, [h('h3', { text: 'ניווט' }), h('p', { text: nav.count ? ('ממוצע ' + (nav.mean_display || '—') + ' · ' + nav.count + ' מבחנים') : 'עדיין אין מבחני ניווט' })])]));
-      var priv = h('div', { id: 'priv' }, skeleton(1)); mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), h('div', { class: 'section' }, [h('h2', { text: s.full_name }), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active)]), h('div', { class: 'card', style: 'display:block' }, [kv]), btns].concat(extra, [priv]), s.full_name); SoldierExtras(s, priv, cancelled);
+      var priv = h('div', { id: 'priv' }, skeleton(1)), emBox = h('div', { id: 'emBox' }); mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), h('div', { class: 'section' }, [h('h2', { text: s.full_name }), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active)]), h('div', { class: 'card', style: 'display:block' }, [kv]), isAdmin() ? emBox : null, btns].filter(Boolean).concat(extra, [priv]), s.full_name); if (isAdmin()) emergencyBlock(s, emBox); SoldierExtras(s, priv, cancelled);
     });
   }
   /* ---------- soldier card extras (batch 4): reassign / active, private notes, assessments, favourite, emergency contact ---------- */
@@ -221,8 +270,21 @@
     function loadAssess() { api('assess.list', { courseId: cid, soldierId: s.id }).then(function (r) { ab.replaceChildren(h('button', { class: 'secondary', type: 'button', text: '+ הערכה', onclick: function () { var st = h('textarea', { id: 'asSt' }), im = h('textarea', { id: 'asIm' }), dm = h('input', { id: 'asDm' }); dialog('הערכת מפקד', [field('חוזקות', st), field('נקודות לשיפור', im), field('תחום', dm)], function (msg) { if (!st.value.trim() && !im.value.trim()) { msg.textContent = 'נדרשת חוזקה או נקודה לשיפור.'; msg.className = 'msg err'; return false; } return api('assess.add', { courseId: cid, data: { soldier_id: s.id, strengths: st.value.trim(), improvement_areas: im.value.trim(), domain: dm.value.trim() } }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('נשמר'); loadAssess(); }); }, 'שמירה'); } })); if (!r.ok) { ab.append(errBox(r)); return; } if (!(r.data || []).length) ab.append(emptyBox('אין הערכות.')); (r.data || []).forEach(function (a) { ab.append(card((a.domain || 'הערכה') + ' · ' + fmtD(a.assessment_date), [a.strengths && 'חוזקות: ' + a.strengths, a.improvement_areas && 'לשיפור: ' + a.improvement_areas].filter(Boolean).join(' | '), null)); }); }); }
     if (isAdmin()) loadNotes(); loadAssess();
     bar.append(h('button', { class: 'secondary', type: 'button', id: 'privFile', text: 'תיק פרטי מאוחד', onclick: function () { var out = h('div', { 'aria-live': 'polite' }, [skeleton(2)]); dialog('תיק פרטי — ' + s.full_name, [out], function () { }, 'סגירה'); api('soldiers.private', { courseId: cid, soldierId: s.id }).then(function (r) { out.replaceChildren(); if (!r.ok) { out.append(errBox(r)); return; } var d = r.data || {}; out.append(h('p', { class: 'muted', text: 'מידע אישי — מוצג רק כאן, אינו נכלל בסיכומים קבוצתיים.' }), h('h3', { text: 'מועדף: ' + (d.favorite ? 'כן' : 'לא') }), h('h3', { text: 'הערות פרטיות (' + (d.notes || []).length + ')' })); (d.notes || []).forEach(function (n) { out.append(h('p', { text: (n.created_at ? String(n.created_at).slice(0, 10) + ' · ' : '') + (n.text || n.note || '') })); }); out.append(h('h3', { text: 'מעקבים אישיים (' + (d.follow_ups || []).length + ')' })); (d.follow_ups || []).forEach(function (f) { out.append(h('p', { text: f.what_to_check + (f.due_date ? ' · עד ' + String(f.due_date).slice(0, 10) : '') + ' · ' + ({ open: 'פתוח', done: 'הושלם', cancelled: 'בוטל' }[f.status] || f.status) })); }); out.append(h('h3', { text: 'הערכות מפקד (' + (d.assessments || []).length + ')' })); (d.assessments || []).forEach(function (a) { out.append(h('p', { text: (a.text || a.note || a.assessment || '') })); }); }); } }));
-    if (isAdmin()) { var eb = h('div', { id: 'emBox' }); box.append(sectionHead('איש קשר לחירום (מנהל בלבד)', null), eb);
-      function loadEm() { api('emergency.get', { courseId: cid, soldierId: s.id }).then(function (r) { eb.replaceChildren(); if (!r.ok) { eb.append(errBox(r)); return; } var d = r.data; eb.append(card(d.present ? d.name + ' · ' + d.relation : 'לא הוזן', d.present ? d.phone_display : 'ניתן להזין שם, קרבה וטלפון', null, function () { var nm = h('input', { id: 'emN', value: d.name }), rl = h('input', { id: 'emR', value: d.relation }), ph = h('input', { id: 'emP', value: d.phone, inputmode: 'tel', dir: 'ltr' }); dialog('איש קשר לחירום', [field('שם', nm), field('קרבה', rl), field('טלפון', ph)], function (msg) { return api('emergency.set', { courseId: cid, soldierId: s.id, contact: { name: nm.value.trim(), relation: rl.value.trim(), phone: ph.value.trim() } }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('נשמר'); loadEm(); }); }, 'שמירה'); })); }); } loadEm(); }
+  }
+  /* Emergency contact — top of the soldier card, admin only (the server's emergency.get is private.read; nothing here widens access). A valid number gets a real tel: link: the phone's dialer opens on tap and the person confirms the call — nothing ever dials by itself. */
+  function telHref(raw) { var d = String(raw || '').replace(/[\s\-().]/g, ''); return /^\+?\d{8,15}$/.test(d) ? 'tel:' + d : null; }
+  window.__telHref = telHref;   // test hook (pure function)
+  function emergencyBlock(s, host) {
+    var cid = S.course.id;
+    function load() { host.replaceChildren(h('div', { class: 'skeleton', style: 'height:56px' })); api('emergency.get', { courseId: cid, soldierId: s.id }).then(function (r) {
+      host.replaceChildren(); if (!r.ok) { host.append(errBox(r, load)); return; } var d = r.data, tel = d.present ? telHref(d.phone) : null;
+      var edit = function () { var nm = h('input', { id: 'emN', value: d.name }), rl = h('input', { id: 'emR', value: d.relation }), ph = h('input', { id: 'emP', value: d.phone, inputmode: 'tel', dir: 'ltr' }); dialog('איש קשר לחירום', [field('שם', nm), field('קרבה', rl), field('טלפון', ph)], function (msg) { return api('emergency.set', { courseId: cid, soldierId: s.id, contact: { name: nm.value.trim(), relation: rl.value.trim(), phone: ph.value.trim() } }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('נשמר'); load(); }); }, 'שמירה'); };
+      host.append(h('div', { class: 'section' }, [h('h2', { text: 'איש קשר לחירום' }), h('span', { class: 'count', text: 'מנהל בלבד' })]));
+      host.append(h('button', { class: 'card', type: 'button', onclick: edit }, [h('div', {}, [h('h3', { text: d.present ? d.name + ' · ' + d.relation : 'לא הוזן איש קשר' }), h('p', { text: d.present ? '' : 'ניתן להזין שם, קרבה וטלפון', dir: 'auto' }), d.present ? h('p', { class: 'em-phone', dir: 'ltr', style: 'text-align:start;font-weight:700;color:#161b20', text: d.phone_display || d.phone }) : null]), h('span', { class: 'arrow', text: d.present ? '✎' : '+' })]));
+      if (d.present && tel) host.append(h('div', { class: 'btns', style: 'margin:6px 0 0' }, [h('a', { class: 'primary em-call', id: 'emCall', href: tel, role: 'button', 'aria-label': 'התקשרות אל ' + d.name + ' (' + d.relation + ')', text: '📞 התקשרות' })]));
+      else if (d.present) host.append(h('p', { class: 'notice', role: 'status', id: 'emBad', text: 'מספר הטלפון שהוזן אינו תקין — אי אפשר לחייג. אפשר לתקן בעריכה.' }));
+    }); }
+    load();
   }
   function reasonDialog(title, required, run) {
     var ta = h('textarea', { id: 'reason', 'aria-required': required ? 'true' : 'false' });
@@ -351,7 +413,7 @@
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
   function render() {
     if (curKey) scrollMem[curKey] = window.scrollY;
-    navPop = !!(history.state && history.state.mv); try { history.replaceState({ mv: ++navSeq }, ''); } catch (e) {}
+    navPop = !!(history.state && history.state.mv); try { history.replaceState({ mv: ++navSeq }, ''); } catch (e) {} dlgGuard.mv = navSeq; dlgGuard.idx = entryIdx();
     var r = (location.hash || '#/home').replace(/^#\//, ''), top = $('#ctx'); if (top) top.textContent = ctxLine();
     if (!S.course) { var adm = C.cf && isAdmin(), emp = [h('div', { class: 'hero' }, [h('small', { text: adm ? 'שלב ראשון' : 'ממתינים להגדרה' }), h('h1', { text: adm ? 'הסביבה מוכנה — חסר רק קורס' : 'עדיין אין קורס זמין עבורכם' }),
         h('p', { id: 'heroWhy', text: adm ? 'אין עדיין נתונים בסביבת הבדיקה המשותפת. טענו קורס סינתטי כדי שכל ארבע הלשוניות יתמלאו בנתונים מומצאים, ואז אפשר להזמין מפקדים.' : 'החשבון שלכם פעיל, אך המנהל טרם שייך אתכם לקורס. פנו אליו; לא נדרשת פעולה נוספת מצדכם.' })])];
@@ -360,9 +422,12 @@
       mount('home', emp); return; }
     var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
-  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('click', function () { go(b.dataset.go); }); });
-  window.addEventListener('hashchange', render);
+  /* Read warm-up (server mode only): the data a tab needs is requested on touch-down (before the click completes) and once when the app is ready; the client's short read memo hands it over, so the screen paints real content instead of a skeleton. Reads only, same arguments as the screens use. */
+  var WARM = { soldiers: [['soldiers.list', { opts: {} }]], tasks: [['followups.list', { opts: {} }], ['tasks.list', { opts: {} }], ['soldiers.list', { opts: {} }]] };
+  function warm(tab) { if (C.mode !== 'server' || !S.course || !WARM[tab]) return; WARM[tab].forEach(function (w) { var a = { courseId: S.course.id, opts: w[1].opts }; api(w[0], a, 'direct'); }); }
+  document.querySelectorAll('.tab').forEach(function (b) { b.addEventListener('pointerdown', function () { warm(b.dataset.go); }, { passive: true }); b.addEventListener('click', function () { go(b.dataset.go); }); });
+  window.addEventListener('hashchange', function () { if (dlgGuard.skip > 0) { dlgGuard.skip--; return; } render(); });
   window.__app = { api: function (m, a) { return api(m, a, 'direct'); },   /* test hook: calls through it are recorded as DIRECT (not UI) in the evidence ledger */ state: S, insightProvider: INSIGHT, groupSafePayload: groupSafePayload };
   view.replaceChildren(skeleton(3));
-  C.ready.then(loadContext).then(function () { $('#ctx').textContent = ctxLine(); render(); }).catch(function (e) { view.replaceChildren(errBox(e && e.message ? e : { message: 'לא ניתן לטעון את האפליקציה.' }, function () { location.reload(); })); });
+  C.ready.then(loadContext).then(function () { $('#ctx').textContent = ctxLine(); render(); setTimeout(function () { warm('soldiers'); warm('tasks'); }, 400); }).catch(function (e) { view.replaceChildren(errBox(e && e.message ? e : { message: 'לא ניתן לטעון את האפליקציה.' }, function () { location.reload(); })); });
 })();
