@@ -52,9 +52,16 @@ jobs:
           node scripts/build_native_app.js --cf
       - name: Static guards (free-plan shape, no eval, no PIN path, helper + workflow rules)
         run: node tests/cf_static.js
+      - name: Worker + D1 shim end-to-end tests (must pass before any deploy)
+        run: node tests/cf_worker.js
+      - name: Route inventory and policy coverage
+        run: node scripts/cf_route_survey.js
       - name: Deploy dry run (uploads nothing, needs no credentials)
         working-directory: cloudflare/free-shared-test
-        run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/dryrun" 2>&1 | tee "$RUNNER_TEMP/dryrun.txt" | grep -E "Total Upload|Your Worker|binding|DB"
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/dryrun" 2>&1 | tee "$RUNNER_TEMP/dryrun.txt"
+          grep -E "Total Upload|Your Worker|binding|DB" "$RUNNER_TEMP/dryrun.txt"
   deploy:
     needs: verify
     if: github.ref == 'refs/heads/cloudflare/free-shared-test' && vars.CF_DEPLOY_ENABLED == 'yes'
