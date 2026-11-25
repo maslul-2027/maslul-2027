@@ -15,7 +15,7 @@ const CASES=[
  {d:'marches',i:0,fill:{x_march_date:T,x_location:'מסע בדיקה',x_km_no_stretcher:'10',x_km_stretcher:'2'},tick:'#x_absent input',read:'מסע בדיקה'},
  {d:'readiness',i:1,fill:{x_soldier_id:{i:1},x_status:{i:1},x_start_date:T}},
  {d:'events',i:0,fill:{x_soldier_id:{i:1},x_event_date:T,x_event_type:'achievement',x_description:'הישג בדיקה'},read:'הישג בדיקה'},
- {d:'qual',i:0,fill:{x_name:'הסמכת בדיקה',x_completion_terms:'תנאי',x_scope_type:'course'},read:'הסמכת בדיקה'},
+ {d:'qual',i:1,fill:{x_name:'הסמכת בדיקה',x_completion_terms:'תנאי',x_scope_type:'course'},read:'הסמכת בדיקה'},
  {d:'notes',i:0,fill:{x_soldier_id:{i:1},x_note_text:'הערת בדיקה'}},
  {d:'admin',i:0,fill:{x_email:'cmd1@x.com',x_display_name:'מפקד בדיקה',x_role:'commander'},read:'מפקד בדיקה'},
  {d:'admin',i:1,fill:{x_name:'קורס שני',x_start_date:'2099-02-01'},read:'קורס שני'}];

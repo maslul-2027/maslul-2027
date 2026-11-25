@@ -61,7 +61,7 @@
         var lab = h('label', { class: 'be-cell', for: inp.id }, [h('span', { class: 'be-lab', text: c.l }), inp]); r.cells.push({ c: c, inp: inp }); return lab; });
       var sel = h('select', { class: 'be-state', 'aria-label': s.full_name + ' — מצב' }, [['', 'מצב: להזנה'], ['absent', 'נעדר'], ['exempt', 'פטור']].map(function (o) { return h('option', { value: o[0], text: o[1] }); }));
       sel.addEventListener('change', function () { r.state = sel.value; r.touched = true; if (r.state) { cfg.cols.forEach(function (c) { r.vals[c.n] = ''; }); r.cells.forEach(function (x) { x.inp.value = ''; }); } paintRow(r); paintProgress(); });
-      if (cfg.noState) sel.hidden = true; r.sel = sel; r.msg = h('div', { class: 'be-msg', 'aria-live': 'polite' });
+      sel.hidden = true; sel.disabled = true;   /* absent / exempt are NOT supported by the data model — no fake client-only state is offered */ r.sel = sel; r.msg = h('div', { class: 'be-msg', 'aria-live': 'polite' });
       r.node = h('div', { class: 'be-row be-empty', 'data-sid': s.id }, [h('div', { class: 'be-who' }, [nm, h('small', { class: 'muted', text: (s.team_name || s.department_name || '').replace(/\s*\(זמני\)/g, '') })]), h('div', { class: 'be-cells' }, cells), sel, r.msg]);
       return r;
     }
@@ -86,7 +86,7 @@
       rows = sols().map(makeRow); rows.forEach(function (r) { list.append(r.node); });
       var why = h('input', { id: 'beReason', maxlength: '300', placeholder: 'סיבת התיקון (נדרשת רק כשמתקנים תוצאות שנשמרו)', autocomplete: 'off', 'aria-label': 'סיבת התיקון' }); why.addEventListener('input', function () { reason = why.value; });
       var save = h('button', { class: 'primary', type: 'button', id: 'beSave', disabled: true, text: 'אין שינויים לשמירה', onclick: doSave });
-      holder.append(h('p', { class: 'muted', text: 'מגדירים פעם אחת את פרטי הבוחן, ואז מזינים תוצאות ברשימה. Enter — לחניך הבא. כל השמירות נשלחות בפעולה אחת; כל חניך נשמר בנפרד ואין שמירה אוטומטית.' }), h('div', { class: 'card be-card' }, [shHost]), h('div', { class: 'be-tools' }, [q, h('div', { class: 'be-two' }, [dep, team]), chips]), progress, list, h('div', { class: 'empty', id: 'beEmpty', hidden: true, text: 'לא נמצאו חניכים לפי הסינון.' }), h('div', { class: 'be-reasonrow' }, [field('סיבת תיקון', why)]), summary, h('div', { class: 'stickybar' }, [save]));
+      holder.append(h('p', { class: 'muted', text: 'מגדירים פעם אחת את פרטי הבוחן, ואז מזינים תוצאות ברשימה. Enter — לחניך הבא. כל השמירות נשלחות בפעולה אחת; כל חניך נשמר בנפרד ואין שמירה אוטומטית. חניך שלא נבחן — משאירים ריק (לא נוצרת רשומה); סימון "נעדר/פטור" אינו נתמך במודל הנתונים ולכן לא מוצג.' }), h('div', { class: 'card be-card' }, [shHost]), h('div', { class: 'be-tools' }, [q, h('div', { class: 'be-two' }, [dep, team]), chips]), progress, list, h('div', { class: 'empty', id: 'beEmpty', hidden: true, text: 'לא נמצאו חניכים לפי הסינון.' }), h('div', { class: 'be-reasonrow' }, [field('סיבת תיקון', why)]), summary, h('div', { class: 'stickybar' }, [save]));
       bulkLeave = { dirty: dirty };
       loadExisting().then(function () { refreshAll(); applyFilter(); });
       refreshAll(); applyFilter();
@@ -245,3 +245,75 @@
     load();
   }
   window.BulkCorrections = BulkCorrections;
+
+
+  /* ---- qualifications: update the status of SEVERAL soldiers for one qualification in one controlled pass. Each soldier keeps the server's rules (history entry, audit, completion needs a date,
+         un-completing needs a reason, approved exclusions are refused). Before each write the assignment is re-read: a status someone else changed meanwhile is reported and left untouched. ---- */
+  function BulkQual() {
+    var sel = {}, quals = [], rowsA = [], saving = false, cur = '';
+    var qs = h('select', { id: 'bqQ' }), st = h('select', { id: 'bqS' }, [['in_progress', 'בתהליך'], ['completed', 'הושלם'], ['pending', 'טרם החל']].map(function (o) { return h('option', { value: o[0], text: o[1] }); })), dt = h('input', { id: 'bqD', type: 'date', value: today() }), why = h('input', { id: 'bqWhy', maxlength: '300' });
+    var list = h('div', { id: 'bqList', class: 'be-list' }), msgBox = h('div', { id: 'bqMsg', 'aria-live': 'polite' }), cnt = h('strong', { id: 'bqCount', 'aria-live': 'polite' }), go1 = h('button', { class: 'primary', type: 'button', id: 'bqGo', text: 'עדכון החניכים שנבחרו', disabled: true });
+    var dtF = field('תאריך השלמה (רק בסטטוס "הושלם")', dt);
+    mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/qual'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: 'עדכון הסמכה — קבוצתי' }), h('p', { class: 'muted', text: 'בוחרים הסמכה, מסמנים חניכים ומחילים סטטוס אחד. כל חניך נשמר בנפרד ונרשם בהיסטוריה; חניך שהוחרג באישור או ששונה בינתיים לא ישתנה ויוצג בשגיאה.' }), field('הסמכה', qs), field('סטטוס חדש', st), dtF, field('סיבה (חובה בביטול השלמה)', why), cnt, list, msgBox, go1], 'עדכון הסמכה');
+    function sync() { dtF.hidden = st.value !== 'completed'; var n = Object.keys(sel).length; cnt.textContent = n ? 'נבחרו ' + n + ' חניכים' : 'לא נבחרו חניכים'; go1.disabled = saving || !n || !qs.value; }
+    function paint() { sync(); if (!rowsA.length) { list.replaceChildren(emptyBox(qs.value ? 'אין חניכים משויכים להסמכה זו.' : 'בחרו הסמכה.')); return; } list.replaceChildren.apply(list, rowsA.map(function (a) { var cb = h('input', { type: 'checkbox', id: 'bq_' + a.id, style: 'width:auto' }); cb.checked = !!sel[a.id]; cb.disabled = saving || a.excluded; cb.addEventListener('change', function () { if (cb.checked) sel[a.id] = 1; else delete sel[a.id]; sync(); }); return h('label', { class: 'be-row be-pick', for: cb.id }, [cb, h('span', { class: 'be-who' }, [h('strong', { text: a.soldier_name }), h('small', { class: 'muted', text: (a.excluded ? 'הוחרג באישור מנהל' : a.status_label + (a.completion_date ? ' · ' + fmtD(a.completion_date) : '')) })])]); })); }
+    function load() { sel = {}; if (!qs.value) { rowsA = []; paint(); return Promise.resolve(); } return api('qual.assignments', { courseId: S.course.id, opts: { qualificationId: qs.value } }, 'fresh').then(function (r) { rowsA = r.ok ? (r.data || []) : []; if (!r.ok) msgBox.replaceChildren(errBox(r)); paint(); }); }
+    api('qual.list', { courseId: S.course.id }).then(function (r) { quals = r.ok ? (r.data || []) : []; qs.replaceChildren.apply(qs, [h('option', { value: '', text: 'בחרו…' })].concat(quals.filter(function (q) { return q.active !== false; }).map(function (q) { return h('option', { value: q.id, text: q.name }); }))); paint(); });
+    qs.addEventListener('change', load); st.addEventListener('change', sync);
+    go1.addEventListener('click', function () {
+      var todo = rowsA.filter(function (a) { return sel[a.id]; }); if (!todo.length) return; if (st.value === 'completed' && !dt.value) { dt.focus(); msgBox.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'הושלם מחייב תאריך השלמה.' })); return; }
+      var un = todo.filter(function (a) { return a.status === 'completed' && st.value !== 'completed'; }); if (un.length && !why.value.trim()) { why.focus(); msgBox.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'ביטול השלמה של ' + un.length + ' חניכים מחייב סיבה.' })); return; }
+      dialog('אישור עדכון קבוצתי', [h('p', { text: 'סטטוס "' + st.selectedOptions[0].text + '" יוחל על ' + todo.length + ' חניכים.' })], function () { run(todo); return true; }, 'אישור');
+    });
+    function run(todo) {
+      saving = true; sync(); msgBox.replaceChildren(h('p', { class: 'muted', text: 'מעדכן ' + todo.length + '…' })); var ok = [], fail = [], i = 0;
+      function next() { if (i >= todo.length) return Promise.resolve(); var a = todo[i++]; return api('qual.assignments', { courseId: S.course.id, opts: { qualificationId: qs.value, soldierId: a.soldier_id } }, 'fresh').then(function (cr) {
+          var now = cr && cr.ok && (cr.data || [])[0]; if (!now) return { ok: false, message: 'לא ניתן לקרוא את השיוך מהשרת' }; if (now.status !== a.status || (now.completion_date || '') !== (a.completion_date || '')) return { ok: false, code: 'CONFLICT', message: 'הסטטוס שונה בינתיים על ידי משתמש אחר — לא שונה' };
+          var patch = { status: st.value }; if (st.value === 'completed') patch.completion_date = dt.value; return api('qual.update', { id: a.id, patch: patch, reason: why.value.trim() }); }).then(function (x) { if (x && x.ok) ok.push(a); else fail.push([a, (x && x.message) || 'נכשל']); }).then(next); }
+      next().then(function () { return load(); }).then(function () { saving = false; var good = ok.filter(function (a) { var n = rowsA.filter(function (y) { return y.id === a.id; })[0]; return n && n.status === st.value; });
+        fail.forEach(function (f) { sel[f[0].id] = 1; }); msgBox.replaceChildren(h('div', { class: 'msg ' + (fail.length || good.length !== ok.length ? 'err' : 'ok'), role: 'status', text: 'עודכנו ' + good.length + ' · לא עודכנו ' + (fail.length + ok.length - good.length) + '.' + (good.length ? ' אומת בשרת.' : '') }), fail.length ? h('ul', { class: 'be-fails' }, fail.map(function (f) { return h('li', { text: f[0].soldier_name + ' — ' + f[1] }); })) : h('span')); paint(); if (!fail.length && good.length === ok.length) toast('ההסמכות עודכנו ואומתו'); });
+    }
+    paint();
+  }
+  window.BulkQual = BulkQual;
+
+  /* ---- commander assessments: a continuous flow from soldier to soldier (personal content — one soldier at a time, never a table). The server keeps its permission rules; the screen never double-sends:
+         a lost reply is reconciled against the saved list before a retry. ---- */
+  function AssessFlow() {
+    var order = [], pos = 0, done = {}, saving = false, pending = null, filt = { dep: '', team: '' };
+    var holder = h('div', {}, skeleton(3));
+    mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/events'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: 'הערכות מפקד — מעבר רציף' }), holder], 'הערכות מפקד');
+    bulkLeave = { dirty: function () { return !saving && !!(($('#afSt') && $('#afSt').value.trim()) || ($('#afIm') && $('#afIm').value.trim())); } };
+    ensureSoldiers().then(start);
+    function sols() { return (cache.soldiers || []).filter(function (x) { return x.active && x.record_status !== 'cancelled' && (!filt.dep || x.department_id === filt.dep) && (!filt.team || x.team_id === filt.team); }); }
+    function start() {
+      var dep = h('select', { id: 'afDep', 'aria-label': 'מחלקה' }, [h('option', { value: '', text: 'כל המחלקות' })].concat(((S.org || {}).departments || []).map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); }))), team = h('select', { id: 'afTeam', 'aria-label': 'צוות' });
+      function teams() { team.replaceChildren.apply(team, [h('option', { value: '', text: 'כל הצוותים' })].concat(((S.org || {}).teams || []).filter(function (t) { return !dep.value || t.department_id === dep.value; }).map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, '') }); }))); } teams();
+      function reset() { filt.dep = dep.value; filt.team = team.value; order = sols(); pos = 0; done = {}; show(); }
+      dep.addEventListener('change', function () { teams(); reset(); }); team.addEventListener('change', reset);
+      holder.replaceChildren(h('p', { class: 'muted', text: 'עוברים חניך אחרי חניך: כותבים, "שמירה והבא", או "דילוג". כל הערכה נשמרת בנפרד; אין שמירה אוטומטית.' }), h('div', { class: 'be-tools' }, [dep, team]), h('div', { id: 'afBox' })); order = sols(); show();
+    }
+    function show() {
+      var box = $('#afBox'); if (!box) return; if (!order.length) { box.replaceChildren(emptyBox('אין חניכים להצגה.')); return; } if (pos >= order.length) pos = order.length - 1; var s = order[pos];
+      var st = h('textarea', { id: 'afSt', rows: '3', maxlength: '1000' }), im = h('textarea', { id: 'afIm', rows: '3', maxlength: '1000' }), dm = h('input', { id: 'afDm', maxlength: '60' }), msg = h('div', { id: 'afMsg', role: 'alert', 'aria-live': 'polite' }), prev = h('div', { id: 'afPrev', class: 'muted' });
+      var save = h('button', { class: 'primary', type: 'button', id: 'afSave', text: 'שמירה והבא' }), skip = h('button', { class: 'secondary', type: 'button', id: 'afSkip', text: 'דילוג' }), back = h('button', { class: 'secondary', type: 'button', id: 'afPrevBtn', text: 'הקודם', disabled: pos === 0 });
+      var doneN = Object.keys(done).length;
+      box.replaceChildren(h('div', { class: 'be-progress', id: 'afProg', role: 'status', 'aria-live': 'polite' }, [h('strong', { text: 'חניך ' + (pos + 1) + ' מתוך ' + order.length + ' · נשמרו ' + doneN })]), h('div', { class: 'card' }, [h('h2', { id: 'afWho', text: s.full_name }), h('small', { class: 'muted', text: (s.team_name || s.department_name || '').replace(/\s*\(זמני\)/g, '') }), prev]), field('חוזקות', st), field('נקודות לשיפור', im), field('תחום (אופציונלי)', dm), msg, h('div', { class: 'btns' }, [save, skip, back]));
+      api('assess.list', { courseId: S.course.id, soldierId: s.id }).then(function (r) { if ($('#afWho') && $('#afWho').textContent === s.full_name) prev.textContent = r.ok ? (r.data || []).length ? 'הערכות קודמות: ' + (r.data || []).length + (done[s.id] ? ' (כולל זו ששמרת עכשיו)' : '') : 'אין הערכות קודמות.' : ''; });
+      function step(d) { var np = pos + d; if (np < 0 || np >= order.length) { if (np >= order.length) { msg.className = 'msg ok'; msg.textContent = 'סיימתם את הרשימה — נשמרו ' + Object.keys(done).length + ' הערכות.'; } return; } pos = np; show(); var f = $('#afSt'); if (f) f.focus(); }
+      function dirty() { return st.value.trim() || im.value.trim() || dm.value.trim(); }
+      skip.addEventListener('click', function () { if (dirty()) { dialog('להמשיך בלי לשמור?', [h('p', { text: 'ההערכה שהוקלדה לא תישמר.' })], function () { step(1); return true; }, 'דילוג בלי לשמור', true); return; } step(1); });
+      back.addEventListener('click', function () { if (dirty()) { dialog('לחזור בלי לשמור?', [h('p', { text: 'ההערכה שהוקלדה לא תישמר.' })], function () { step(-1); return true; }, 'חזרה בלי לשמור', true); return; } step(-1); });
+      save.addEventListener('click', function () {
+        if (saving) return; if (!st.value.trim() && !im.value.trim()) { msg.className = 'msg err'; msg.textContent = 'נדרשת חוזקה או נקודה לשיפור.'; (st.value ? im : st).focus(); return; }
+        saving = true; busy(save, true); msg.textContent = ''; var data = { soldier_id: s.id, strengths: st.value.trim(), improvement_areas: im.value.trim(), domain: dm.value.trim() }, sig = JSON.stringify(data);
+        var reconcile = pending && pending.sig === sig ? api('assess.list', { courseId: S.course.id, soldierId: s.id }, 'fresh').then(function (r) { return r.ok && (r.data || []).some(function (a) { return String(a.strengths || '') === data.strengths && String(a.improvement_areas || '') === data.improvement_areas && a.own !== false && String(a.created_at || a.assessment_date || '').slice(0, 10) === today(); }); }) : Promise.resolve(false);
+        reconcile.then(function (already) { return already ? { ok: true, already: true } : api('assess.add', { courseId: S.course.id, data: data }); }).then(function (x) {
+          saving = false; busy(save, false);
+          if (x && x.ok) { pending = null; done[s.id] = 1; toast('נשמר'); if (pos + 1 < order.length) { pos++; show(); var f = $('#afSt'); if (f) f.focus(); } else { show(); var m2 = $('#afMsg'); if (m2) { m2.className = 'msg ok'; m2.textContent = 'סיימתם את הרשימה — נשמרו ' + Object.keys(done).length + ' הערכות.'; } } }
+          else { pending = x && x.code === 'NETWORK' || x && x.code === 'UNKNOWN_OUTCOME' ? { sig: sig } : null; msg.className = 'msg err'; msg.textContent = ((x && x.message) || 'השמירה נכשלה') + ' — ההערכה נשארה על המסך.' + (pending ? ' בלחיצה נוספת תיבדק קודם הרשימה השמורה כדי שלא תיווצר כפילות.' : ''); }
+        });
+      });
+    }
+  }
+  window.AssessFlow = AssessFlow;
