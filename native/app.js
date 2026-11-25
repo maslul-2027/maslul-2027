@@ -353,8 +353,10 @@
     if (curKey) scrollMem[curKey] = window.scrollY;
     navPop = !!(history.state && history.state.mv); try { history.replaceState({ mv: ++navSeq }, ''); } catch (e) {}
     var r = (location.hash || '#/home').replace(/^#\//, ''), top = $('#ctx'); if (top) top.textContent = ctxLine();
-    if (!S.course) { var emp = [h('div', { class: 'empty', text: 'אין קורס. יש ליצור קורס במסך הניהול.' })];
-      if (C.cf && isAdmin()) emp.push(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי לבדיקה (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; api('gw:seed', {}).then(function (x) { if (!x.ok) { toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
+    if (!S.course) { var adm = C.cf && isAdmin(), emp = [h('div', { class: 'hero' }, [h('small', { text: adm ? 'שלב ראשון' : 'ממתינים להגדרה' }), h('h1', { text: adm ? 'הסביבה מוכנה — חסר רק קורס' : 'עדיין אין קורס זמין עבורכם' }),
+        h('p', { id: 'heroWhy', text: adm ? 'אין עדיין נתונים בסביבת הבדיקה המשותפת. טענו קורס סינתטי כדי שכל ארבע הלשוניות יתמלאו בנתונים מומצאים, ואז אפשר להזמין מפקדים.' : 'החשבון שלכם פעיל, אך המנהל טרם שייך אתכם לקורס. פנו אליו; לא נדרשת פעולה נוספת מצדכם.' })])];
+      if (adm) { emp[0].append(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; this.setAttribute('aria-busy', 'true'); var b = this; api('gw:seed', {}).then(function (x) { if (!x.ok) { b.disabled = false; b.removeAttribute('aria-busy'); toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
+        emp.push(sectionHead('מה יקרה אחרי הטעינה', null), card('חניכים וצוותים', 'רשימה, חיפוש וסינון לפי מחלקה', null), card('מעקבים ומסעות', 'משימות, מסע עם חסרים ועריכת משתתפים אחרי שמירה', null), card('הזמנת מפקדים', 'בלשונית "עוד" → אישור בקשות; כל מפקד רואה רק את הצוות שלו', null)); }
       mount('home', emp); return; }
     var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
