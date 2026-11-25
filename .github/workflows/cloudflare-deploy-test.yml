@@ -102,6 +102,23 @@ jobs:
           URL="$(grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.txt" | head -1)"
           [ -n "$URL" ] || { echo "::error::could not find the workers.dev URL in the deploy output"; exit 1; }
           echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Worker pepper secret - generate ONCE inside the runner, send straight to Cloudflare, never stored in GitHub, never printed
+        working-directory: cloudflare/free-shared-test
+        env:
+          OPTIONAL_FIRST_ADMIN_TOKEN: ${{ secrets.WORKER_FIRST_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          have="$(npx wrangler secret list --config wrangler.deploy.toml --format json)"
+          # Created only when ABSENT: replacing the pepper would invalidate every PIN/e-mail hash (all accounts).
+          if echo "$have" | grep -q '"APP_SECRET"'; then echo "pepper secret already present - left untouched"; else
+            v="$(openssl rand -hex 32)"; echo "::add-mask::$v"
+            printf '%s' "$v" | npx wrangler secret put APP_SECRET --config wrangler.deploy.toml >/dev/null
+            echo "pepper secret created in Cloudflare (value not shown, not stored in GitHub)"
+          fi
+          # Optional: the owner may hand the first-admin token to Cloudflare through an Environment secret instead of the dashboard.
+          if [ -n "${OPTIONAL_FIRST_ADMIN_TOKEN:-}" ] && ! echo "$have" | grep -q '"BOOTSTRAP_TOKEN"'; then
+            printf '%s' "$OPTIONAL_FIRST_ADMIN_TOKEN" | npx wrangler secret put BOOTSTRAP_TOKEN --config wrangler.deploy.toml >/dev/null; echo "first-admin token forwarded to Cloudflare"
+          fi
       - name: Smoke test (read-only; fail-closed; READY / NOT_READY_EXPECTED / FAIL)
         env:
           URL: ${{ steps.deploy.outputs.url }}
