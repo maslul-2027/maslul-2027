@@ -58,7 +58,7 @@ async function route(request, env, now) {
   // Staged first deploy: GET /auth/status must answer BEFORE the Worker secrets exist (authFor throws MISCONFIGURED without them). It says whether the Worker is READY; it never opens anything.
   if (request.method === 'GET' && url.pathname === '/auth/status') {
     const n = await db.prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'active' AND role = 'admin'").first(), needsSetup = n.n === 0, pep = String(env.APP_SECRET || '').length >= 32, boot = String(env.BOOTSTRAP_TOKEN || '').length >= 32, configured = pep && (!needsSetup || boot);
-    return json(200, { ok: true, needsSetup, configured, missing: configured ? [] : [].concat(pep ? [] : ['APP_SECRET'], needsSetup && !boot ? ['BOOTSTRAP_TOKEN'] : []) });
+    return json(200, { ok: true, needsSetup, configured, recoveryEnabled: String(env.ADMIN_RECOVERY_TOKEN || '').length >= 32, missing: configured ? [] : [].concat(pep ? [] : ['APP_SECRET'], needsSetup && !boot ? ['BOOTSTRAP_TOKEN'] : []) });
   }
   const auth = authFor(env, db, now), ip = request.headers.get('cf-connecting-ip') || 'local';
   const len = Number(request.headers.get('content-length') || 0); let body = {};
@@ -70,6 +70,7 @@ async function route(request, env, now) {
   }
   const ok = (b, extra) => json(200, Object.assign({ ok: true }, b || {}), extra);
   if (m === 'POST' && p === '/auth/bootstrap') return ok(await auth.bootstrap(body, ip));
+  if (m === 'POST' && p === '/auth/recover') return ok(await auth.recover(body, ip));
   if (m === 'POST' && p === '/auth/register') return ok(await auth.register(body, ip));
   if (m === 'POST' && p === '/auth/enroll/start') return ok(await auth.enrollStart(body, ip));
   if (m === 'POST' && p === '/auth/enroll/confirm') return ok(await auth.enrollConfirm(body, ip));

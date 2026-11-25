@@ -300,8 +300,18 @@
     sumList('שלמות ישיבות', 'meetings.integrity', function (d, box) { kv(box, [['פערי audit', d.audit_gap_count], ['יתומים', d.orphan_count]]); }),
     sumList('חוזקות ופערים', 'dash.strengthsGaps', function (d, box) { if (!d.available) box.append(emptyBox(d.reason || 'לא זמין.')); else { (d.strengths || []).forEach(function (x) { box.append(card('חוזקה: ' + x.label, x.text || '', null)); }); (d.gaps || []).forEach(function (x) { box.append(card('פער: ' + x.label, x.text || '', null)); }); } }),
     sumList('סקירת קורסים', 'dash.home', function (d, box) { (d.courses || []).forEach(function (c) { kv(box, [[c.name, 'חיילים ' + c.soldiers + ' · התראות פתוחות ' + (c.alerts ? c.alerts.open : '—')]]); }); }, function () { return {}; })] };
+  /* Fitness SOURCES registry (static, reviewed by hand; no live fetching). Status words are literal: nothing here is normative unless VERIFIED by the owner. Scoring tables are NOT derived from these sources. */
+  var FIT_SOURCES = [
+    { name: 'מחשבון קצבים לאימונים — אתר כושר קרבי', url: 'https://kosherkraviruning.netlify.app/', status: 'נבדק תוכן · מקור לא מאומת', note: 'מחשבון קצבי אימון לפי תוצאת 3 ק״מ (לא טבלת ניקוד). נבדק 25.11.2026. מצוין על הדף "© 2026 כל הזכויות שמורות למערך כושר קרבי"; אין רישיון שימוש חוזר, אין גרסה, והדומיין אינו idf.il — לכן משמש כהקשר בלבד ולא מועתק.' },
+    { name: 'מאגר כושר קרבי (הדגמות, בטיחות, תוכניות)', url: 'https://kosherkraviinfo.places2run.com/', status: 'ממתין לאימות מקור', note: 'מקור הקשר נפרד. לא נבדק לעומק; אינו נורמטיבי.' },
+    { name: 'פקודת צה״ל — כושר (order5.pdf)', url: 'https://m.www.idf.il/media/rtzdsiye/order5.pdf', status: 'ממתין לבדיקת גרסה', note: 'מסמך רשמי שפורסם; יש לאמת תאריך וגרסה וסעיפים לפני שימוש נורמטיבי. טבלאות הניקוד המאושרות במערכת לא שונו.' }
+  ];
+  function sourcesBox(box) {
+    box.append(h('h3', { text: 'מקורות כושר (רישום)', style: 'margin:14px 0 6px' }), h('div', { class: 'notice', role: 'note', text: 'מקור שלא אומת אינו משנה ניקוד, ואינו מוצג כמקור רשמי. כל שינוי ניקוד דורש אישור בעלים.' }));
+    FIT_SOURCES.forEach(function (x) { box.append(h('div', { class: 'card', style: 'display:block' }, [h('div', { style: 'font-weight:700' }, [h('a', { href: x.url, target: '_blank', rel: 'noopener noreferrer', dir: 'ltr', text: x.name })]), h('span', { class: 'badge', text: x.status }), h('p', { class: 'muted', style: 'margin:6px 0 0', text: x.note })])); });
+  }
   D.fitref = { title: 'טבלאות ניקוד כש״ג', actions: [], forms: [], lists: [{ h: 'מבחן כש״ג רגיל — טבלאות ניקוד (לקריאה בלבד)', m: 'fitness.reference', a: CID, view: function (d, box) {
-    var ok = d.status === 'APPROVED';
+    var ok = d.status === 'APPROVED'; sourcesBox(box);
     box.append(h('div', { class: ok ? 'card' : 'notice', style: ok ? 'display:block' : 'font-weight:600', role: 'status' }, [h('div', { text: ok ? 'גרסת ניקוד מאושרת: ' + (d.version && d.version.label || '') + (d.version && d.version.approved_at ? ' · אושרה ' + fmtD(d.version.approved_at) : '') : 'טבלאות לא מאושרות — לא משמשות לחישוב ציון רשמי' }), ok ? null : h('div', { style: 'font-weight:400', text: d.warning })]));
     kv(box, [['סוג מבחן', d.test_type], ['משקלות', Object.keys(d.weights || {}).map(function (k) { return (d.weight_labels[k] || k) + ' ' + d.weights[k] + '%'; }).join(' · ')], ['מקור', ok ? 'גרסה מאושרת במערכת' : d.source === 'draft_version' ? 'טיוטה שנטענה למערכת (לא מאושרת)' : 'תמלול טיוטה מתמונות המקור (לא נטען, לא מאושר)'], ['כלל מתח בנים', d.rule_note]]);
     if ((d.missing_tables || []).length) box.append(h('div', { class: 'notice', text: 'טבלאות חסרות: ' + d.missing_tables.map(function (m) { return m.gender_label + ' — ' + m.component_label; }).join(' · ') }));

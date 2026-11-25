@@ -34,6 +34,22 @@ export function authFor(env, db, now) {
       if (!res[0].meta.changes) throw new AuthError('FORBIDDEN', 'לא מורשה.');
       return { enrollToken: tok };
     },
+    /** ADMIN RECOVERY (owner-only): needs the separate Worker secret ADMIN_RECOVERY_TOKEN (>= 32 chars, chosen by the owner in Cloudflare, never in chat/repo). It is NOT the first-set-up token. Single use per value
+     *  (its hash is remembered), IP rate-limited, audited. Effect: the targeted ADMIN (the e-mail given, else the oldest admin) goes back to 'invited', PIN hash cleared, sessions revoked, fresh single-use link issued.
+     *  Nothing is deleted; no PIN is written by anyone but the owner; no bypass of authorisation. */
+    async recover(p, ip) {
+      await A.rate(ip, 'rec', 5); const rt = String(env.ADMIN_RECOVERY_TOKEN || ''), given = String(p.token || '');
+      if (rt.length < 32 || !eq(given, rt)) { await A.audit('recover_denied', {}).run(); throw new AuthError('FORBIDDEN', 'לא מורשה.'); }
+      const rh = await sha256Hex('recover|' + rt), used = await db.prepare('SELECT 1 AS x FROM meta WHERE tbl = ?1').bind('recovery_used|' + rh).first();
+      if (used) { await A.audit('recover_reuse', {}).run(); throw new AuthError('FORBIDDEN', 'קוד השחזור כבר נוצל. הגדירו ערך חדש ב-Cloudflare.'); }
+      const email = normEmail(p.email); let u = email ? await db.prepare("SELECT id FROM users WHERE email_h = ?1 AND role = 'admin'").bind(await emailH(email)).first() : null;
+      if (!u) u = await db.prepare("SELECT id FROM users WHERE role = 'admin' ORDER BY created_at, rowid LIMIT 1").first(); if (!u) throw new AuthError('NOT_FOUND', 'לא נמצא מנהל לשחזור.');
+      const tok = randToken(32);
+      await db.batch([db.prepare("UPDATE users SET status = 'invited', active = 1, access_h = NULL, fails = 0, locked_until = 0, lock_count = 0 WHERE id = ?1").bind(u.id), db.prepare('UPDATE sessions SET revoked = 1 WHERE user_id = ?1').bind(u.id),
+        db.prepare('UPDATE enroll SET used = 1 WHERE user_id = ?1 AND used = 0').bind(u.id), db.prepare('INSERT INTO enroll (h, user_id, exp) VALUES (?1, ?2, ?3)').bind(await sha256Hex('enroll|' + tok), u.id, t() + CFG.enrollTtlMs),
+        db.prepare('INSERT INTO meta (tbl, ver) VALUES (?1, 1)').bind('recovery_used|' + rh), A.audit('admin_recover', { user: u.id })]);
+      return { enrollToken: tok };
+    },
     async register(p, ip) {
       await A.rate(ip, 'reg'); const email = normEmail(p.email), name = String(p.fullName || '').trim(); if (!email || name.length < 2 || name.length > 80) throw new AuthError('INVALID', 'שם ואימייל תקינים נדרשים.');
       const pend = await db.prepare("SELECT COUNT(*) AS n FROM users WHERE status = 'pending'").first(); if (pend.n >= CFG.maxPending) throw new AuthError('RATE_LIMITED', 'יותר מדי בקשות ממתינות. פנו למנהל.');

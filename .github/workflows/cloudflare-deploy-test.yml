@@ -106,6 +106,7 @@ jobs:
         working-directory: cloudflare/free-shared-test
         env:
           OPTIONAL_FIRST_ADMIN_TOKEN: ${{ secrets.WORKER_FIRST_ADMIN_TOKEN }}
+          OPTIONAL_RECOVERY_TOKEN: ${{ secrets.WORKER_ADMIN_RECOVERY_TOKEN }}
         run: |
           set -euo pipefail
           have="$(npx wrangler secret list --config wrangler.deploy.toml --format json)"
@@ -119,6 +120,18 @@ jobs:
           if [ -n "${OPTIONAL_FIRST_ADMIN_TOKEN:-}" ] && ! echo "$have" | grep -q '"BOOTSTRAP_TOKEN"'; then
             printf '%s' "$OPTIONAL_FIRST_ADMIN_TOKEN" | npx wrangler secret put BOOTSTRAP_TOKEN --config wrangler.deploy.toml >/dev/null; echo "first-admin token forwarded to Cloudflare"
           fi
+          # Optional owner-only admin RECOVERY value (a different secret from the set-up token). Forwarded when present; the Worker refuses reuse of a value it has already honoured.
+          if [ -n "${OPTIONAL_RECOVERY_TOKEN:-}" ]; then
+            printf '%s' "$OPTIONAL_RECOVERY_TOKEN" | npx wrangler secret put ADMIN_RECOVERY_TOKEN --config wrangler.deploy.toml >/dev/null; echo "recovery value forwarded to Cloudflare"
+          fi
+      - name: D1 account-state diagnostic (READ-ONLY, counts only - no e-mail, no hash, no token is selected or printed)
+        continue-on-error: true
+        working-directory: cloudflare/free-shared-test
+        run: |
+          q() { npx wrangler d1 execute DB --remote --config wrangler.deploy.toml --json --command "$1" 2>&1 | head -c 2500; echo; }
+          echo "users by role/status/active/has-pin:"; q "SELECT role, status, active, (access_h IS NOT NULL) AS has_pin, COUNT(*) AS n FROM users GROUP BY 1,2,3,4"
+          echo "enrolment links total/used:"; q "SELECT COUNT(*) AS total, COALESCE(SUM(used),0) AS used FROM enroll"
+          echo "audit events by type:"; q "SELECT ev, COUNT(*) AS n FROM audit GROUP BY ev ORDER BY n DESC LIMIT 25"
       - name: Smoke test (read-only; fail-closed; READY / NOT_READY_EXPECTED / FAIL)
         env:
           URL: ${{ steps.deploy.outputs.url }}

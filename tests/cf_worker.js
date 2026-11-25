@@ -124,6 +124,23 @@ await T('S24 PIN-only pilot login: exactly 4 digits; weak PINs refused WITHOUT c
       assert.equal((await L({}))._status, 401, 'no PIN'); assert.equal((await L({ pin: '7392' }))._status, 401, 'wrong PIN');
       const in1 = await L({ pin: '7391' }); assert.ok(in1.ok, JSON.stringify(in1)); const in2 = await L({ pin: '7391' }); assert.ok(in2.ok, 're-login on another device works');
       for (let i = 0; i < 5; i++) await L({ pin: '1357' }); const lk = await L({ pin: '7391' }); assert.equal(lk._status, 423, 'locked temporarily even with the right PIN'); });
+  await T('S26 ADMIN RECOVERY: needs its own owner-set secret (not the set-up token); wrong/absent = 403; admin goes back to invited (sessions revoked, old PIN void), data untouched; owner picks a new PIN; a used recovery value cannot be replayed', async () => {
+      const LS = require('../scripts/cf_local_server.js'), RT = 'owner-recovery-secret-0123456789abcdefXYZ', BT = 'local-bootstrap-token-0123456789', none = await LS.start({}), srv = await LS.start({ recoveryToken: RT });
+      const mk = o => async (m, p0, body, jar) => { const r = await fetch(o.origin + p0, { method: m, headers: Object.assign({ 'content-type': 'application/json', origin: o.origin }, jar && jar.c ? { cookie: jar.c } : {}, jar && jar.csrf ? { 'x-csrf-token': jar.csrf } : {}), body: m === 'POST' ? JSON.stringify(body || {}) : undefined }); const j = await r.json().catch(() => ({})); j._status = r.status; const sc = r.headers.get('set-cookie'); if (sc && jar) jar.c = sc.split(';')[0]; if (j.csrf && jar) jar.csrf = j.csrf; return j; };
+      try {
+        const n = mk(none); assert.equal((await n('GET', '/auth/status')).recoveryEnabled, false); assert.equal((await n('POST', '/auth/recover', { token: RT }))._status, 403, 'no secret configured = refused');
+        const c = mk(srv), jar = {}; assert.equal((await c('GET', '/auth/status')).recoveryEnabled, true);
+        const b = await c('POST', '/auth/bootstrap', { token: BT, fullName: 'מנהל', email: 'owner@example.test' }); assert.ok((await c('POST', '/auth/enroll/confirm', { token: b.enrollToken, pin: '4826' })).ok);
+        const li = await c('POST', '/auth/login', { email: 'owner@example.test', pin: '4826' }, jar); assert.ok(li.ok); assert.ok((await c('POST', '/api', { method: 'whoAmI', args: {} }, jar))._status !== 401, 'session works before recovery');
+        assert.equal((await c('POST', '/auth/recover', { token: BT }))._status, 403, 'the SET-UP token cannot recover'); assert.equal((await c('POST', '/auth/recover', { token: 'z'.repeat(40) }))._status, 403);
+        const r = await c('POST', '/auth/recover', { token: RT }); assert.ok(r.ok && r.enrollToken, JSON.stringify(r));
+        assert.equal((await c('POST', '/api', { method: 'whoAmI', args: {} }, jar))._status, 401, 'old session revoked'); assert.equal((await c('POST', '/auth/login', { email: 'owner@example.test', pin: '4826' }))._status, 401, 'old PIN void until re-enrolment');
+        assert.equal((await c('GET', '/auth/status')).needsSetup, true, 'no active admin while waiting');
+        assert.equal((await c('POST', '/auth/recover', { token: RT }))._status, 403, 'the same recovery value cannot be replayed');
+        assert.equal((await c('POST', '/auth/enroll/confirm', { token: r.enrollToken, pin: '1111' }))._status, 400, 'weak PIN refused'); assert.ok((await c('POST', '/auth/enroll/confirm', { token: r.enrollToken, pin: '5938' })).ok);
+        const again = await c('POST', '/auth/login', { email: 'owner@example.test', pin: '5938' }, {}); assert.ok(again.ok && again.role === 'admin', 'the SAME admin signs in with the new PIN');
+        assert.equal((await c('POST', '/auth/recover', { token: RT }))._status, 403); const aud = (await c('GET', '/audit', null, { c: undefined })); 
+      } finally { await none.close(); await srv.close(); } });
   await T('S25 interrupted first-admin set-up can be RESUMED: same account, nothing deleted, fresh link, old link void; needs the deployment token; not possible once an admin is active', async () => {
       const LS = require('../scripts/cf_local_server.js'), srv = await LS.start({}); try {
         const call = async (m, p0, body) => { const r = await fetch(srv.origin + p0, { method: m, headers: { 'content-type': 'application/json', origin: srv.origin }, body: m === 'POST' ? JSON.stringify(body || {}) : undefined }); const j = await r.json().catch(() => ({})); j._status = r.status; return j; };

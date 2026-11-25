@@ -90,6 +90,11 @@
 - **404 על `/settings/environments` כשיש admin** נובע בדרך כלל מהתחברות לחשבון GitHub אחר בדפדפן הפנימי של אפליקציה. מסלול אמין: **Safari** (לא דפדפן פנימי) → github.com → כניסה כ-`maslul-2027` (לוודא בתפריט הפרופיל) → אותיות aA בשורת הכתובת → **Request Desktop Website** → https://github.com/maslul-2027/maslul-2027/settings/environments/new → שם `cloudflare-test` → Required reviewers = `maslul-2027`, **Prevent self-review כבוי**, Deployment branches = Selected → `cloudflare/free-shared-test`. סודות Cloudflare לא מוגדרים בשלב זה; `CF_DEPLOY_ENABLED` לא מוגדר.
 - **אימות לאחר היצירה (למנהל, מכל מחשב מחובר כבעלים):** `gh api repos/maslul-2027/maslul-2027/environments/cloudflare-test --jq '{p:.protection_rules,b:.deployment_branch_policy}'` ו-`…/environments/cloudflare-test/deployment-branch-policies`.
 
+### שחזור גישת מנהל (בעלים בלבד; החלטת 25.11.2026)
+- **למה:** אם מנהל קיים אך אי אפשר להיכנס (PIN אבד / נקבע בגרסה קודמת / סוד pepper הוחלף), הגדרה ראשונית לא תעזור (`needsSetup:false` = יש מנהל פעיל).
+- **איך (בלי למחוק נתונים, בלי לעקוף הרשאות):** סוד Worker **נפרד** `ADMIN_RECOVERY_TOKEN` (32+ תווים שהבעלים בוחר ב-Cloudflare; אינו אסימון ההתקנה שנחשף בצ'אט). במסך הכניסה: "שכחתי PIN / שחזור גישת מנהל" → קוד השחזור (+אימייל אופציונלי; ריק = המנהל הוותיק ביותר). השרת מחזיר את המנהל למצב `invited`, מנקה את ה-PIN, מבטל את הסשנים שלו ומנפיק קישור חד-פעמי לבחירת PIN חדש. ערך שחזור שנוצל **נחסם לשימוש חוזר** (יש להגדיר ערך חדש); הגבלת קצב ו-audit. אין כתיבת PIN ישירה ל-D1.
+- בדיקה: S26 (בלי סוד/אסימון התקנה/ערך שגוי = 403; סשן ישן מבוטל; PIN ישן פסול; PIN חדש; אין replay).
+
 ### D1, מכסות, שחזור
 - **D1:** נוצר/נמצא אוטומטית על ידי ה-workflow (`maslul-test-db`, binding `DB`); הסכמה נוצרת על ידי ה-Worker בפנייה הראשונה. אם `d1 create` נכשל בהרשאה: Cloudflare → Storage & Databases → D1 → Create `maslul-test-db`, ואז Re-run.
 - **מכסות Free לאימות אחרי חיבור:** Worker 10ms CPU ו-100K בקשות/יום; D1 5M קריאות / 100K כתיבות ליום, 5GB לחשבון, 500MB למסד; חריגה נחסמת ואינה מחויבת. לבדוק בלוח Metrics של ה-Worker ושל D1 תוך כדי בדיקה סינתטית.

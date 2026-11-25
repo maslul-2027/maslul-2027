@@ -48,22 +48,25 @@
   function loginUI(needsSetup) {
     var msg = el('div', { role: 'alert', id: 'auMsg', 'aria-live': 'assertive' }), mode = 'login';
     var em = mkInput('auEmail', 'email', 'אימייל', { autocomplete: 'username', inputmode: 'email' }), ac = mkInput('auCode', 'password', 'קוד אישי (PIN) בן 4 ספרות', { autocomplete: 'current-password', maxlength: '4', inputmode: 'numeric', pattern: '[0-9]*', class: 'pin-input' });
-    var nm = mkInput('auName', 'text', 'שם מלא', { dir: 'rtl', autocomplete: 'name' }), bt = mkInput('auBoot', 'password', 'אסימון התקנה (BOOTSTRAP_TOKEN)', { autocomplete: 'off' });
+    var rl = null, rc = mkInput('auRec', 'password', 'קוד שחזור (שהגדרתם ב-Cloudflare)', { autocomplete: 'off' }), nm = mkInput('auName', 'text', 'שם מלא', { dir: 'rtl', autocomplete: 'name' }), bt = mkInput('auBoot', 'password', 'אסימון התקנה (BOOTSTRAP_TOKEN)', { autocomplete: 'off' });
     var go = el('button', { class: 'primary', type: 'submit', id: 'auGo', text: 'כניסה' }), tabs = [['login', 'כניסה'], ['register', 'בקשת גישה']].concat(needsSetup ? [['setup', 'הגדרה ראשונית']] : []), tb = {};
-    var form = el('form', { novalidate: 'true' }, [nm.f, em.f, ac.f, bt.f, go]), hint = el('p', { class: 'auth-hint', id: 'auHint' }), bar = el('div', { class: 'seg', role: 'group', 'aria-label': 'מצב' }, tabs.map(function (t) { var b = el('button', { type: 'button', id: 'auTab_' + t[0], text: t[1], 'aria-pressed': 'false' }); b.onclick = function () { setMode(t[0]); }; tb[t[0]] = b; return b; }));
-    var HINTS = { login: 'היכנסו עם האימייל וקוד ה-PIN האישי שלכם בן 4 הספרות. אחרי 5 ניסיונות שגויים החשבון ננעל זמנית.', register: 'השאירו שם מלא ואימייל. המנהל יאשר פעם אחת וישלח לכם קישור חד־פעמי; בו תבחרו PIN ותכנסו כרגיל.', setup: 'הגדרה ראשונית — רק למנהל הראשון. נדרש אסימון ההתקנה שהוגדר ב-Cloudflare. אם כבר התחלתם והתעכבתם באמצע — הזינו אותו שוב כאן והמשיכו מאותו חשבון, בלי ליצור חדש ובלי למחוק נתונים.' };
-    function setMode(m) { mode = m; hint.textContent = HINTS[m]; ac.i.className = 'pin-input'; nm.f.hidden = m === 'login'; ac.f.hidden = m !== 'login'; bt.f.hidden = m !== 'setup'; go.textContent = m === 'login' ? 'כניסה' : m === 'register' ? 'בקשת גישה' : 'יצירת מנהל ראשון'; Object.keys(tb).forEach(function (k) { tb[k].setAttribute('aria-pressed', String(k === m)); }); msg.textContent = ''; msg.className = ''; }
+    var form = el('form', { novalidate: 'true' }, [nm.f, em.f, ac.f, bt.f, rc.f, go]), hint = el('p', { class: 'auth-hint', id: 'auHint' }), bar = el('div', { class: 'seg', role: 'group', 'aria-label': 'מצב' }, tabs.map(function (t) { var b = el('button', { type: 'button', id: 'auTab_' + t[0], text: t[1], 'aria-pressed': 'false' }); b.onclick = function () { setMode(t[0]); }; tb[t[0]] = b; return b; }));
+    var HINTS = { login: 'היכנסו עם האימייל וקוד ה-PIN האישי שלכם בן 4 הספרות. אחרי 5 ניסיונות שגויים החשבון ננעל זמנית.', register: 'השאירו שם מלא ואימייל. המנהל יאשר פעם אחת וישלח לכם קישור חד־פעמי; בו תבחרו PIN ותכנסו כרגיל.', recover: 'שחזור גישת מנהל: הזינו את קוד השחזור שהגדרתם ב-Cloudflare (סוד ADMIN_RECOVERY_TOKEN) ואת אימייל המנהל (אפשר להשאיר ריק — ישוחזר המנהל הראשון). תקבלו קישור חד־פעמי לבחירת PIN חדש. שום נתון לא נמחק.',
+      setup: 'הגדרה ראשונית — רק למנהל הראשון. נדרש אסימון ההתקנה שהוגדר ב-Cloudflare. אם כבר התחלתם והתעכבתם באמצע — הזינו אותו שוב כאן והמשיכו מאותו חשבון, בלי ליצור חדש ובלי למחוק נתונים.' };
+    function setMode(m) { mode = m; hint.textContent = HINTS[m]; ac.i.className = 'pin-input'; nm.f.hidden = m === 'login'; ac.f.hidden = m !== 'login'; bt.f.hidden = m !== 'setup'; rc.f.hidden = m !== 'recover'; nm.f.hidden = m === 'login' || m === 'recover'; go.textContent = m === 'login' ? 'כניסה' : m === 'register' ? 'בקשת גישה' : m === 'recover' ? 'שחזור גישת מנהל' : 'יצירת מנהל ראשון'; if (rl) rl.hidden = m === 'recover'; Object.keys(tb).forEach(function (k) { tb[k].setAttribute('aria-pressed', String(k === m)); }); msg.textContent = ''; msg.className = ''; }
     setMode('login');
     form.addEventListener('submit', function (e) {
       e.preventDefault(); var say = note(msg); go.disabled = true; go.setAttribute('aria-busy', 'true');
-      var req = mode === 'login' ? http('POST', '/auth/login', { email: em.i.value, pin: ac.i.value }) : mode === 'register' ? http('POST', '/auth/register', { fullName: nm.i.value, email: em.i.value }) : http('POST', '/auth/bootstrap', { token: bt.i.value, fullName: nm.i.value, email: em.i.value });
-      req.then(function (r) { go.disabled = false; go.removeAttribute('aria-busy'); ac.i.value = ''; bt.i.value = '';
+      var req = mode === 'recover' ? http('POST', '/auth/recover', { token: rc.i.value, email: em.i.value }) : mode === 'login' ? http('POST', '/auth/login', { email: em.i.value, pin: ac.i.value }) : mode === 'register' ? http('POST', '/auth/register', { fullName: nm.i.value, email: em.i.value }) : http('POST', '/auth/bootstrap', { token: bt.i.value, fullName: nm.i.value, email: em.i.value });
+      req.then(function (r) { go.disabled = false; go.removeAttribute('aria-busy'); ac.i.value = ''; bt.i.value = ''; rc.i.value = '';
         if (!r.ok) { say(r.message || 'הפעולה נכשלה.'); msg.className = 'msg err'; return; }
         if (mode === 'register') { msg.textContent = 'הבקשה נשלחה. המנהל יאשר אותה וישלח לכם קישור הצטרפות.'; msg.className = 'msg ok'; return; }
-        if (mode === 'setup') { enrollUI(r.enrollToken); return; }
+        if (mode === 'setup' || mode === 'recover') { enrollUI(r.enrollToken); return; }
         CSRF = r.csrf || ''; try { sessionStorage.setItem(SK, CSRF); } catch (x) {} location.reload(); });
     });
-    screen(banner().concat([bar, hint, form, msg])); setTimeout(function () { em.i.focus(); }, 50);
+    rl = el('button', { type: 'button', id: 'auRecLink', class: 'linkbtn', text: 'שכחתי PIN / שחזור גישת מנהל' }); rl.onclick = function () { setMode('recover'); }; var back = el('button', { type: 'button', id: 'auBack', class: 'linkbtn', text: 'חזרה לכניסה', hidden: 'true' }); back.onclick = function () { setMode('login'); };
+    var _sm = setMode; setMode = function (m) { _sm(m); back.hidden = m !== 'recover'; }; setMode('login');
+    screen(banner().concat([bar, hint, form, msg, el('div', { class: 'auth-links' }, [rl, back])])); setTimeout(function () { em.i.focus(); }, 50);
   }
   function enrollUI(token) {
     var msg = el('div', { role: 'alert', id: 'enMsg', 'aria-live': 'assertive' }), box = el('div', {});
