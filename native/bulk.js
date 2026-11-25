@@ -6,7 +6,7 @@
   var BULK = {};
   var bulkLeave = null;   // { dirty: fn } while a group-entry screen holds unsaved input
   function numParse(v) { var t = String(v === null || v === undefined ? '' : v).trim().replace(',', '.'); if (t === '') return { blank: true }; if (!/^-?\d+(\.\d+)?$/.test(t)) return { bad: true }; return { n: Number(t) }; }
-  function cv(c, raw) { var t = String(raw === null || raw === undefined ? '' : raw).trim(); if (t === '') return null; if (c.t === 'time') return /^\d{1,3}:[0-5]\d$/.test(t) ? t : undefined; var p = numParse(t); return p.bad ? undefined : p.n; }   // null = empty, undefined = invalid
+  function cv(c, raw) { var t = String(raw === null || raw === undefined ? '' : raw).trim(); if (t === '') return null; if (c.t === 'sel' || c.t === 'txt') return t; if (c.t === 'time') return /^\d{1,3}:[0-5]\d$/.test(t) ? t : undefined; var p = numParse(t); return p.bad ? undefined : p.n; }   // null = empty, undefined = invalid
   function eqv(a, b) { return a === b || (a === null && b === null); }
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function BulkEntry(cfg) {
@@ -22,7 +22,7 @@
     function shared() { var o = {}; cfg.shared.forEach(function (f) { var el = $('#be_' + f.n); o[f.n] = el ? el.value : (sh[f.n] || ''); }); return o; }
     function sharedErr(o) { var e = ''; cfg.shared.forEach(function (f) { if (e) return; var v = o[f.n]; if (f.req && String(v).trim() === '') { e = 'יש למלא: ' + f.l; return; } if (f.t === 'number' && String(v).trim() !== '') { var p = numParse(v); if (p.bad) { e = f.l + ': ערך לא תקין'; return; } if (f.min !== undefined && p.n < f.min) e = f.l + ': מינימום ' + f.min; else if (f.max !== undefined && p.n > f.max) e = f.l + ': מקסימום ' + f.max; else if (f.int && !Number.isInteger(p.n)) e = f.l + ': מספר שלם'; else if (f.step && Math.abs(p.n / f.step - Math.round(p.n / f.step)) > 1e-9) e = f.l + ': בקפיצות של ' + f.step; } }); return e; }
     /* per-cell validation → message or '' */
-    function cellErr(r, c, o) { var raw = colVal(r, c), v = cv(c, raw); if (v === null) return ''; if (v === undefined) return c.t === 'time' ? 'פורמט דק׳:שנ׳ (למשל 13:05)' : 'ערך לא תקין'; if (c.t === 'time') return ''; var min = c.min, max = typeof c.max === 'string' ? numParse(o[c.max]).n : c.max; if (min !== undefined && v < min) return 'מינימום ' + min; if (max !== undefined && max !== null && !isNaN(max) && v > max) return 'מקסימום ' + max; if (c.int && !Number.isInteger(v)) return 'מספר שלם'; return ''; }
+    function cellErr(r, c, o) { var raw = colVal(r, c), v = cv(c, raw); if (v === null) return ''; if (c.t === 'txt') return c.max_len && v.length > c.max_len ? 'עד ' + c.max_len + ' תווים' : ''; if (c.t === 'sel') return c.o.some(function (x) { return x[0] === v; }) ? '' : 'ערך לא תקין'; if (v === undefined) return c.t === 'time' ? 'פורמט דק׳:שנ׳ (למשל 13:05)' : 'ערך לא תקין'; if (c.t === 'time') return ''; var min = c.min, max = typeof c.max === 'string' ? numParse(o[c.max]).n : c.max; if (min !== undefined && v < min) return 'מינימום ' + min; if (max !== undefined && max !== null && !isNaN(max) && v > max) return 'מקסימום ' + max; if (c.int && !Number.isInteger(v)) return 'מספר שלם'; return ''; }
     /* row status: saved | edited | new | partial | invalid | failed | skip | empty | locked */
     function statusOf(r) {
       var o = shared(), reqCols = cfg.cols.filter(function (c) { return c.req; }), filled = cfg.cols.filter(function (c) { return String(colVal(r, c)).trim() !== ''; }).length, need = cfg.minFilled || reqCols.length || 1;
@@ -31,6 +31,7 @@
       if (r.fail) return { k: 'failed', t: 'נכשל: ' + r.fail };
       if (r.pending) return { k: 'pending', t: 'בקשת תיקון נשלחה לאישור' };
       for (var i = 0; i < cfg.cols.length; i++) { var e = cellErr(r, cfg.cols[i], o); if (e) return { k: 'invalid', t: cfg.cols[i].l + ': ' + e }; }
+      if (cfg.rowErr && !r.state) { var re = cfg.rowErr(function (n) { var cc = cfg.cols.filter(function (x) { return x.n === n; })[0]; return cc ? cv(cc, colVal(r, cc)) : null; }); if (re) return { k: 'invalid', t: re }; }
       if (r.rec) { var same = cfg.cols.every(function (c) { return eqv(cv(c, colVal(r, c)), cv(c, r.orig[c.n])); }) && sharedSame(r, o);
         if (!r.editable) return { k: 'locked', t: 'נשמר · של מפקד אחר (לא ניתן לעריכה כאן)' }; if (same) return { k: 'saved', t: 'נשמר ✓' }; if (missing) return { k: 'partial', t: lack() }; return { k: 'edited', t: isAdmin() ? 'שונה — יישמר כתיקון' : 'שונה — תישלח בקשת תיקון' }; }
       if (r.state) return { k: 'skip', t: r.state === 'absent' ? 'נעדר — לא נבחן, אין ציון' : 'פטור — לא נבחן, אין ציון' };
@@ -54,13 +55,13 @@
     function makeRow(s) {
       var r = { s: s, vals: {}, state: '', rec: null, orig: null, cells: [], touched: false, fail: '', pending: false, editable: true };
       var nm = h('button', { class: 'be-name linkbtn', type: 'button', text: s.full_name, title: 'פתיחת כרטיס החניך', onclick: function () { go('soldier/' + s.id); } });
-      var cells = cfg.cols.map(function (c, ci) { var inp = h('input', { class: 'be-in', id: 'be_' + s.id + '_' + c.n, inputmode: c.t === 'time' ? 'numeric' : c.int ? 'numeric' : 'decimal', autocomplete: 'off', enterkeyhint: 'next', maxlength: '8', placeholder: c.t === 'time' ? 'ד:שש' : null, 'aria-label': s.full_name + ' — ' + c.l, dir: 'ltr' });
-        inp.addEventListener('input', function () { r.vals[c.n] = inp.value; r.touched = true; r.fail = ''; paintRow(r); paintProgress(); if (filt.st !== 'all') applyFilter(); });
+      var cells = cfg.cols.map(function (c, ci) { var inp = c.t === 'sel' ? h('select', { class: 'be-in', id: 'be_' + s.id + '_' + c.n, 'aria-label': s.full_name + ' — ' + c.l }, [['', '—']].concat(c.o).map(function (o) { return h('option', { value: o[0], text: o[1] }); })) : c.t === 'txt' ? h('input', { class: 'be-in', id: 'be_' + s.id + '_' + c.n, autocomplete: 'off', enterkeyhint: 'next', maxlength: String(c.max_len || 300), 'aria-label': s.full_name + ' — ' + c.l, placeholder: c.l }) : h('input', { class: 'be-in', id: 'be_' + s.id + '_' + c.n, inputmode: c.t === 'time' ? 'numeric' : c.int ? 'numeric' : 'decimal', autocomplete: 'off', enterkeyhint: 'next', maxlength: '8', placeholder: c.t === 'time' ? 'ד:שש' : null, 'aria-label': s.full_name + ' — ' + c.l, dir: 'ltr' });
+        inp.addEventListener(c.t === 'sel' ? 'change' : 'input', function () { r.vals[c.n] = inp.value; r.touched = true; r.fail = ''; paintRow(r); paintProgress(); if (filt.st !== 'all') applyFilter(); });
         inp.addEventListener('keydown', function (e) { var i = rows.indexOf(r); if (e.key === 'Enter' || e.key === 'ArrowDown') { e.preventDefault(); var n = nextVisible(i, 1); if (n) focusCell(n, ci); else if (e.key === 'Enter' && ci + 1 < cfg.cols.length) { var f = rows.filter(function (x) { return !x.node.hidden; })[0]; focusCell(f, ci + 1); } else { var sv = $('#beSave'); if (sv && !sv.disabled) sv.focus(); } } else if (e.key === 'ArrowUp') { e.preventDefault(); focusCell(nextVisible(i, -1), ci); } });
         var lab = h('label', { class: 'be-cell', for: inp.id }, [h('span', { class: 'be-lab', text: c.l }), inp]); r.cells.push({ c: c, inp: inp }); return lab; });
       var sel = h('select', { class: 'be-state', 'aria-label': s.full_name + ' — מצב' }, [['', 'מצב: להזנה'], ['absent', 'נעדר'], ['exempt', 'פטור']].map(function (o) { return h('option', { value: o[0], text: o[1] }); }));
       sel.addEventListener('change', function () { r.state = sel.value; r.touched = true; if (r.state) { cfg.cols.forEach(function (c) { r.vals[c.n] = ''; }); r.cells.forEach(function (x) { x.inp.value = ''; }); } paintRow(r); paintProgress(); });
-      r.sel = sel; r.msg = h('div', { class: 'be-msg', 'aria-live': 'polite' });
+      if (cfg.noState) sel.hidden = true; r.sel = sel; r.msg = h('div', { class: 'be-msg', 'aria-live': 'polite' });
       r.node = h('div', { class: 'be-row be-empty', 'data-sid': s.id }, [h('div', { class: 'be-who' }, [nm, h('small', { class: 'muted', text: (s.team_name || s.department_name || '').replace(/\s*\(זמני\)/g, '') })]), h('div', { class: 'be-cells' }, cells), sel, r.msg]);
       return r;
     }
@@ -184,3 +185,63 @@
       createArgs: function (s, v, o, req) { var d = { request_id: req, soldier_id: s.id, test_date: o.test_date, weapon_type: o.weapon_type.trim(), distance_m: numParse(o.distance_m).n, weapon_zeroed: o.weapon_zeroed === 'true', notes: '' }; d[col] = v[col]; return { courseId: S.course.id, data: d }; } };
   }
   BULK.mk = mkCfg('regular'); BULK.ylm = mkCfg('ylm');
+
+  /* ---- readiness: group status update (quick marking). A new status is a NEW record (history is kept); the activity-limit text never carries a diagnosis ---- */
+  BULK.readiness = {
+    domain: 'readiness', back: 'd/readiness', title: 'עדכון כשירות מבצעית — קבוצתי', table: 'ReadinessRecords', createM: 'readiness.assess', pre: [], noState: true, minFilled: 1,
+    shared: [{ n: 'start_date', l: 'בתוקף מתאריך', t: 'date', req: 1, def: 'today' }, { n: 'next_review_date', l: 'מועד בדיקה הבא (אופציונלי)', t: 'date' }],
+    sharedEdit: [],
+    cols: [{ n: 'status', l: 'סטטוס', t: 'sel', req: 1, o: [['fit', 'כשיר'], ['fit_with_restrictions', 'כשיר עם מגבלות'], ['unfit', 'לא כשיר']] }, { n: 'restrictions', l: 'מגבלות פעילות (ללא אבחנה)', t: 'txt', max_len: 300 }],
+    rowErr: function (g) { var st = g('status'), rs = g('restrictions'); if (st === 'fit_with_restrictions' && !rs) return 'כשיר עם מגבלות מחייב תיאור מגבלות פעילות'; if (st === 'fit' && rs) return 'כשיר אינו כולל מגבלות'; return ''; },
+    existingKey: function (o) { return /^\d{4}-\d{2}-\d{2}$/.test(o.start_date) ? o.start_date : ''; },
+    existing: function (o, fresh) { return api('readiness.list', { courseId: S.course.id, opts: {} }, fresh ? 'fresh' : undefined).then(function (r) { if (r.ok) r = { ok: true, data: (r.data || []).filter(function (x) { return String(x.start_date).slice(0, 10) === o.start_date; }) }; return r; }); },
+    recVals: function (r) { return { status: r.status, restrictions: r.restrictions || '' }; },
+    createArgs: function (s, v, o, req) { var d = { request_id: req, soldier_id: s.id, status: v.status, restrictions: v.restrictions || '', start_date: o.start_date }; if (o.next_review_date) d.next_review_date = o.next_review_date; return { courseId: S.course.id, data: d }; }
+  };
+
+  /* ---- assignments: move SEVERAL soldiers to one department/team in one controlled action (admin only). Each soldier keeps the server's own reassign rules: audit entry, mandatory reason,
+         optimistic check on the soldier's updated_at (a soldier changed by someone else meanwhile is reported and left untouched), approved-exception flag after the course start. ---- */
+  function BulkReassign() {
+    if (!isAdmin()) return Domain('org');
+    var sel = {}, filt = '', msgBox = h('div', { id: 'brMsg', 'aria-live': 'polite' }), listBox = h('div', { id: 'brList', class: 'be-list' }), saving = false;
+    var dep = h('select', { id: 'brDep' }, ((S.org || {}).departments || []).map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); })), team = h('select', { id: 'brTeam' }), why = h('input', { id: 'brWhy', maxlength: '300' }), ex = h('input', { id: 'brEx', type: 'checkbox', style: 'width:auto;min-height:24px' });
+    function teams() { team.replaceChildren.apply(team, ((S.org || {}).teams || []).filter(function (t) { return t.department_id === dep.value; }).map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, '') }); })); } dep.addEventListener('change', function () { teams(); count(); }); teams(); team.addEventListener('change', count);
+    var q = h('input', { id: 'brQ', type: 'search', placeholder: 'חיפוש חניך', 'aria-label': 'חיפוש חניך' }), cnt = h('strong', { id: 'brCount', 'aria-live': 'polite' }), go1 = h('button', { class: 'primary', type: 'button', id: 'brGo', text: 'העברת החניכים שנבחרו', disabled: true });
+    mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/org'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: 'שיוך קבוצתי של חניכים' }), h('p', { class: 'muted', text: 'בוחרים חניכים, יעד אחד וסיבה אחת. כל חניך נשמר בנפרד ונרשם ביומן; חניך שהשתנה בינתיים אצל מישהו אחר לא ישונה ויוצג בשגיאה.' }), field('מחלקה יעד', dep), field('צוות יעד', team), field('סיבה (חובה)', why), h('label', { class: 'be-inline' }, [ex, h('span', { text: ' חריג מאושר (נדרש אחרי תחילת הקורס)' })]), field('חיפוש', q), cnt, listBox, msgBox, go1], 'שיוך קבוצתי');
+    function names(s) { return (s.department_name || '') + ' · ' + (s.team_name || ''); }
+    var sols = []; ensureSoldiers().then(function () { sols = (cache.soldiers || []).filter(function (x) { return x.active && x.record_status !== 'cancelled'; }); paint(); });
+    function same(s) { return s.department_id === dep.value && s.team_id === team.value; }
+    function count() { var n = Object.keys(sel).filter(function (id) { var s = sols.filter(function (x) { return x.id === id; })[0]; return s && !same(s); }).length; cnt.textContent = n ? 'נבחרו ' + n + ' חניכים להעברה' : 'לא נבחרו חניכים'; go1.disabled = saving || !n || !why.value.trim(); paint(true); }
+    function paint(keep) { var t = q.value.trim().toLowerCase(); listBox.replaceChildren.apply(listBox, sols.filter(function (s) { return !t || (s.full_name || '').toLowerCase().includes(t); }).map(function (s) { var cb = h('input', { type: 'checkbox', id: 'br_' + s.id, style: 'width:auto' }); cb.checked = !!sel[s.id]; cb.disabled = saving || same(s); cb.addEventListener('change', function () { if (cb.checked) sel[s.id] = 1; else delete sel[s.id]; count(); }); return h('label', { class: 'be-row be-pick', for: cb.id }, [cb, h('span', { class: 'be-who' }, [h('strong', { text: s.full_name }), h('small', { class: 'muted', text: names(s) + (same(s) ? ' · כבר ביעד' : '') })])]); })); }
+    q.addEventListener('input', function () { paint(); }); why.addEventListener('input', count);
+    go1.addEventListener('click', function () {
+      var todo = sols.filter(function (s) { return sel[s.id] && !same(s); }); if (!todo.length) return; if (!why.value.trim()) { why.focus(); msgBox.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'יש לציין סיבה.' })); return; }
+      dialog('אישור שיוך קבוצתי', [h('p', { text: 'יועברו ' + todo.length + ' חניכים אל ' + dep.selectedOptions[0].text + ' / ' + team.selectedOptions[0].text + '. כל חניך נרשם ביומן הפעולות.' })], function () { run(todo); return true; }, 'אישור והעברה');
+    });
+    function run(todo) {
+      saving = true; count(); msgBox.replaceChildren(h('p', { class: 'muted', text: 'מעביר ' + todo.length + ' חניכים…' })); var ok = [], fail = [], i = 0;
+      function next() { if (i >= todo.length) return Promise.resolve(); var s = todo[i++]; return api('soldiers.card', { id: s.id }, 'fresh').then(function (cr) { var cur = cr && cr.ok && (cr.data.soldier || cr.data); if (!cur || !cur.updated_at) return { ok: false, message: 'לא ניתן לקרוא את החניך מהשרת' }; if (cur.department_id !== s.department_id || cur.team_id !== s.team_id) return { ok: false, code: 'CONFLICT', message: 'השיוך שונה בינתיים על ידי משתמש אחר — לא שונה' }; return api('soldiers.reassign', { id: s.id, target: { department_id: dep.value, team_id: team.value, approved_exception: ex.checked }, expected_updated_at: cur.updated_at, reason: why.value.trim() }); }).then(function (x) { if (x && x.ok) ok.push(s); else fail.push([s, (x && x.message) || 'נכשל', x && x.code]); }).then(next); }
+      next().then(function () { cache.soldiers = null; return ensureSoldiers(); }).then(function () {
+        saving = false; sols = (cache.soldiers || []).filter(function (x) { return x.active && x.record_status !== 'cancelled'; }); var moved = ok.filter(function (s) { var n = sols.filter(function (y) { return y.id === s.id; })[0]; return n && n.department_id === dep.value && n.team_id === team.value; }); sel = {}; fail.forEach(function (f) { sel[f[0].id] = 1; });
+        msgBox.replaceChildren(h('div', { class: 'msg ' + (fail.length || moved.length !== ok.length ? 'err' : 'ok'), role: 'status', text: 'הועברו ' + moved.length + ' · לא הועברו ' + (fail.length + ok.length - moved.length) + '.' + (moved.length ? ' אומת בשרת.' : '') }), fail.length ? h('ul', { class: 'be-fails' }, fail.map(function (f) { return h('li', { text: f[0].full_name + ' — ' + f[1] + (f[2] === 'CONFLICT' ? ' (רעננו ונסו שוב)' : '') }); })) : h('span')); paint(); count(); if (!fail.length) toast('השיוך עודכן ואומת');
+      });
+    }
+    count();
+  }
+  window.BulkReassign = BulkReassign;
+
+  /* ---- correction requests: handle several pending requests in one pass (admin only). Nothing is pre-selected; every request shows what would change; each decision is its own server call and is reported separately. ---- */
+  function BulkCorrections() {
+    if (!isAdmin()) return Domain('corrections');
+    var sel = {}, items = [], saving = false, list = h('div', { id: 'bcList', class: 'be-list' }), msgBox = h('div', { id: 'bcMsg', 'aria-live': 'polite' }), cnt = h('strong', { id: 'bcCount', 'aria-live': 'polite' });
+    var dec = h('select', { id: 'bcDec' }, [h('option', { value: 'approve', text: 'אישור' }), h('option', { value: 'reject', text: 'דחייה' })]), note = h('input', { id: 'bcNote', maxlength: '300' }), go1 = h('button', { class: 'primary', type: 'button', id: 'bcGo', text: 'החלה על הבקשות שנבחרו', disabled: true });
+    mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go('d/corrections'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: 'טיפול קבוצתי בבקשות תיקון' }), h('p', { class: 'muted', text: 'לא נבחר דבר מראש. כל בקשה מציגה מה ישתנה; ההחלטה נשלחת לכל בקשה בנפרד ומדווחת בנפרד.' }), field('החלטה', dec), field('הערה (אופציונלי)', note), cnt, list, msgBox, go1], 'בקשות תיקון');
+    function load() { return api('correction.list', { courseId: S.course.id, status: 'pending' }, 'fresh').then(function (r) { items = r.ok ? (r.data || []) : []; if (!r.ok) msgBox.replaceChildren(errBox(r)); paint(); }); }
+    function desc(c) { var ch = c.changes || c.patch || c.proposed || {}; var t = ''; try { t = typeof ch === 'string' ? ch : Object.keys(ch).map(function (k) { return k + ': ' + ch[k]; }).join(' · '); } catch (e) {} return (c.table_name || '') + ' · ' + (c.reason || '') + (t ? ' · ' + t : '') + ' · ' + (c.requested_by || ''); }
+    function paint() { cnt.textContent = Object.keys(sel).length ? 'נבחרו ' + Object.keys(sel).length + ' בקשות' : 'לא נבחרו בקשות'; go1.disabled = saving || !Object.keys(sel).length; if (!items.length) { list.replaceChildren(emptyBox('אין בקשות תיקון ממתינות.')); return; } list.replaceChildren.apply(list, items.map(function (c) { var cb = h('input', { type: 'checkbox', id: 'bc_' + c.id, style: 'width:auto' }); cb.checked = !!sel[c.id]; cb.disabled = saving; cb.addEventListener('change', function () { if (cb.checked) sel[c.id] = 1; else delete sel[c.id]; paint(); }); return h('label', { class: 'be-row be-pick', for: cb.id }, [cb, h('span', { class: 'be-who' }, [h('strong', { text: desc(c) })])]); })); }
+    go1.addEventListener('click', function () { var todo = items.filter(function (c) { return sel[c.id]; }); if (!todo.length) return; dialog('אישור טיפול קבוצתי', [h('p', { text: (dec.value === 'approve' ? 'יאושרו ' : 'יידחו ') + todo.length + ' בקשות תיקון.' })], function () { run(todo); return true; }, 'אישור', dec.value === 'reject'); });
+    function run(todo) { saving = true; paint(); var ok = [], fail = [], i = 0; function next() { if (i >= todo.length) return Promise.resolve(); var c = todo[i++]; return api('correction.review', { requestId: c.id, decision: dec.value, note: note.value.trim() }).then(function (x) { if (x && x.ok) ok.push(c); else fail.push([c, (x && x.message) || 'נכשל']); }).then(next); }
+      next().then(function () { sel = {}; fail.forEach(function (f) { sel[f[0].id] = 1; }); return load(); }).then(function () { saving = false; var still = ok.filter(function (c) { return items.some(function (x) { return x.id === c.id; }); }).length; msgBox.replaceChildren(h('div', { class: 'msg ' + (fail.length || still ? 'err' : 'ok'), role: 'status', text: 'טופלו ' + (ok.length - still) + ' · לא טופלו ' + (fail.length + still) + '.' + (ok.length - still ? ' אומת בשרת (הבקשות יצאו מרשימת הממתינות).' : '') }), fail.length ? h('ul', { class: 'be-fails' }, fail.map(function (f) { return h('li', { text: desc(f[0]) + ' — ' + f[1] }); })) : h('span')); paint(); if (!fail.length && !still) toast('הבקשות טופלו ואומתו'); }); }
+    load();
+  }
+  window.BulkCorrections = BulkCorrections;

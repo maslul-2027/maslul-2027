@@ -13,7 +13,7 @@ const CASES=[
  {d:'nav',i:1,fill:{x_soldier_id:{i:1},x_navigation_type_id:{i:1},x_test_date:T,x_distance_km:'3',x_plan_score:'4',x_debrief_score:'4',x_points_completed:'4',x_points_total:'5'},read:T},
  {d:'mk',i:2,fill:{x_soldier_id:{i:1},x_test_date:T,x_weapon_type:'M16',x_distance_m:'100',x_examiner_score:'80'},read:T},
  {d:'marches',i:0,fill:{x_march_date:T,x_location:'מסע בדיקה',x_km_no_stretcher:'10',x_km_stretcher:'2'},tick:'#x_absent input',read:'מסע בדיקה'},
- {d:'readiness',i:0,fill:{x_soldier_id:{i:1},x_status:{i:1},x_start_date:T}},
+ {d:'readiness',i:1,fill:{x_soldier_id:{i:1},x_status:{i:1},x_start_date:T}},
  {d:'events',i:0,fill:{x_soldier_id:{i:1},x_event_date:T,x_event_type:'achievement',x_description:'הישג בדיקה'},read:'הישג בדיקה'},
  {d:'qual',i:0,fill:{x_name:'הסמכת בדיקה',x_completion_terms:'תנאי',x_scope_type:'course'},read:'הסמכת בדיקה'},
  {d:'notes',i:0,fill:{x_soldier_id:{i:1},x_note_text:'הערת בדיקה'}},

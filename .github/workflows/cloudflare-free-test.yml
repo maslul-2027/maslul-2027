@@ -14,6 +14,7 @@ on:
       - 'scripts/e2e_cf_browser.js'
       - 'scripts/e2e_cf_motion.js'
       - 'scripts/e2e_cf_bulk.js'
+      - 'scripts/e2e_cf_bulk_modules.js'
       - 'scripts/cf_auth_screens.js'
       - 'scripts/lib/cf_harness.js'
       - 'tests/cf_*.js'
