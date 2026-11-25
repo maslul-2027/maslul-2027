@@ -1,5 +1,5 @@
 # MASLUL shared TEST — Cloudflare Workers FREE + D1 FREE. SYNTHETIC DATA ONLY. No secrets in this file.
-# Secrets (set once in the Cloudflare dashboard, Settings -> Variables and secrets; never committed):  APP_SECRET (>= 32 random chars)  and  BOOTSTRAP_TOKEN (>= 16 random chars, used once to create the first admin).
+# Secrets (set once in the Cloudflare dashboard, Settings -> Variables and secrets; never committed):  APP_SECRET (>= 32 random chars)  and  BOOTSTRAP_TOKEN (>= 32 random chars, used once to create the first admin).
 name = "maslul-test"
 main = "src/worker.js"
 compatibility_date = "2025-10-11"
