@@ -21,7 +21,7 @@ export function authFor(env, db, now) {
     /** First admin: only while the users table is empty AND with the deployment secret BOOTSTRAP_TOKEN. Returns an enrolment token (same path as every other user). */
     async bootstrap(p, ip) {
       await A.rate(ip, 'boot', 10); const bt = String(env.BOOTSTRAP_TOKEN || '');
-      if (bt.length < 16 || !eq(String(p.token || ''), bt)) { await A.audit('bootstrap_denied', {}).run(); throw new AuthError('FORBIDDEN', 'לא מורשה.'); }
+      if (bt.length < 32 || !eq(String(p.token || ''), bt)) { await A.audit('bootstrap_denied', {}).run(); throw new AuthError('FORBIDDEN', 'לא מורשה.'); }
       const email = normEmail(p.email), name = String(p.fullName || '').trim(); if (!email || name.length < 2 || name.length > 80) throw new AuthError('INVALID', 'שם ואימייל תקינים נדרשים.');
       const id = crypto.randomUUID(), tok = randToken(32), th = await sha256Hex('enroll|' + tok), eh = await emailH(email);
       const res = await db.batch([
