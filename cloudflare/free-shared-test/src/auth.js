@@ -42,8 +42,11 @@ export function authFor(env, db, now) {
       if (rt.length < 32 || !eq(given, rt)) { await A.audit('recover_denied', {}).run(); throw new AuthError('FORBIDDEN', 'לא מורשה.'); }
       const rh = await sha256Hex('recover|' + rt), used = await db.prepare('SELECT 1 AS x FROM meta WHERE tbl = ?1').bind('recovery_used|' + rh).first();
       if (used) { await A.audit('recover_reuse', {}).run(); throw new AuthError('FORBIDDEN', 'קוד השחזור כבר נוצל. הגדירו ערך חדש ב-Cloudflare.'); }
-      const email = normEmail(p.email); let u = email ? await db.prepare("SELECT id FROM users WHERE email_h = ?1 AND role = 'admin'").bind(await emailH(email)).first() : null;
-      if (!u) u = await db.prepare("SELECT id FROM users WHERE role = 'admin' ORDER BY created_at, rowid LIMIT 1").first(); if (!u) throw new AuthError('NOT_FOUND', 'לא נמצא מנהל לשחזור.');
+      // An explicit email must identify THAT admin. Never silently fall back to another account on a typo.
+      // With an empty email, intentionally recover the oldest admin (owner-controlled one-time recovery token required).
+      const email = normEmail(p.email);
+      let u = email ? await db.prepare("SELECT id FROM users WHERE email_h = ?1 AND role = 'admin'").bind(await emailH(email)).first() : await db.prepare("SELECT id FROM users WHERE role = 'admin' ORDER BY created_at, rowid LIMIT 1").first();
+      if (!u) { await A.audit('recover_target_not_found', {}).run(); throw new AuthError('NOT_FOUND', 'לא נמצא מנהל לשחזור לפי הפרטים שהוזנו.'); }
       const tok = randToken(32);
       await db.batch([db.prepare("UPDATE users SET status = 'invited', active = 1, access_h = NULL, fails = 0, locked_until = 0, lock_count = 0 WHERE id = ?1").bind(u.id), db.prepare('UPDATE sessions SET revoked = 1 WHERE user_id = ?1').bind(u.id),
         db.prepare('UPDATE enroll SET used = 1 WHERE user_id = ?1 AND used = 0').bind(u.id), db.prepare('INSERT INTO enroll (h, user_id, exp) VALUES (?1, ?2, ?3)').bind(await sha256Hex('enroll|' + tok), u.id, t() + CFG.enrollTtlMs),
