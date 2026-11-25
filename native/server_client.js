@@ -1,7 +1,7 @@
 /* MASLUL native client — SERVER mode (private TEST). All data/logic is on the authenticated server; identity is the HttpOnly session cookie. SYNTHETIC DATA ONLY.
    Same evidence recording as the preview client (UI vs direct vs gesture) so the 174-route ledger logic applies; no data is stored in the browser except the CSRF token (sessionStorage). */
 (function () {
-  var WRITE = /__WRITE_SRC__/i, CSRF = '', ME = null, calls = {}, live = {}, IDEM = {}, memo = {}, MEMO_MS = 8000, SK = 'maslul_srv_csrf';
+  var WRITE = /__WRITE_SRC__/i, CSRF = '', ME = null, calls = {}, live = {}, IDEM = {}, memo = {}, MEMO_MS = 4000, SK = 'maslul_srv_csrf';
   try { CSRF = sessionStorage.getItem(SK) || ''; calls = JSON.parse(sessionStorage.getItem('maslul_calls') || '{}') || {}; } catch (e) {}
   var lastGesture = 0; ['click', 'change', 'input', 'submit', 'keydown', 'pointerup'].forEach(function (ev) { document.addEventListener(ev, function (e) { if (e.isTrusted) lastGesture = Date.now(); }, true); });
   function rec(m, r, src, gest) { var c = calls[m] || (calls[m] = { ok: 0, ui_ok: 0, direct_ok: 0, gesture_ok: 0, codes: {} }); if (r && r.ok) { c.ok++; if (src === 'direct') c.direct_ok = (c.direct_ok || 0) + 1; else { c.ui_ok = (c.ui_ok || 0) + 1; if (gest) c.gesture_ok = (c.gesture_ok || 0) + 1; } } else { var k = (r && r.code) || 'ERR'; c.codes[k] = (c.codes[k] || 0) + 1; } try { sessionStorage.setItem('maslul_calls', JSON.stringify(calls)); } catch (e) {} }
@@ -18,7 +18,7 @@
       if (wr && ME && ME.role === 'viewer') { var d = { ok: false, code: 'FORBIDDEN', message: 'חשבון צפייה בלבד — אי אפשר לבצע שינויים.' }; rec(method, d, src, gest); return Promise.resolve(d); }
       try { rk = method + '\u0001' + JSON.stringify(a); if (!wr) key = rk; } catch (e) {}
       if (wr) memo = {};   /* any change made through this client drops every remembered read: a screen opened right after a save always shows the saved state */
-      if (key && src !== 'fresh' && memo[key] && Date.now() - memo[key].t < MEMO_MS) { var hit = copy(memo[key].r); rec(method, hit, src, gest); return Promise.resolve(hit); }   /* short-lived read memo: a tab revisited within a few seconds paints at once instead of re-showing a skeleton */
+      if (key && src !== 'fresh' && gest && src !== 'direct' && memo[key] && Date.now() - memo[key].t < MEMO_MS) { var hit = copy(memo[key].r); rec(method, hit, src, gest); client.api(method, a, 'fresh'); return Promise.resolve(hit); }   /* paint from memory at once (only for screens opened by a real tap or the warm-up; a program call always asks the server) and revalidate in the background, so a revoked session is signed out right away */   /* short-lived read memo: a tab revisited within a few seconds paints at once instead of re-showing a skeleton */
       if (key && live[key]) return live[key]; var send = a; if (wr && rk && typeof a === 'object' && !Array.isArray(a)) { send = Object.assign({}, a); send.idem_ = idem(rk); }
       var p = http('POST', '/api', { method: method, args: send }).then(function (r) { if (wr && rk) { if (r && r.ok === false && r.code !== 'BUSY') delete IDEM[rk]; else if (IDEM[rk]) IDEM[rk].t = Date.now() - 55000; } rec(method, r, src, gest); if (wr) memo = {}; else if (key && r && r.ok === true) memo[key] = { t: Date.now(), r: copy(r) }; return expired(r); });
       if (key) { live[key] = p; var fin = function () { if (live[key] === p) delete live[key]; }; p.then(fin, fin); } return p;

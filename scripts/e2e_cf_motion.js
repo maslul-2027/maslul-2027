@@ -22,13 +22,14 @@ const T = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } c
   await p.waitForSelector('#seedBtn'); await p.click('#seedBtn'); await p.waitForFunction(() => window.__app && window.__app.state.course && window.__app.state.org && !document.querySelector('#seedBtn'), null, { timeout: 30000 });
   await p.waitForTimeout(1500);   // let the initial warm-up finish and the memo window pass: first visit below is a true cold visit
   // instrumentation: records, for one navigation, skeleton frames, ms to first real card, route classes seen, minimum opacity of the view's blocks
-  const nav = (act, ready) => p.evaluate(async ([act, ready]) => {
+  const nav = async (act, ready) => { await p.keyboard.press('Shift'); return navRun(act, ready); };   // a trusted input event just before the tap: the client treats the navigation as person-initiated (a program call never uses the read memo)
+  const navRun = (act, ready) => p.evaluate(async ([act, ready]) => {
     const v = document.getElementById('view'); const seen = new Set(); let sk = 0, minOp = 1, frames = 0, t1 = null; const t0 = performance.now();
     const mo = new MutationObserver(() => { ['rt-tab', 'rt-push', 'rt-pop'].forEach(c => { if (v.classList.contains(c)) seen.add(c); }); }); mo.observe(v, { attributes: true, attributeFilter: ['class'] });
     const done = new Promise(res => { const tick = () => { frames++; if (v.querySelector('.skeleton') && getComputedStyle(v.querySelector('.skeleton')).opacity !== '0') sk++; [...v.children].forEach(c => { const o = parseFloat(getComputedStyle(c).opacity); if (o < minOp) minOp = o; }); if (t1 === null && document.querySelector(ready)) t1 = performance.now() - t0; if (performance.now() - t0 < 1400) requestAnimationFrame(tick); else res(); }; requestAnimationFrame(tick); });
     eval(act); await done; mo.disconnect(); return { skeletonFrames: sk, contentMs: t1 === null ? null : Math.round(t1), classes: [...seen], minOpacity: minOp, frames };
   }, [act, ready]);
-  const click = sel => `document.querySelector('${sel}').click()`;
+  const click = sel => `(() => { const e = document.querySelector('${sel}'); e.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); e.click(); })()`;   // a real tap = pointerdown + click (the read memo only serves screens opened by a person's gesture)
   delay = LAT;
   await T('cold first visit of Soldiers (server latency ' + LAT + 'ms): content appears, motion class is the tab motion', async () => {
     const r = await nav(click('.tab[data-go=soldiers]'), '#people .card'); R.soldiersCold = r; assert.ok(r.contentMs !== null, 'content never appeared'); assert.ok(r.classes.includes('rt-tab'), JSON.stringify(r)); assert.ok(r.minOpacity >= 0.99, 'translucent frame ' + r.minOpacity); });
