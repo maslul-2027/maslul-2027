@@ -45,6 +45,7 @@ dialog[open]::backdrop{animation:bdIn var(--t-dialog) ease-out}
 @keyframes viewIn{from{transform:translateY(8px)}to{transform:none}}
 /* Uniform direction-aware motion (RTL: a deeper screen arrives from the left, back returns from the right; tabs rise gently). Logical via --rt-dir; transform-only. */
 :root{--rt-dir:-1}html[dir=ltr]{--rt-dir:1}
+
 #view.route-in{overflow-x:clip}
 #view.rt-push>*:not(.fab){animation:rtPush 220ms var(--ease)}
 #view.rt-pop>*:not(.fab){animation:rtPop 200ms var(--ease)}
