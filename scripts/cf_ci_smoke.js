@@ -15,7 +15,7 @@ const fail = m => { console.log('SMOKE FAIL: ' + m); console.log('RESULT=FAIL');
 (async () => {
   let st, j = null;
   for (let i = 1; i <= RETRIES; i++) {
-    try { st = await f('/auth/status'); await diag('GET /auth/status (attempt ' + i + '/' + RETRIES + ')', st); j = null; if (st.status === 200) { try { j = await st.json(); } catch (e) { j = null; } if (j && j.ok === true && typeof j.configured === 'boolean') break; fail('/auth/status answered 200 but not the expected JSON (a fake 200 is not a pass)'); } }
+    try { st = await f('/auth/status'); await diag('GET /auth/status (attempt ' + i + '/' + RETRIES + ')', st); j = null; if (st.status === 200) { try { j = await st.json(); } catch (e) { j = null; } if (j && j.ok === true && typeof j.configured === 'boolean' && typeof j.recoveryEnabled === 'boolean') break; if (j && j.ok === true && typeof j.configured === 'boolean') { console.log('  [diag] status JSON has no recoveryEnabled yet -> the previous Worker version may still be served (edge propagation); retrying'); j = null; } else fail('/auth/status answered 200 but not the expected JSON (a fake 200 is not a pass)'); } }
     catch (e) { console.log('  [diag] attempt ' + i + ' network error: ' + String(e.message || e).slice(0, 80)); }
     if (st && st.status !== 200 && ![404, 502, 503, 504, 522, 523, 524, 530].includes(st.status)) fail('/auth/status answered ' + st.status);
     if (i < RETRIES) await sleep(WAIT);
