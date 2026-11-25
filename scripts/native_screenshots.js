@@ -10,6 +10,6 @@ const srv = http.createServer((q, r) => { const u = q.url.split('?')[0]; if (u =
     p = await ctx.newPage(); await p.goto(base + '/'); await p.waitForSelector('#k1:not(:empty)'); await p.waitForFunction(() => !/…/.test(document.getElementById('k3').textContent)); await p.screenshot({ path: path.join(out, `native-${w}-home.png`) });
     await p.click('[data-go=soldiers]'); await p.waitForSelector('#people .card'); await p.screenshot({ path: path.join(out, `native-${w}-soldiers.png`) });
     await p.click('#people .card'); await p.waitForSelector('dl.kv'); await p.screenshot({ path: path.join(out, `native-${w}-card.png`) });
-    await p.click('[data-go=tasks]'); await p.waitForSelector('.seg'); await p.screenshot({ path: path.join(out, `native-${w}-tasks.png`) });
+    await p.click('[data-go=tasks]'); await p.waitForSelector('#fuBody'); await p.screenshot({ path: path.join(out, `native-${w}-tasks.png`) });
     await p.click('[data-go=more]'); await p.waitForSelector('#refresh-app'); await p.screenshot({ path: path.join(out, `native-${w}-more.png`) }); await ctx.close(); }
   await b.close(); srv.close(); console.log('screenshots →', out); })();
