@@ -8,7 +8,7 @@ let pass = 0, fail = 0; const R = {}; const t = async (n, f) => { try { await f(
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 (async () => {
   await new Promise(r => srv.listen(0, r)); const base = 'http://127.0.0.1:' + srv.address().port, b = await chromium.launch(), errs = [];
-  const open = async (o, role) => { const c = await b.newContext(Object.assign({ viewport: { width: 390, height: 844 }, hasTouch: true }, o || {})); const p = await c.newPage(); p.on('pageerror', e => errs.push(e.message)); if (role) await p.addInitScript(r => { try { localStorage.setItem('maslul_native_role', r); } catch (e) {} }, role); await p.goto(base + '/'); await p.waitForSelector('#k1'); await p.waitForFunction(() => window.__app.state.course); return p; };
+  const open = async (o, role) => { const c = await b.newContext(Object.assign({ viewport: { width: 390, height: 844 }, hasTouch: true }, o || {})); const p = await c.newPage(); p.on('pageerror', e => errs.push(e.message)); if (role) await p.addInitScript(r => { try { localStorage.setItem('maslul_native_role', r); } catch (e) {} }, role); await p.goto(base + '/'); await p.waitForSelector('#k1'); await p.waitForFunction(() => window.__app && window.__app.state && window.__app.state.course); return p; };
   const p = await open(); globalThis.PG = p;
   const cid = await p.evaluate(() => window.__app.state.course.id), API = (pg, m, a) => pg.evaluate(([m, a]) => window.__app.api(m, a), [m, a]);
   const types = (await API(p, 'navtypes.list', { courseId: cid })).data.filter(x => x.active), TY = types[0], TY2 = types[1] || types[0];
