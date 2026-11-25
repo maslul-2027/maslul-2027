@@ -18,9 +18,9 @@ const med = a => { const s = a.slice().sort((x, y) => x - y); return s[Math.floo
     if (name.startsWith('login')) { // real login path: register -> approve -> enrol -> login
       const c = h.client(), em = 'lg' + (++n) + '@example.test'; await c('POST', '/auth/register', { fullName: 'מנהל ' + n, email: em }); const pend = (await A('GET', '/admin/pending')).pending.find(x => x.email === em);
       const ap = await A('POST', '/admin/approve', { requestId: pend.id, grant: { role: 'viewer', courseIds: [cid], unitIds: [] } }), st = await c('POST', '/auth/enroll/start', { token: ap.enrollToken }), sec = h.unb32(st.totpSecret);
-      await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, code: await h.U.hotp(sec, Math.floor(h.clock() / 30000)) });
-      const body = { email: em, accessCode: st.accessCode, code: await h.code(sec) }; await c('POST', '/auth/login', body); const cold = c.last.workerCpuMs; const warm = [];
-      for (let i = 0; i < 6; i++) { const c2 = h.client(); await c2('POST', '/auth/login', { email: em, accessCode: st.accessCode, code: await h.code(sec) }); warm.push(c2.last.workerCpuMs); }
+      await c('POST', '/auth/enroll/confirm', { token: ap.enrollToken, pin: '4826', code: await h.U.hotp(sec, Math.floor(h.clock() / 30000)) });
+      const body = { email: em, pin: '4826', code: await h.code(sec) }; await c('POST', '/auth/login', body); const cold = c.last.workerCpuMs; const warm = [];
+      for (let i = 0; i < 6; i++) { const c2 = h.client(); await c2('POST', '/auth/login', { email: em, pin: '4826', code: await h.code(sec) }); warm.push(c2.last.workerCpuMs); }
       rows.push({ name, cold: cold, warm: med(warm), st: c.last.statements }); continue;
     }
     const r0 = await fn(); const cold = A.last.workerCpuMs, ws = []; let last, ok = !!(r0 && r0.ok); for (let i = 0; i < 25; i++) { const r = await fn(); ok = ok && !!(r && r.ok); ws.push(A.last.workerCpuMs); last = A.last; } if (!ok) console.log('WARNING: ' + name + ' did not return ok:true — its numbers are for an error path: ' + JSON.stringify(r0).slice(0, 120)); rows.push({ name, ok, cold, warm: med(ws), p95: ws.slice().sort((a, b) => a - b)[Math.floor(ws.length * 0.95)], st: last.statements, rr: last.rowsRead, rw: last.rowsWritten });

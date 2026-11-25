@@ -47,7 +47,7 @@
   function note(msg, ok) { msg.textContent = ''; msg.className = ''; return function (t) { msg.textContent = t; msg.className = ok ? 'msg ok' : 'msg err'; }; }
   function loginUI(needsSetup) {
     var msg = el('div', { role: 'alert', id: 'auMsg', 'aria-live': 'assertive' }), mode = 'login';
-    var em = mkInput('auEmail', 'email', 'אימייל', { autocomplete: 'username', inputmode: 'email' }), ac = mkInput('auCode', 'password', 'קוד גישה (12 תווים)', { autocomplete: 'current-password', maxlength: '20', autocapitalize: 'characters' }), tp = mkInput('auTotp', 'text', 'קוד בן 6 ספרות מאפליקציית האימות', { inputmode: 'numeric', pattern: '[0-9]*', maxlength: '8', autocomplete: 'one-time-code' });
+    var em = mkInput('auEmail', 'email', 'אימייל', { autocomplete: 'username', inputmode: 'email' }), ac = mkInput('auCode', 'password', 'קוד אישי (PIN) בן 4 ספרות', { autocomplete: 'current-password', maxlength: '4', inputmode: 'numeric', pattern: '[0-9]*' }), tp = mkInput('auTotp', 'text', 'קוד בן 6 ספרות מאפליקציית האימות', { inputmode: 'numeric', pattern: '[0-9]*', maxlength: '8', autocomplete: 'one-time-code' });
     var nm = mkInput('auName', 'text', 'שם מלא', { dir: 'rtl', autocomplete: 'name' }), bt = mkInput('auBoot', 'password', 'אסימון התקנה (BOOTSTRAP_TOKEN)', { autocomplete: 'off' });
     var go = el('button', { class: 'primary', type: 'submit', id: 'auGo', text: 'כניסה' }), tabs = [['login', 'כניסה'], ['register', 'בקשת גישה']].concat(needsSetup ? [['setup', 'הגדרה ראשונית']] : []), tb = {};
     var form = el('form', { novalidate: 'true' }, [nm.f, em.f, ac.f, tp.f, bt.f, go]), bar = el('div', { class: 'row2', role: 'group', 'aria-label': 'מצב' }, tabs.map(function (t) { var b = el('button', { type: 'button', class: 'secondary', id: 'auTab_' + t[0], text: t[1], 'aria-pressed': 'false' }); b.onclick = function () { setMode(t[0]); }; tb[t[0]] = b; return b; }));
@@ -55,25 +55,24 @@
     setMode('login');
     form.addEventListener('submit', function (e) {
       e.preventDefault(); var say = note(msg); go.disabled = true; go.setAttribute('aria-busy', 'true');
-      var req = mode === 'login' ? http('POST', '/auth/login', { email: em.i.value, accessCode: ac.i.value, code: tp.i.value }) : mode === 'register' ? http('POST', '/auth/register', { fullName: nm.i.value, email: em.i.value }) : http('POST', '/auth/bootstrap', { token: bt.i.value, fullName: nm.i.value, email: em.i.value });
+      var req = mode === 'login' ? http('POST', '/auth/login', { email: em.i.value, pin: ac.i.value, code: tp.i.value }) : mode === 'register' ? http('POST', '/auth/register', { fullName: nm.i.value, email: em.i.value }) : http('POST', '/auth/bootstrap', { token: bt.i.value, fullName: nm.i.value, email: em.i.value });
       req.then(function (r) { go.disabled = false; go.removeAttribute('aria-busy'); ac.i.value = ''; tp.i.value = ''; bt.i.value = '';
         if (!r.ok) { say(r.message || 'הפעולה נכשלה.'); msg.className = 'msg err'; return; }
         if (mode === 'register') { msg.textContent = 'הבקשה נשלחה. המנהל יאשר אותה וישלח לכם קישור הצטרפות.'; msg.className = 'msg ok'; return; }
         if (mode === 'setup') { enrollUI(r.enrollToken); return; }
         CSRF = r.csrf || ''; try { sessionStorage.setItem(SK, CSRF); } catch (x) {} location.reload(); });
     });
-    screen(banner().concat([bar, form, msg, el('p', { class: 'muted', text: 'אין לכם קוד גישה? בקשו גישה מהמנהל — הוא ישלח קישור הצטרפות חד־פעמי.' })])); setTimeout(function () { em.i.focus(); }, 50);
+    screen(banner().concat([bar, form, msg, el('p', { class: 'muted', text: 'עדיין אין לכם חשבון? בקשו גישה מהמנהל — הוא ישלח קישור הצטרפות חד־פעמי.' })])); setTimeout(function () { em.i.focus(); }, 50);
   }
   function enrollUI(token) {
     var msg = el('div', { role: 'alert', id: 'enMsg', 'aria-live': 'assertive' }), box = el('div', {});
     http('POST', '/auth/enroll/start', { token: token }).then(function (s) {
       if (!s.ok) { msg.textContent = s.message || 'הקישור אינו תקף.'; msg.className = 'msg err'; box.append(el('button', { class: 'secondary', type: 'button', text: 'חזרה לכניסה', onclick: function () { location.hash = ''; location.reload(); } })); return; }
-      var cd = mkInput('enCode', 'text', 'קוד בן 6 ספרות מהאפליקציה', { inputmode: 'numeric', pattern: '[0-9]*', maxlength: '8', autocomplete: 'one-time-code' }), ok = el('button', { class: 'primary', type: 'submit', id: 'enGo', text: 'אימות והפעלת החשבון' });
+      var pn = mkInput('enPin', 'password', 'בחרו קוד אישי (PIN) בן 4 ספרות', { inputmode: 'numeric', pattern: '[0-9]*', maxlength: '4', autocomplete: 'new-password' }), pn2 = mkInput('enPin2', 'password', 'הקלידו שוב את ה-PIN', { inputmode: 'numeric', pattern: '[0-9]*', maxlength: '4', autocomplete: 'new-password' }), cd = mkInput('enCode', 'text', 'קוד בן 6 ספרות מהאפליקציה', { inputmode: 'numeric', pattern: '[0-9]*', maxlength: '8', autocomplete: 'one-time-code' }), ok = el('button', { class: 'primary', type: 'submit', id: 'enGo', text: 'אימות והפעלת החשבון' });
       var otp = el('a', { id: 'enOtp', href: s.otpauth, text: 'פתיחה באפליקציית האימות (בטלפון)' });
-      var form = el('form', { novalidate: 'true' }, [cd.f, ok]);
-      form.addEventListener('submit', function (e) { e.preventDefault(); ok.disabled = true; http('POST', '/auth/enroll/confirm', { token: token, code: cd.i.value }).then(function (r) { ok.disabled = false; if (!r.ok) { msg.textContent = r.message || 'הקוד שגוי.'; msg.className = 'msg err'; return; } try { history.replaceState(null, '', location.pathname); } catch (x) {} box.replaceChildren(el('p', { class: 'msg ok', role: 'status', text: 'החשבון הופעל. שמרו את קוד הגישה במקום בטוח — בכל כניסה תזינו אותו וקוד מהאפליקציה.' }), el('button', { class: 'primary', id: 'enLogin', type: 'button', text: 'מעבר לכניסה', onclick: function () { loginUI(false); } })); }); });
-      box.append(el('p', { text: 'שלום ' + s.name + ' (' + s.email + ')' }), el('h2', { text: '1. קוד הגישה שלכם (יוצג פעם אחת בלבד)' }), el('p', { id: 'enAccess', dir: 'ltr', style: 'font-size:26px;letter-spacing:2px;font-weight:700;text-align:center;user-select:all', text: s.accessCode }), el('p', { class: 'muted', text: 'העתיקו אותו למנהל סיסמאות או רשמו אותו. אי אפשר לשחזר אותו — רק המנהל יכול להנפיק חדש.' }),
-        el('h2', { text: '2. הגדרת אפליקציית אימות' }), el('p', {}, [otp]), el('p', { class: 'muted', text: 'או הוסיפו ידנית באפליקציית אימות (Google/Microsoft Authenticator, סיסמאות iOS) את המפתח:' }), el('p', { id: 'enSecret', dir: 'ltr', style: 'font-family:monospace;word-break:break-all;user-select:all', text: s.totpSecret }), el('h2', { text: '3. אימות' }), form);
+      var form = el('form', { novalidate: 'true' }, [pn.f, pn2.f, cd.f, ok]);
+      form.addEventListener('submit', function (e) { e.preventDefault(); if (!/^\d{4}$/.test(pn.i.value)) { msg.textContent = 'ה-PIN חייב להיות בדיוק 4 ספרות.'; msg.className = 'msg err'; return; } if (pn.i.value !== pn2.i.value) { msg.textContent = 'שני ה-PIN אינם זהים.'; msg.className = 'msg err'; return; } ok.disabled = true; http('POST', '/auth/enroll/confirm', { token: token, pin: pn.i.value, code: cd.i.value }).then(function (r) { ok.disabled = false; if (!r.ok) { msg.textContent = r.message || 'הקוד שגוי.'; msg.className = 'msg err'; return; } try { history.replaceState(null, '', location.pathname); } catch (x) {} box.replaceChildren(el('p', { class: 'msg ok', role: 'status', text: 'החשבון הופעל. בכל כניסה תזינו את ה-PIN שבחרתם וקוד בן 6 ספרות מאפליקציית האימות.' }), el('button', { class: 'primary', id: 'enLogin', type: 'button', text: 'מעבר לכניסה', onclick: function () { loginUI(false); } })); }); });
+      box.append(el('p', { text: 'שלום ' + s.name + ' (' + s.email + ')' }), el('h2', { text: '1. הגדרת אפליקציית אימות' }), el('p', {}, [otp]), el('p', { class: 'muted', text: 'או הוסיפו ידנית באפליקציית אימות (Google/Microsoft Authenticator, סיסמאות iOS) את המפתח:' }), el('p', { id: 'enSecret', dir: 'ltr', style: 'font-family:monospace;word-break:break-all;user-select:all', text: s.totpSecret }), el('h2', { text: '2. בחירת PIN ואימות' }), form);
     });
     screen(banner().concat([box, msg]));
   }
