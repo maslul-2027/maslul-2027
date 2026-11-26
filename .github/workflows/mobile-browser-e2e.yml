@@ -34,6 +34,7 @@ on:
       - 'scripts/e2e_native_bulk_reliability.js'
       - 'scripts/e2e_native_entry.js'
       - 'scripts/e2e_native_insight.js'
+      - 'scripts/e2e_native_insight_privacy.js'
       - 'scripts/test_reportkit.js'
       - 'scripts/lib/reportkit_node.js'
       - 'native/entry.js'
@@ -148,6 +149,7 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf poppler-utils python3-openpyxl
       - run: node scripts/test_reportkit.js
       - run: node scripts/e2e_native_insight.js preview artifacts/insight_screens
+      - run: node scripts/e2e_native_insight_privacy.js preview
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
         run: |
           node tests/selfsigned.js

@@ -85,6 +85,11 @@ var RK = (function () {
       });
       y -= hh + 10;
     };
+    self.callout = function (text, o) {                              // finding card: light fill, accent bar on the right, wrapped text
+      o = o || {}; var size = o.size || 10, L = wrap('regular', text, size, W - 26), lh = size * 1.45, hh = L.length * lh + 14; ensure(hh + 6); var top = y; rect(MX, top - hh, W, hh, LIGHT); rect(X - 4, top - hh, 4, hh, o.accent || TEAL);
+      L.forEach(function (ln, k) { drawLine('regular', size, ln, X - 14, top - 9 - (k + 1) * lh + size * 0.55, INK); }); y -= hh + 6;
+    };
+    self.banner = function (label, value, sub) { ensure(64); var top = y; rect(MX, top - 50, W, 50, [0.055, 0.17, 0.19]); rect(X - 5, top - 50, 5, 50, RED); drawLine('bold', 15, label, X - 16, top - 22, WHITE); if (sub) drawLine('regular', 8.5, sub, X - 16, top - 40, [0.8, 0.9, 0.9]); if (value) drawLeft('bold', 20, String(value), MX + 14, top - 32, WHITE); y -= 62; };
     self.table = function (head, rows, o) {
       o = o || {}; var nc = head.length, size = 8.5, pad = 4, lh = size * 1.35, avail = W, want = head.map(function (hd) { return wText('bold', hd, size) + 2 * pad + 4; });
       rows.forEach(function (r) { r.forEach(function (c, i) { var w = Math.min(wText('regular', String(c), size) + 2 * pad + 4, avail * 0.5); if (w > want[i]) want[i] = w; }); });
@@ -95,7 +100,7 @@ var RK = (function () {
     };
     function chartTitle(t, note) { ensure(40); para('bold', 10.5, t, { gap: 1 }); if (note) para('regular', 8, note, { color: GREY, gap: 4 }); }
     self.hbars = function (o) {                                     // horizontal bars from the right edge; value label at the bar end
-      chartTitle(o.title, o.note); var rows = o.rows, lw = 130, bw = W - lw - 40, rh = 17, max = o.max || Math.max.apply(null, rows.map(function (r) { return r.value || 0; }).concat([1]));
+      chartTitle(o.title, o.note); var rows = o.rows, lw = 130, bw = W - lw - 40, rh = o.rowH || 17, max = o.max || Math.max.apply(null, rows.map(function (r) { return r.value || 0; }).concat([1]));
       ensure(rows.length * rh + 6); rows.forEach(function (r) {
         ensure(rh); y -= rh; drawLine('regular', 8.5, r.label, X, y + 4, INK); var bx = X - lw, v = r.value; rect(bx - bw, y + 2, bw, 11, LIGHT);
         if (v !== null && v !== undefined) { var w = Math.max(1.5, bw * Math.min(v, max) / max); rect(bx - w, y + 2, w, 11, r.color || TEAL); drawLine('bold', 8, r.text !== undefined ? r.text : f2(v), bx - bw - 4, y + 4.5, INK); }
@@ -103,7 +108,7 @@ var RK = (function () {
       }); y -= 8;
     };
     self.histogram = function (o) {                                 // numeric bins low → high from LEFT to RIGHT (number line); bin counts above the bars
-      chartTitle(o.title, o.note); var bins = o.bins, n = bins.length, ch = 110, gap = 6, bw = (W - 30 - gap * (n - 1)) / n, max = Math.max.apply(null, bins.map(function (b) { return b.n; }).concat([1]));
+      chartTitle(o.title, o.note); var bins = o.bins, n = bins.length, ch = o.h || 110, gap = 6, bw = (W - 30 - gap * (n - 1)) / n, max = Math.max.apply(null, bins.map(function (b) { return b.n; }).concat([1]));
       ensure(ch + 36); var base = y - ch - 6, x0 = MX + 30; path([[x0 - 4, base], [X, base]], LINE, 0.8); path([[x0 - 4, base], [x0 - 4, base + ch]], LINE, 0.8);
       drawLine('regular', 7.5, String(max), x0 - 8, base + ch - 6, GREY); drawLine('regular', 7.5, '0', x0 - 8, base - 3, GREY);
       bins.forEach(function (b, i) { var bx = x0 + i * (bw + gap), hh = ch * b.n / max; rect(bx, base, bw, hh, b.color || TEAL); drawCentre('bold', 8, String(b.n), bx + bw / 2, base + hh + 3, INK); drawCentre('regular', 7.5, b.label, bx + bw / 2, base - 12, GREY); });
@@ -116,7 +121,7 @@ var RK = (function () {
       path([[mid, y], [mid, y + rows.length * rh]], GREY, 0.7); y -= 8;
     };
     self.lines = function (o) {                                     // time runs RIGHT → LEFT (OLDEST at the right edge, newest at the left — the reading direction of Hebrew), markers + value labels, gaps for missing values
-      chartTitle(o.title, o.note); var ch = 120, ensureH = ch + 40; ensure(ensureH); var base = y - ch - 6, x0 = MX + 34, aw = W - 44, labels = o.labels, n = labels.length, lo = o.yMin, hi = o.yMax;
+      chartTitle(o.title, o.note); var ch = o.h || 120, ensureH = ch + 40; ensure(ensureH); var base = y - ch - 6, x0 = MX + 34, aw = W - 44, labels = o.labels, n = labels.length, lo = o.yMin, hi = o.yMax;
       path([[x0, base], [X, base]], LINE, 0.8); path([[x0, base], [x0, base + ch]], LINE, 0.8);
       [0, 0.5, 1].forEach(function (f) { var yy = base + ch * f; if (f) path([[x0, yy], [X, yy]], LINE, 0.4, true); drawLine('regular', 7.5, f2(lo + (hi - lo) * f), x0 - 4, yy - 3, GREY); });
       var xs = labels.map(function (_, i) { return n === 1 ? x0 + aw / 2 : X - 8 - i * ((aw - 16) / (n - 1)); });
