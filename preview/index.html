@@ -1302,7 +1302,7 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function BulkEntry(cfg) {
     if (C.mode === 'server' && C.role === 'viewer') return Domain(cfg.domain);
-    var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
+    var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, loaded = false, loadSeq = 0, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
     var progress = h('div', { class: 'be-progress', id: 'beProgress', role: 'status', 'aria-live': 'polite' }), list = h('div', { class: 'be-list', id: 'beList' }), summary = h('div', { id: 'beSummary', 'aria-live': 'polite' });
     var shHost = h('div', { class: 'be-shared', id: 'beShared' }), holder = h('div', {}, skeleton(3));
     mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go(cfg.back); }, text: '→ חזרה' }), h('h1', { class: 'page', text: cfg.title }), holder], cfg.title);
@@ -1337,7 +1337,7 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
       return { cnt: cnt, entered: entered, prob: prob, text: 'הוזנו ' + entered + ' מתוך ' + rows.length + ' · חסרים ' + cnt.empty + (cnt.skip ? ' · נעדרים/פטורים ' + cnt.skip : '') + ' · לשמירה ' + (cnt.new + cnt.edited) + (prob ? ' · דורשים תיקון ' + prob : '') };
     }
     function refreshAll() { rows.forEach(paintRow); paintProgress(); }
-    function paintProgress() { var p = pctLine(); progress.replaceChildren(h('strong', { text: p.text }), h('div', { class: 'be-bar', 'aria-hidden': 'true' }, [h('span', { style: 'width:' + Math.round(100 * p.entered / Math.max(1, rows.length)) + '%' })])); var sv = $('#beSave'); if (sv) { var n = p.cnt.new + p.cnt.edited, rf = p.cnt.failed; sv.disabled = saving || (n === 0 && rf === 0); sv.textContent = saving ? 'שומר…' : rf > 0 ? 'ניסיון חוזר ל-' + rf + ' שנכשלו' + (n ? ' + שמירת ' + n : '') : n ? 'שמירה (' + n + ' רשומות)' : 'אין שינויים לשמירה'; } }
+    function paintProgress() { var p = pctLine(); progress.replaceChildren(h('strong', { text: p.text }), h('div', { class: 'be-bar', 'aria-hidden': 'true' }, [h('span', { style: 'width:' + Math.round(100 * p.entered / Math.max(1, rows.length)) + '%' })])); var sv = $('#beSave'); if (sv) { var n = p.cnt.new + p.cnt.edited, rf = p.cnt.failed; sv.disabled = saving || !loaded || (n === 0 && rf === 0); sv.textContent = saving ? 'שומר…' : !loaded ? 'טוען תוצאות שמורות…' : rf > 0 ? 'ניסיון חוזר ל-' + rf + ' שנכשלו' + (n ? ' + שמירת ' + n : '') : n ? 'שמירה (' + n + ' רשומות)' : 'אין שינויים לשמירה'; } }
     function paintRow(r) { var st = statusOf(r); r.node.className = 'be-row be-' + st.k; r.msg.textContent = st.t; r.msg.className = 'be-msg' + (st.k === 'invalid' || st.k === 'partial' || st.k === 'failed' ? ' err' : st.k === 'saved' ? ' ok' : ''); r.cells.forEach(function (x) { var e = cellErr(r, x.c, shared()); x.inp.setAttribute('aria-invalid', e ? 'true' : 'false'); var ap = !cfg.colApplies || cfg.colApplies(x.c, shared(), P); if (!ap && x.inp.value) { x.inp.value = ''; r.vals[x.c.n] = ''; } x.inp.disabled = !!r.state || (r.rec && !r.editable) || saving || !ap; x.inp.title = ap ? '' : 'הרכיב אינו חלק מסוג המבחן שנבחר'; }); r.sel.disabled = !!r.rec || saving; }
     function visible(r) { var s = r.s, t = filt.q.trim().toLowerCase(); if (filt.dep && s.department_id !== filt.dep) return false; if (filt.team && s.team_id !== filt.team) return false; if (t && !((s.full_name || '').toLowerCase().includes(t) || String(s.personal_number).includes(t))) return false; var k = statusOf(r).k; if (filt.st === 'missing') return k === 'empty'; if (filt.st === 'entered') return k === 'saved' || k === 'edited' || k === 'new' || k === 'locked' || k === 'pending'; if (filt.st === 'fix') return k === 'partial' || k === 'invalid' || k === 'failed'; return true; }
     function applyFilter() { var shown = 0; rows.forEach(function (r) { var v = visible(r); r.node.hidden = !v; if (v) shown++; }); var em = $('#beEmpty'); if (em) em.hidden = shown > 0; }
@@ -1361,7 +1361,20 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
       rows.forEach(function (r) { var ex = by[r.s.id] && by[r.s.id][0]; if (!ex) { if (r.rec) { var same = !r.touched || sameVals(r); r.rec = null; r.orig = null; if (same) { cfg.cols.forEach(function (c) { r.vals[c.n] = ''; }); r.cells.forEach(function (x) { x.inp.value = ''; }); r.touched = false; } } return; } r.rec = ex; r.orig = cfg.recVals(ex); r.editable = isAdmin() || ex.own === true || C.mode !== 'server'; r.state = ''; r.sel.value = ''; if (!r.touched || sameVals(r)) { cfg.cols.forEach(function (c) { r.vals[c.n] = r.orig[c.n] === undefined || r.orig[c.n] === null ? '' : String(r.orig[c.n]); }); r.cells.forEach(function (x) { x.inp.value = r.vals[x.c.n]; }); r.touched = false; } r.dup = by[r.s.id].length > 1; });
     }
     function sameVals(r) { return cfg.cols.every(function (c) { return eqv(cv(c, colVal(r, c)), cv(c, r.orig[c.n])); }); }
-    function loadExisting() { var o = shared(); if (!cfg.existingKey(o)) { existing = []; overlay(); refreshAll(); return Promise.resolve(); } return cfg.existing(o).then(function (r) { if (!r.ok) { toast(msgOf(r), 'err'); return; } existing = r.data || []; (cfg.sharedEdit || []).forEach(function (n) { var el = $('#be_' + n), ex = existing.filter(function (x) { return x.record_status !== 'cancelled'; })[0]; if (el && String(el.value).trim() === '' && ex && ex[n] !== undefined && ex[n] !== null) el.value = String(ex[n]); }); overlay(); refreshAll(); applyFilter(); }); }
+    function loadFailed(r) { loaded = false; refreshAll(); summary.replaceChildren(h('div', { class: 'msg err', role: 'alert' }, [h('span', { text: 'לא ניתן לטעון את התוצאות השמורות (' + (r && r.message ? msgOf(r) : 'אין תקשורת') + ') — השמירה חסומה כדי לא לדרוס תוצאות קיימות. ' }), h('button', { class: 'linkbtn', type: 'button', id: 'beRetryLoad', text: 'נסו לטעון שוב', onclick: function () { loadExisting(); } })])); }
+    /* loadExisting: every call gets a sequence number; only the LATEST answer may touch the rows (quickly switching tester/test type/date can never paint an older test's results onto the new one).
+       Rows are detached from the previous test's records immediately, and saving stays blocked until the matching saved list has really arrived. */
+    function loadExisting() {
+      var seq = ++loadSeq, o = shared(), key = cfg.existingKey(o); loaded = false; existing = []; overlay(); refreshAll();
+      if (!key) { loaded = true; existing = []; summary.replaceChildren(); refreshAll(); applyFilter(); return Promise.resolve(); }
+      summary.replaceChildren(h('p', { class: 'muted', id: 'beLoading', role: 'status', text: 'טוען תוצאות שמורות…' }));
+      return Promise.resolve().then(function () { return cfg.existing(o); }).then(function (r) {
+        if (seq !== loadSeq) return;
+        if (!r || !r.ok) { loadFailed(r); return; }
+        existing = r.data || []; (cfg.sharedEdit || []).forEach(function (n) { var el = $('#be_' + n), ex = existing.filter(function (x) { return x.record_status !== 'cancelled'; })[0]; if (el && String(el.value).trim() === '' && ex && ex[n] !== undefined && ex[n] !== null) el.value = String(ex[n]); });
+        loaded = true; summary.replaceChildren(); overlay(); refreshAll(); applyFilter();
+      }, function () { if (seq === loadSeq) loadFailed(null); });
+    }
     function build() {
       holder.replaceChildren();
       if (!sols().length) { holder.append(emptyBox('אין חניכים פעילים בהרשאה שלכם.')); return; }
@@ -1383,9 +1396,10 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
       refreshAll(); applyFilter();
       var firstIn = $('#be_' + cfg.shared[0].n); if (firstIn && !firstIn.value) firstIn.focus({ preventScroll: true });
     }
-    function reconcile() { return cfg.existing(shared(), true).then(function (r) { if (r.ok) { existing = r.data || []; } return r.ok; }); }
+    /* re-read the saved results for the SNAPSHOT of the shared fields that was used for this save (never the live inputs) — a rejected promise counts as a failed read */
+    function reconcile(o) { return Promise.resolve().then(function () { return cfg.existing(o, true); }).then(function (r) { if (r && r.ok) { existing = r.data || []; return true; } return false; }, function () { return false; }); }
     function doSave() {
-      if (saving) return; var o = shared(), e = sharedErr(o); if (e) { toast(e, 'err'); return; }
+      if (saving) return; if (!loaded) { toast('התוצאות השמורות עדיין לא נטענו — אי אפשר לשמור', 'err'); return; } var o = shared(), e = sharedErr(o); if (e) { toast(e, 'err'); return; }
       var todo = rows.filter(function (r) { var k = statusOf(r).k; return k === 'new' || k === 'edited' || k === 'failed'; }), bad = rows.filter(function (r) { var k = statusOf(r).k; return k === 'partial' || k === 'invalid'; });
       if (bad.length) { summary.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'לא נשמר דבר: ' + bad.length + ' שורות דורשות תיקון (מסומנות באדום). ' + bad.slice(0, 3).map(function (r) { return r.s.full_name + ' — ' + statusOf(r).t; }).join(' · ') })); var f = bad[0]; f.node.scrollIntoView({ block: 'center' }); return; }
       if (!todo.length) return;
@@ -1393,36 +1407,61 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
       if (edits.length > 0 && todo.length >= 5) { dialog('אישור שינוי מרוכז', [h('p', { text: 'יישמרו ' + todo.length + ' רשומות, מהן ' + edits.length + ' תיקוני תוצאות קיימות' + (isAdmin() ? '.' : ' (יישלחו לאישור).') })], function () { run(todo, o); return true; }, 'אישור ושמירה'); return; }
       run(todo, o);
     }
+    /* ---- verification: a saved record counts only if its id, its soldier, EVERY sent value and the shared test fields equal what was sent ---- */
+    function sharedMatch(rec, o, names) {
+      return names.every(function (n) { var f = cfg.shared.filter(function (x) { return x.n === n; })[0]; if (!f) return true; var want = o[n], got = rec[n]; if (got === undefined || got === null || got === '') return String(want == null ? '' : want).trim() === '' || got === undefined; if (String(want).trim() === '') return true;
+        if (f.t === 'number') return numParse(want).n === Number(got); if (f.t === 'date') return String(got).slice(0, 10) === String(want).slice(0, 10); return String(got).trim() === String(want).trim(); });
+    }
+    function verifyRow(r, by2, preIds, o) {   // → '' when verified, otherwise the reason
+      var cands = by2[r.s.id] || [], rec = null;
+      if (r.expId) rec = cands.filter(function (x) { return x.id === r.expId; })[0]; else if (r.created) { var nw = cands.filter(function (x) { return !preIds[x.id]; }); rec = nw[0]; if (nw.length > 1) return 'נמצאו כמה רשומות חדשות לחניך (כמה רשומות חדשות) — נדרשת בדיקה'; }
+      if (!rec) return r.expId ? 'הרשומה ' + 'שנשלחה לא נמצאה בשרת' : 'לא נמצאה בשרת רשומה חדשה לחניך';
+      if (rec.soldier_id !== undefined && rec.soldier_id !== r.s.id) return 'הרשומה שנמצאה שייכת לחניך אחר';
+      var extra = cands.filter(function (x) { return x.id !== rec.id && !preIds[x.id]; }); if (extra.length) return 'נוספה במקביל רשומה נוספת לאותו חניך באותו מבחן (כמה רשומות חדשות) — נדרשת בדיקה ואיחוד';
+      var got = cfg.recVals(rec), bad = cfg.cols.filter(function (c) { return !eqv(cv(c, got[c.n]), r.sent[c.n]); })[0];
+      if (bad) return 'השרת החזיר ערך שונה מהנשלח (' + bad.l + ': נשלח ' + (r.sent[bad.n] === null ? 'ריק' : r.sent[bad.n]) + ', נשמר ' + (got[bad.n] === '' || got[bad.n] === null || got[bad.n] === undefined ? 'ריק' : got[bad.n]) + ')';
+      if (!sharedMatch(rec, o, r.created ? cfg.shared.map(function (f) { return f.n; }) : (cfg.sharedEdit || []))) return 'פרטי המבחן שנשמרו שונים מהנשלח';
+      r.verifiedRec = rec; return '';
+    }
     function run(todo, o) {
-      saving = true; refreshAll(); summary.replaceChildren(h('p', { class: 'muted', text: 'שומר ' + todo.length + ' רשומות…' }));
-      reconcile().then(function (ok) {
-        if (!ok) { saving = false; refreshAll(); summary.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'לא ניתן היה לוודא את המצב השמור בשרת — דבר לא נשלח. נסו שוב.' })); return; }
-        var by = {}; existing.forEach(function (x) { if (x.record_status !== 'cancelled') (by[x.soldier_id] = by[x.soldier_id] || []).push(x); });
+      saving = true; refreshAll(); var locks = [].slice.call(shHost.querySelectorAll('input,select')); locks.forEach(function (el) { el.disabled = true; });
+      summary.replaceChildren(h('p', { class: 'muted', text: 'שומר ' + todo.length + ' רשומות…' }));
+      function end() { saving = false; locks.forEach(function (el) { el.disabled = false; }); }
+      function crash() { end(); refreshAll(); summary.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'השמירה הופסקה בשגיאה בלתי צפויה. לא כל הרשומות אומתו — רעננו את המסך ובדקו מה נשמר לפני ניסיון חוזר (ניסיון חוזר לא ייצור כפילויות).' })); }
+      reconcile(o).then(function (rok) {
+        if (!rok) { end(); refreshAll(); summary.replaceChildren(h('div', { class: 'msg err', role: 'alert', text: 'לא ניתן היה לוודא את המצב השמור בשרת — דבר לא נשלח. נסו שוב.' })); return; }
+        var by = {}, preIds = {}; existing.forEach(function (x) { if (x.record_status !== 'cancelled') { (by[x.soldier_id] = by[x.soldier_id] || []).push(x); preIds[x.id] = 1; } });
         var ok = [], fail = [], q = todo.slice(), active = 0, MAXC = 3;
         function one(r) {
-          var fresh = by[r.s.id] && by[r.s.id][0], vals = {}; cfg.cols.forEach(function (c) { vals[c.n] = cv(c, colVal(r, c)); });
+          var fresh = by[r.s.id] && by[r.s.id][0], vals = {}; cfg.cols.forEach(function (c) { vals[c.n] = cv(c, colVal(r, c)); }); r.sent = vals; r.expId = null; r.created = false;
           if (!r.rec && fresh) {   // somebody (or an earlier lost reply) already saved this soldier for this test: never create a second record
             var fv = cfg.recVals(fresh), same = cfg.cols.every(function (c) { return eqv(cv(c, fv[c.n]), vals[c.n]); });
-            if (same) { r.rec = fresh; r.orig = fv; r.editable = isAdmin() || fresh.own === true || C.mode !== 'server'; r.fail = ''; ok.push(r); return Promise.resolve(); }
+            if (same) { r.expId = fresh.id; r.fail = ''; ok.push(r); return Promise.resolve(); }
             r.fail = 'כבר קיימת תוצאה שנשמרה בינתיים (' + cfg.cols.map(function (c) { return fv[c.n]; }).join(' / ') + ') — רעננו כדי לערוך אותה'; fail.push(r); return Promise.resolve(); }
-          if (r.rec) { var fr = fresh && fresh.id === r.rec.id ? fresh : null; if (!fr) { r.fail = 'התוצאה השמורה לא נמצאה/בוטלה — רעננו'; fail.push(r); return Promise.resolve(); } var fv2 = cfg.recVals(fr); if (!cfg.cols.every(function (c) { return eqv(cv(c, fv2[c.n]), cv(c, r.orig[c.n])); })) { r.fail = 'התוצאה עודכנה בינתיים על ידי משתמש אחר (' + cfg.cols.map(function (c) { return fv2[c.n]; }).join(' / ') + ') — לא נדרסה. רעננו ונסו שוב'; fail.push(r); return Promise.resolve(); } }
+          if (r.rec) { var fr = fresh && fresh.id === r.rec.id ? fresh : null; if (!fr) { r.fail = 'התוצאה השמורה לא נמצאה/בוטלה — רעננו'; fail.push(r); return Promise.resolve(); } var fv2 = cfg.recVals(fr); if (cfg.cols.every(function (c) { return eqv(cv(c, fv2[c.n]), vals[c.n]); }) && isAdmin()) { r.fail = ''; ok.push(r); return Promise.resolve(); } if (!cfg.cols.every(function (c) { return eqv(cv(c, fv2[c.n]), cv(c, r.orig[c.n])); })) { r.fail = 'התוצאה עודכנה בינתיים על ידי משתמש אחר (' + cfg.cols.map(function (c) { return fv2[c.n]; }).join(' / ') + ') — לא נדרסה. רעננו ונסו שוב'; fail.push(r); return Promise.resolve(); } }
           var call;
-          if (r.rec) { var patch = {}, chg = {}; cfg.cols.forEach(function (c) { if (!eqv(cv(c, r.orig[c.n]), vals[c.n])) patch[c.n] = vals[c.n] === null ? '' : vals[c.n]; }); (cfg.sharedEdit || []).forEach(function (n) { var f = cfg.shared.filter(function (x) { return x.n === n; })[0] || {}; if (String(o[n]).trim() === '') return; var v = f.t === 'number' ? numParse(o[n]).n : o[n]; if (String(r.orig[n]) !== String(v)) patch[n] = v; });
+          if (r.rec) { r.expId = r.rec.id; var patch = {}; cfg.cols.forEach(function (c) { if (!eqv(cv(c, r.orig[c.n]), vals[c.n])) patch[c.n] = vals[c.n] === null ? '' : vals[c.n]; }); (cfg.sharedEdit || []).forEach(function (n) { var f = cfg.shared.filter(function (x) { return x.n === n; })[0] || {}; if (String(o[n]).trim() === '') return; var v = f.t === 'number' ? numParse(o[n]).n : o[n]; if (String(r.orig[n]) !== String(v)) patch[n] = v; });
             call = isAdmin() ? api('record.edit', { table: cfg.table, id: r.rec.id, patch: patch, reason: reason.trim() }) : api('correction.request', { table: cfg.table, id: r.rec.id, changes: patch, reason: reason.trim() }); }
-          else { var rk = cfg.existingKey(o) + '|' + r.s.id; if (r.reqK !== rk) { r.reqK = rk; r.reqId = rid(); } call = api(cfg.createM, cfg.createArgs(r.s, vals, o, r.reqId)); }   /* one stable request id per soldier+test: the server's own duplicate guard makes a repeated send harmless */
-          return call.then(function (x) { if (x && x.ok) { if (r.rec && !isAdmin()) { r.pending = true; } r.fail = ''; ok.push(r); } else { r.fail = (x && x.message) || 'השמירה נכשלה'; fail.push(r); } }, function () { r.fail = 'אין תקשורת'; fail.push(r); });
+          else { r.created = true; var rk = cfg.existingKey(o) + '|' + r.s.id; if (r.reqK !== rk) { r.reqK = rk; r.reqId = rid(); } call = api(cfg.createM, cfg.createArgs(r.s, vals, o, r.reqId)); }   /* one stable request id per soldier+test: the server's own duplicate guard makes a repeated send harmless */
+          return call.then(function (x) { if (x && x.ok) { var d = x.data || {}, nid = d.id || (d.record && d.record.id) || null; if (r.created && nid) r.expId = nid; if (r.rec && !isAdmin()) { r.pending = true; } r.fail = ''; ok.push(r); } else { r.fail = (x && x.message) || 'השמירה נכשלה'; fail.push(r); } }, function () { r.fail = 'אין תקשורת'; fail.push(r); });
         }
-        function pump() { return new Promise(function (res) { function next() { if (!q.length && active === 0) return res(); while (active < MAXC && q.length) { (function (r) { active++; one(r).then(function () { active--; paintRow(r); paintProgress(); next(); }); })(q.shift()); } } next(); }); }
-        pump().then(function () { return reconcile(); }).then(function () {   // trust only what the server now holds
-          saving = false; var by2 = {}; (existing || []).forEach(function (x) { if (x.record_status !== 'cancelled') (by2[x.soldier_id] = by2[x.soldier_id] || []).push(x); });
-          ok.forEach(function (r) { var ex = by2[r.s.id] && by2[r.s.id][0]; if (ex && !r.pending) { r.rec = ex; r.orig = cfg.recVals(ex); r.touched = false; r.editable = isAdmin() || ex.own === true || C.mode !== 'server'; } });
-          var verified = ok.filter(function (r) { return r.pending || (by2[r.s.id] && by2[r.s.id].length); }), unv = ok.length - verified.length;
-          refreshAll(); applyFilter();
-          var box = [h('div', { class: 'msg ' + (fail.length || unv ? 'err' : 'ok'), role: 'status', text: (fail.length || unv ? 'נשמרו ' + verified.length + ' · לא נשמרו ' + (fail.length + unv) + '.' : 'נשמרו ' + verified.length + ' רשומות ואומתו בשרת.') + (todo.some(function (r) { return r.pending; }) ? ' בקשות תיקון ממתינות לאישור מנהל.' : '') })];
-          if (fail.length) box.push(h('ul', { class: 'be-fails' }, fail.map(function (r) { return h('li', { text: r.s.full_name + ' — ' + r.fail }); })), h('p', { class: 'muted', text: 'לחיצה על "ניסיון חוזר" תשלח רק את הרשומות שנכשלו; שאר החניכים לא ישתנו.' }));
-          summary.replaceChildren.apply(summary, box); if (!fail.length) toast('נשמר ואומת בשרת'); if (fail[0]) fail[0].node.scrollIntoView({ block: 'center' });
-        });
-      });
+        function safe(r) { var p; try { p = Promise.resolve(one(r)); } catch (e) { p = Promise.reject(e); } return p.catch(function () { if (fail.indexOf(r) < 0) { ok = ok.filter(function (x) { return x !== r; }); r.fail = 'שגיאה בלתי צפויה בשמירה'; fail.push(r); } }); }
+        function pump() { return new Promise(function (res) { function next() { if (!q.length && active === 0) return res(); while (active < MAXC && q.length) { (function (r) { active++; safe(r).then(function () { active--; paintRow(r); paintProgress(); next(); }); })(q.shift()); } } next(); }); }
+        pump().then(function () { return reconcile(o); }).then(function (rok2) {   // trust only what the server now holds — and only if that read itself succeeded
+          var by2 = {}; (existing || []).forEach(function (x) { if (x.record_status !== 'cancelled') (by2[x.soldier_id] = by2[x.soldier_id] || []).push(x); });
+          var verified = [], unv = [], pend = ok.filter(function (r) { return r.pending; });
+          ok.filter(function (r) { return !r.pending; }).forEach(function (r) {
+            var why = rok2 ? verifyRow(r, by2, preIds, o) : 'השמירה נשלחה אך קריאת האימות מהשרת נכשלה — לא ניתן לדעת מה נשמר';
+            if (why) { r.fail = why; r.verifiedRec = null; unv.push(r); } else { var ex = r.verifiedRec; r.rec = ex; r.orig = cfg.recVals(ex); r.touched = false; r.fail = ''; r.editable = isAdmin() || ex.own === true || C.mode !== 'server'; verified.push(r); }
+          });
+          end(); refreshAll(); applyFilter();
+          var bad = fail.length + unv.length, allGood = !bad && !pend.length && verified.length > 0;
+          var parts = ['אומתו בשרת: ' + verified.length]; if (bad) parts.push('נכשלו או לא אומתו: ' + bad); if (pend.length) parts.push('בקשות תיקון שנשלחו וממתינות לאישור מנהל: ' + pend.length + ' (הערכים השמורים טרם שונו)');
+          var box = [h('div', { class: 'msg' + (allGood ? ' ok' : bad ? ' err' : ''), role: bad ? 'alert' : 'status', id: 'beResult', text: (allGood ? 'נשמרו ' + verified.length + ' רשומות ואומתו בשרת (מזהה, חניך וכל הערכים תואמים לנשלח). ' : '') + (allGood ? '' : parts.join(' · ') + '.') })];
+          var list = fail.concat(unv); if (list.length) box.push(h('ul', { class: 'be-fails' }, list.map(function (r) { return h('li', { text: r.s.full_name + ' — ' + r.fail }); })), h('p', { class: 'muted', text: 'לחיצה על "ניסיון חוזר" תבדוק מחדש מול השרת ותשלח רק את מה שעדיין חסר; שאר החניכים לא ישתנו ולא ייווצרו כפילויות.' }));
+          summary.replaceChildren.apply(summary, box); if (allGood) toast('נשמר ואומת בשרת'); else if (!bad && pend.length) toast('בקשות התיקון נשלחו לאישור', 'ok'); else if (list[0]) list[0].node.scrollIntoView({ block: 'center' });
+        }).catch(crash);
+      }).catch(crash);
     }
     window.__bulk = { rows: function () { return rows.length; } };
   }
