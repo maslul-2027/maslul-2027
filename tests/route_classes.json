@@ -150,6 +150,8 @@
  "record.restore": "O",
  "reports.build": "O",
  "reports.download": "O",
+ "reports.exportAuthorize": "A",
+ "reports.exportComplete": "A",
  "reports.fullExport": "A",
  "reports.generate": "O",
  "reports.jobs": "O",

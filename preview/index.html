@@ -145,11 +145,15 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
 @media(min-width:720px){.in-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .in-kpi{background:#fff;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:14px;padding:12px;min-width:0}
 .in-kpi.neg{border-top-color:var(--red)}
-.in-kpi small{display:block;color:#5a6870;font-size:12px}
-.in-kpi b{display:block;font-size:22px;line-height:1.25;overflow-wrap:anywhere}
-.in-kpi span{display:block;color:#5a6870;font-size:12px;overflow-wrap:anywhere}
+.in-kpi small{display:block;color:#4a575e;font-size:13px;font-weight:600}
+.in-kpi b{display:block;font-size:26px;line-height:1.2;overflow-wrap:anywhere;margin:2px 0}
+.in-kpi span{display:block;color:#4a575e;font-size:13px;overflow-wrap:anywhere}
+.in-prog{display:block;height:6px;border-radius:3px;background:#e1e9eb;margin-top:8px;overflow:hidden}.in-prog i{display:block;height:100%;background:var(--teal);border-radius:3px}
 .in-act{margin-top:4px}
-.in-find{margin:6px 0 12px;padding:0 18px;line-height:1.7}
+.in-find{list-style:none;margin:8px 0 14px;padding:0;display:grid;gap:8px}
+.in-find li{background:#fff;border:1px solid var(--line);border-inline-start:5px solid var(--teal);border-radius:12px;padding:12px 14px;font-size:16px;line-height:1.55}
+.in-sub{font-size:16px}
+.in-meta{margin:6px 0 10px;border:0;background:transparent;padding:0}.in-meta summary{min-height:44px;color:#4a575e;font-weight:600;font-size:13px}.in-meta p{margin:0 0 8px;font-size:13px;color:#4a575e;line-height:1.5}
 .in-fig{margin:10px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:14px}
 .in-fig figcaption{font-weight:700;font-size:14px;margin-bottom:6px}
 .in-svg{width:100%;height:auto;display:block;direction:ltr}
@@ -1868,7 +1872,10 @@ var RK = (function () {
   /* ---------- bidi: one RTL paragraph, simplified UBA (same rules as backend_next/export_formats.js plus attached number signs; a test asserts identical output on text without signed numbers) ---------- */
   var isHeb = function (c) { return (c >= 0x590 && c <= 0x5ff) || c === 0x200f; }, isLat = function (c) { return (c >= 65 && c <= 90) || (c >= 97 && c <= 122); }, isDig = function (c) { return c >= 48 && c <= 57; };
   var MIRROR = { 40: 41, 41: 40, 91: 93, 93: 91, 60: 62, 62: 60, 123: 125, 125: 123 };
+  /* the embedded font has no ≥ ≤ → ← × glyph: spell them so a PDF never shows a replacement box */
+  function pdfSafe(str) { return String(str).replace(/N\s?≥\s?(\d+)/g, 'N לפחות $1').replace(/≥\s?(\d+)/g, 'לפחות $1').replace(/≤\s?(\d+)/g, 'עד $1').replace(/≥/g, 'לפחות').replace(/≤/g, 'עד').replace(/[→←⇒]/g, ' ').replace(/×/g, 'x').replace(/Σ/g, 'סכום'); }
   function bidiVisual(str) {
+    str = pdfSafe(str);
     var cp = Array.from(str).map(function (ch) { return ch.codePointAt(0); }).filter(function (c) { return c !== 0x200e && c !== 0x200f; }), n = cp.length, t = new Array(n), i;
     for (i = 0; i < n; i++) t[i] = isHeb(cp[i]) ? 'R' : isLat(cp[i]) ? 'L' : isDig(cp[i]) ? 'N' : 'O';
     for (i = 1; i < n - 1; i++) if (t[i] === 'O' && [46, 44, 58, 47, 45, 43, 0x2013].indexOf(cp[i]) !== -1 && t[i - 1] === 'N' && t[i + 1] === 'N') t[i] = 'N';
@@ -2169,7 +2176,7 @@ var RK = (function () {
       if (vu.length) { d.hbars({ title: 'ממוצע ציון סופי לפי מחלקה', note: 'רק יחידות עם N≥' + IN_MIN_N + (hu ? ' · ' + hu + ' יחידות הוסתרו (קבוצה קטנה או הסתרה משלימה)' : ''), max: 100, rowH: 20, rows: vu.map(function (u) { return { label: u.name, value: u.mean, text: inFmt(u.mean) + ' · N=' + u.n }; }) }); }
       var tr_ = p.teams.filter(function (u) { return !u.hidden; }); d.table(['יחידה', 'N', 'ממוצע', 'חציון', 'שינוי'], vu.concat(tr_).map(function (u) { return [u.name, String(u.n), inFmt(u.mean), inFmt(u.median), u.delta !== undefined ? inSign(u.delta) : '—']; }));
       var hiddenAll = (p.departments.length - vu.length) + (p.teams.length - tr_.length); if (hiddenAll) d.p(hiddenAll + ' יחידות הוסתרו בטבלה זו (קבוצה קטנה מ-' + IN_MIN_N + ' או הסתרה משלימה) — לא מוצגים להן מספרים.', { size: 8.5, color: RK.colors.GREY });
-      d.pageBreak(); d.banner('התפלגות ציון סופי', 'N=' + p.score.n, 'כל עמודה מכילה לפחות ' + IN_MIN_N + ' חניכים (טווחים סמוכים אוחדו)');
+      d.banner('התפלגות ציון סופי', 'N=' + p.score.n, 'כל עמודה מכילה לפחות ' + IN_MIN_N + ' חניכים (טווחים סמוכים אוחדו)');
       if (p.score.bins.length >= 2) d.histogram({ title: 'מספר חניכים בכל טווח ציון', note: 'ציר מספרי משמאל לימין · טווחים סמוכים אוחדו כדי שכל עמודה תכיל לפחות ' + IN_MIN_N, h: 140, bins: p.score.bins }); else d.callout('מספר החניכים קטן מכדי להציג התפלגות מפורטת: נדרשים לפחות ' + IN_MIN_N + ' חניכים בכל עמודה, ולכן כל הציונים מוצגים כטווח אחד.'); d.table(['טווח ציון', 'חניכים'], p.score.bins.map(function (b) { return [b.label, String(b.n)]; }));
       if (p.components) { var cp = p.components; d.banner('רכיבי הציון', '', 'ממוצע לכל רכיב בסולם שלו · בלי משקלים מומצאים'); d.hbars({ title: 'תכנון ותחקיר (סולם 0–5)', max: 5, rowH: 22, rows: [{ label: 'תכנון', value: cp.plan.hidden ? null : cp.plan.mean, text: cp.plan.hidden ? 'מוסתר' : inFmt(cp.plan.mean) }, { label: 'תחקיר', value: cp.debrief.hidden ? null : cp.debrief.mean, text: cp.debrief.hidden ? 'מוסתר' : inFmt(cp.debrief.mean) }] }); d.hbars({ title: 'נקודות שנדקרו (% מסך הנקודות)', max: 100, rowH: 22, rows: [{ label: 'נקודות', value: cp.points.hidden ? null : cp.points.mean, text: cp.points.hidden ? 'מוסתר' : inFmt(cp.points.mean) + '%' }] }); }
       d.banner('השוואה ומגמה', '', 'אותו סוג ניווט בלבד · רק אירועים עם N≥' + IN_MIN_N);
@@ -2202,10 +2209,38 @@ var RK = (function () {
   function inCheck(bytes, kind) { if (!bytes || bytes.length < 1000) return false; var h = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]); if (kind === 'pdf') return h === '%PDF-' && String.fromCharCode.apply(null, bytes.slice(bytes.length - 6)).indexOf('%%EOF') !== -1; return h.slice(0, 2) === 'PK'; }
   function inSave(bytes, name, mime) { var b = new Blob([bytes], { type: mime }), u = URL.createObjectURL(b), a = h('a', { href: u, download: name, rel: 'noopener', style: 'display:none' }); document.body.append(a); a.click(); setTimeout(function () { a.remove(); URL.revokeObjectURL(u); }, 4000); window.__lastDownload = { name: name, size: bytes.length, type: mime }; }
   function inFileName(m, ext) { return 'maslul-navigation_' + m.date + '_' + String(m.typeId).replace(/[^A-Za-z0-9-]/g, '') + '_v1.' + ext; }
+  /* SHA-256 of the produced bytes (WebCrypto when the context allows it, small pure-JS fallback otherwise) */
+  function inSha(bytes) {
+    function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
+    if (window.crypto && crypto.subtle && crypto.subtle.digest) return crypto.subtle.digest('SHA-256', bytes).then(hex);
+    var K = [], P = 2, n = 0; function isP(c) { for (var i = 2; i * i <= c; i++) if (c % i === 0) return false; return true; }
+    function f(x) { return ((x - Math.floor(x)) * 4294967296) | 0; } while (n < 64) { if (isP(P)) { K[n++] = f(Math.pow(P, 1 / 3)); } P++; }
+    var H = [], q = 0; P = 2; while (q < 8) { if (isP(P)) { H[q++] = f(Math.pow(P, 1 / 2)); } P++; }
+    var l = bytes.length, w = new Uint8Array(((l + 9 + 63) >> 6) << 6); w.set(bytes); w[l] = 128; var dv = new DataView(w.buffer); dv.setUint32(w.length - 4, (l * 8) >>> 0); dv.setUint32(w.length - 8, Math.floor(l / 536870912));
+    function R(x, k) { return (x >>> k) | (x << (32 - k)); }
+    for (var o = 0; o < w.length; o += 64) { var W = new Array(64), i; for (i = 0; i < 16; i++) W[i] = dv.getInt32(o + i * 4); for (i = 16; i < 64; i++) { var s0 = R(W[i - 15], 7) ^ R(W[i - 15], 18) ^ (W[i - 15] >>> 3), s1 = R(W[i - 2], 17) ^ R(W[i - 2], 19) ^ (W[i - 2] >>> 10); W[i] = (W[i - 16] + s0 + W[i - 7] + s1) | 0; }
+      var a = H.slice(); for (i = 0; i < 64; i++) { var S1 = R(a[4], 6) ^ R(a[4], 11) ^ R(a[4], 25), ch = (a[4] & a[5]) ^ (~a[4] & a[6]), t1 = (a[7] + S1 + ch + K[i] + W[i]) | 0, S0 = R(a[0], 2) ^ R(a[0], 13) ^ R(a[0], 22), mj = (a[0] & a[1]) ^ (a[0] & a[2]) ^ (a[1] & a[2]), t2 = (S0 + mj) | 0; a = [(t1 + t2) | 0, a[0], a[1], a[2], (a[3] + t1) | 0, a[4], a[5], a[6]]; }
+      for (i = 0; i < 8; i++) H[i] = (H[i] + a[i]) | 0; }
+    return Promise.resolve(H.map(function (x) { return ('00000000' + (x >>> 0).toString(16)).slice(-8); }).join(''));
+  }
+  window.__inSha = inSha;
+  /* The ONLY way a report file reaches the user: (1) the SERVER authorizes (role+course) and records the request, (2) the browser builds + checks the bytes, (3) the server records size+SHA-256 against the single-use ticket, (4) only then the file is saved.
+     A refusal at any step means no download and a visible message. Honest limit: the server cannot see the bytes, so this gates and records the sanctioned path (it is not DRM). */
+  function inGated(kind, format, scope, build, fileName) {
+    var pdf = format === 'pdf', mime = pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', cid = S.course.id;
+    return api('reports.exportAuthorize', { courseId: cid, req: { kind: kind, format: format, scope: String(scope || '').slice(0, 160) } }).then(function (a) {
+      if (!a.ok) { toast('ההפקה נחסמה בשרת: ' + msgOf(a), 'err'); return false; }
+      var bytes; try { bytes = build(); } catch (e) { toast('יצירת הקובץ נכשלה: ' + e.message, 'err'); return false; }
+      if (!inCheck(bytes, format)) { toast('הקובץ שנוצר לא עבר בדיקת תקינות — לא הורד.', 'err'); return false; }
+      var pages = 0; if (pdf) { var bin = ''; for (var i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode.apply(null, bytes.subarray ? bytes.subarray(i, i + 8192) : bytes.slice(i, i + 8192)); pages = (bin.match(/\/Type\s*\/Page[^s]/g) || []).length; }
+      return inSha(bytes).then(function (sha) { return api('reports.exportComplete', { courseId: cid, req: { ticket: a.data.ticket, sha256: sha, bytes: bytes.length, pages: pages } }); }).then(function (c) {
+        if (!c.ok) { toast('הקובץ לא הורד: השרת לא אישר את רישום ההפקה (' + msgOf(c) + ')', 'err'); return false; }
+        inSave(bytes, fileName, mime); window.__lastDownload.ticket = a.data.ticket; toast('הקובץ נוצר ונבדק, ההפקה נרשמה בשרת — ההורדה החלה (בדקו בתיקיית ההורדות)'); return true; });
+    });
+  }
   function inDownload(m, kind) {
-    var pdf = kind === 'pdf', bytes; try { bytes = pdf ? inNavPdf(m) : inNavXlsx(m); } catch (e) { toast('יצירת הקובץ נכשלה: ' + e.message, 'err'); return false; }
-    if (!inCheck(bytes, pdf ? 'pdf' : 'xlsx')) { toast('הקובץ שנוצר לא עבר בדיקת תקינות — לא הורד.', 'err'); return false; }
-    inSave(bytes, inFileName(m, pdf ? 'pdf' : 'xlsx'), pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); toast(pdf ? 'הקובץ נוצר ונבדק — ההורדה החלה (בדקו בתיקיית ההורדות)' : 'הקובץ נוצר ונבדק — ההורדה החלה (בדקו בתיקיית ההורדות)'); return true;
+    var pdf = kind === 'pdf';
+    return inGated('navigation', pdf ? 'pdf' : 'xlsx', m.typeId + ' ' + m.date, function () { return pdf ? inNavPdf(m) : inNavXlsx(m); }, inFileName(m, pdf ? 'pdf' : 'xlsx'));
   }
   /* fresh read → model (one read for the event AND its same-type history) */
   function inLoad(typeId, date) {
@@ -2242,7 +2277,7 @@ var RK = (function () {
       var jump = function () { go('insight/nav/' + m.typeId + '/' + t.date); }; pt.addEventListener('click', jump); pt.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jump(); } });
       svg.append(pt, stext(x(i), y(t.mean) - 9, inFmt(t.mean), { class: 'in-t in-tv' }), stext(x(i), 141, inDate(t.date).slice(0, 5))); }); return svg;
   }
-  function kpi(label, value, note, id, tone) { return h('div', { class: 'in-kpi' + (tone ? ' ' + tone : ''), id: id }, [h('small', { text: label }), h('b', { text: value }), h('span', { text: note || '' })]); }
+  function kpi(label, value, note, id, tone, pct) { return h('div', { class: 'in-kpi' + (tone ? ' ' + tone : ''), id: id }, [h('small', { text: label }), h('b', { text: value }), h('span', { text: note || '' })].concat(typeof pct === 'number' ? [h('span', { class: 'in-prog', 'aria-hidden': 'true' }, [h('i', { style: 'width:' + Math.max(2, Math.min(100, pct)) + '%' })])] : []));  }
   function unitBars(units) { var vis = units.filter(function (u) { return !u.hidden; }); return h('div', { class: 'in-bars', id: 'inUnitBars' }, vis.map(function (u) { return h('div', { class: 'in-barrow' }, [h('span', { class: 'in-bl', text: u.name }), h('span', { class: 'in-bt', role: 'img', 'aria-label': u.name + ': ממוצע ' + inFmt(u.mean) + ', N=' + u.n }, [h('i', { style: 'width:' + Math.max(2, Math.min(100, u.mean)) + '%' })]), h('b', { text: inFmt(u.mean) })]); })); }
   /* ---- screens ---- */
   function NavInsight(typeId, date, savedId) {
@@ -2254,11 +2289,11 @@ var RK = (function () {
         var m = r.model, P = m.pub, O = m.ops; window.__insight.model = m;
         body.append(h('p', { class: 'in-sub', id: 'inSub', text: m.typeName + ' · ' + inDate(m.date) + ' · ' + (m.course || '') }));
         if (savedId) { var found = m.rows.some(function (x) { return x.id === savedId; }); body.append(h('div', { class: 'msg ' + (found ? 'ok' : 'err'), id: 'inVerified', role: found ? 'status' : 'alert', text: found ? 'נשמר ואומת בשרת: הרשומה נקראה מחדש ונמצאה.' : 'הרשומה לא נמצאה בקריאה החוזרת מהשרת — השמירה לא אומתה, ולכן לא מוצגת הצלחה. בדקו ברשימת הניווטים ונסו שוב.' })); }
-        body.append(h('p', { class: 'muted', id: 'inStamp', text: 'נקרא מהשרת ' + new Date(m.generatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) + ' · מקור: ' + m.source + ' · מכנה: ' + P.eligible + ' חניכים (פעילים כיום + בעלי רשומה באירוע; אין תיעוד היסטורי של הרכב הקורס)' }));
+        body.append(h('details', { class: 'in-meta', id: 'inStamp' }, [h('summary', { text: 'נקרא מהשרת ' + new Date(m.generatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) + ' · מקור ומכנה' }), h('p', { text: 'נקרא מהשרת ' + new Date(m.generatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) + ' · מקור: ' + m.source + ' · מכנה: ' + P.eligible + ' חניכים (פעילים כיום + בעלי רשומה באירוע; אין תיעוד היסטורי של הרכב הקורס)'  })]));
         if (!O.recorded) { body.append(emptyBox('אין רשומות פעילות לאירוע זה — אין מה לנתח.')); return; }
         /* ---- GROUP zone: the same suppressed projection that the PDF/Excel use ---- */
-        body.append(h('div', { class: 'in-kpis' }, [kpi('כיסוי', P.hidden ? 'אין מספיק נתונים' : P.recorded + '/' + P.eligible, P.hidden ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : P.pct + '%', 'inK1'), kpi('ממוצע ציון סופי', P.score.hidden ? 'אין מספיק נתונים' : inFmt(P.score.mean), P.score.hidden ? 'פחות מ-' + IN_MIN_N : 'חציון ' + inFmt(P.score.median) + ' · N=' + P.score.n, 'inK2'), kpi('שינוי מהקודם', P.prior ? inSign(P.prior.delta) : '—', P.prior ? 'לעומת ' + inDate(P.prior.date).slice(0, 5) : 'אין השוואה', 'inK3', P.prior && P.prior.delta < 0 ? 'neg' : ''), kpi('דורש טיפול', P.hidden ? '—' : String(P.attention.length), P.hidden ? '' : P.attention.length ? 'ראו למטה' : 'אין פריטים', 'inK4', !P.hidden && P.attention.length ? 'neg' : '')]));
-        var act = h('div', { class: 'btns in-act' }); if (isAdmin()) { act.append(h('button', { class: 'primary', type: 'button', id: 'inPdf', text: 'יצירת דוח PDF', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inDownload(m, 'pdf'); busy(b, false); }, 30); } }), h('button', { class: 'secondary', type: 'button', id: 'inXlsx', text: 'ייצוא נתונים (Excel)', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inDownload(m, 'xlsx'); busy(b, false); }, 30); } })); } else act.append(h('p', { class: 'muted', id: 'inNoExport', text: 'כפתורי ההורדה מוצגים למנהל בלבד. שימו לב: זו הסתרה בממשק; הקריאות עצמן מוגבלות בשרת להיקף ההרשאה שלכם.' }));
+        body.append(h('div', { class: 'in-kpis' }, [kpi('כיסוי', P.hidden ? 'אין מספיק נתונים' : P.recorded + '/' + P.eligible, P.hidden ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : P.pct + '%', 'inK1', '', P.hidden ? undefined : P.pct), kpi('ממוצע ציון סופי', P.score.hidden ? 'אין מספיק נתונים' : inFmt(P.score.mean), P.score.hidden ? 'פחות מ-' + IN_MIN_N : 'חציון ' + inFmt(P.score.median) + ' · N=' + P.score.n, 'inK2'), kpi('שינוי מהקודם', P.prior ? inSign(P.prior.delta) : '—', P.prior ? 'לעומת ' + inDate(P.prior.date).slice(0, 5) : 'אין השוואה', 'inK3', P.prior && P.prior.delta < 0 ? 'neg' : ''), kpi('דורש טיפול', P.hidden ? '—' : String(P.attention.length), P.hidden ? '' : P.attention.length ? 'ראו למטה' : 'אין פריטים', 'inK4', !P.hidden && P.attention.length ? 'neg' : '')]));
+        var act = h('div', { class: 'btns in-act' }); if (isAdmin()) { act.append(h('button', { class: 'primary', type: 'button', id: 'inPdf', text: 'יצירת דוח PDF', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inDownload(m, 'pdf').then(function () { busy(b, false); }); }, 30); } }), h('button', { class: 'secondary', type: 'button', id: 'inXlsx', text: 'ייצוא נתונים (Excel)', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inDownload(m, 'xlsx').then(function () { busy(b, false); }); }, 30); } })); } else act.append(h('p', { class: 'muted', id: 'inNoExport', text: 'הפקת קבצים מותרת למנהל בלבד. הכפתורים מוסתרים כאן, וההרשאה נבדקת ונרשמת גם בשרת בכל הפקה.' }));
         act.append(h('button', { class: 'secondary', type: 'button', id: 'inRefresh', text: 'רענון', onclick: draw })); body.append(act);
         body.append(sectionHead('ממצאים', null), h('ul', { class: 'in-find', id: 'inFind' }, P.findings.map(function (t) { return h('li', { text: t }); })));
         if (P.hidden || P.score.hidden) body.append(h('div', { class: 'msg', id: 'inInsufficient', role: 'status', text: (P.score.reason || 'אין מספיק נתונים') + '. כל הספירות והמדדים הקבוצתיים מוסתרים; הרשימה המבצעית למטה מיועדת למורשים בלבד.' }));
@@ -2294,7 +2329,9 @@ var RK = (function () {
         body.append(sectionHead('דוחות לפי תבנית', null));
         body.append(card('תמונת מצב קורס', 'מה השתנה, מה דורש טיפול, איכות נתונים וכל התחומים · סיכומים קבוצתיים מוגנים', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course'); }));
         body.append(card('דוח ניווט', list.length ? 'ניתוח אירוע, מגמה, PDF ו-Excel · ' + list.length + ' אירועים' : 'אין עדיין אירועי ניווט', h('span', { class: 'arrow', text: '←' }), list.length ? function () { go('insight/nav/' + list[0].typeId + '/' + list[0].date); } : null));
-        [['דוח כש״ג', 'fitness'], ['מבחנים', 'exams'], ['קליעה', 'shooting'], ['נוכחות / מסעות', 'attendance']].forEach(function (t) { body.append(card(t[0], 'סיכום קבוצתי של התחום בדשבורד הקורס, כולל PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course/' + t[1]); })); });
+        [['דוח כש״ג', 'fitness'], ['קליעה', 'shooting'], ['נוכחות / מסעות', 'attendance']].forEach(function (t) { body.append(card(t[0], 'סיכום קבוצתי של התחום בדשבורד הקורס, כולל PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course/' + t[1]); })); });
+        var exBox = h('div', { id: 'inExamCards' }); body.append(sectionHead('דוחות מבחנים', null), exBox);
+        api('exams.defs', { courseId: S.course.id, opts: {} }, 'fresh').then(function (dr) { if (!dr.ok) { exBox.append(h('p', { class: 'muted', text: 'רשימת המבחנים לא נטענה.' })); return; } var defs = dr.data || []; if (!defs.length) exBox.append(emptyBox('אין מבחנים מוגדרים.')); defs.forEach(function (d) { exBox.append(card('דוח מבחן — ' + d.name, 'מסלול עמידה א׳/ב׳/ג׳, התפלגות, יחידות, PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/exam/' + d.id); })); }); });
         body.append(sectionHead('אירועי ניווט', String(list.length))); if (!list.length) body.append(emptyBox('אין אירועי ניווט להצגה.'));
         list.slice(0, 40).forEach(function (e) { body.append(card(e.name + ' · ' + inDate(e.date), e.n >= IN_MIN_N ? e.n + ' רשומות' : 'פחות מ-' + IN_MIN_N + ' רשומות', null, function () { go('insight/nav/' + e.typeId + '/' + e.date); })); });
       });
@@ -2304,6 +2341,15 @@ var RK = (function () {
   /* ===== COURSE dashboard ("תמונת מצב קורס") + domain views: composed ONLY from the engine's existing group-safe routes (their own N≥5 suppression applies; person-counts 1–4 are additionally shown as "פחות מ-5").
      Same model → screen, PDF, Excel. Individual rows are never requested here. ===== */
   var CI_CATS = [['all', 'הכול'], ['navigation', 'ניווט'], ['fitness', 'כש״ג'], ['exams', 'מבחנים'], ['shooting', 'קליעה'], ['attendance', 'נוכחות'], ['marches', 'מסעות'], ['readiness', 'כשירות מבצעית']];
+  /* Partition suppression for counts that add up to a total that is ALSO shown: a hidden small cell must not be recoverable by subtraction.
+     Rule: cells 1..4 are hidden; while 0 < (total − Σ visible cells) < 5 the smallest visible positive cell is hidden too (label "מוסתר (מניעת הסקה)"). Returns {key: display}. */
+  function inPart(cells, total) {
+    var out = {}, vis = {}, sum = 0; if (typeof total === 'number' && total < IN_MIN_N) { Object.keys(cells).forEach(function (k) { out[k] = cells[k] === null || cells[k] === undefined ? '—' : 'פחות מ-' + IN_MIN_N; }); return out; }
+    Object.keys(cells).forEach(function (k) { var v = cells[k]; if (v === null || v === undefined) { out[k] = '—'; return; } if (v > 0 && v < IN_MIN_N) { out[k] = 'פחות מ-' + IN_MIN_N; return; } vis[k] = v; });
+    if (typeof total === 'number') { var rem = function () { var t = 0; Object.keys(vis).forEach(function (k) { t += vis[k]; }); return total - t; };
+      while (rem() > 0 && rem() < IN_MIN_N) { var ks = Object.keys(vis).filter(function (k) { return vis[k] > 0; }).sort(function (a, b) { return vis[a] - vis[b]; }); if (!ks.length) break; out[ks[0]] = 'מוסתר (מניעת הסקה)'; delete vis[ks[0]]; } }
+    Object.keys(vis).forEach(function (k) { out[k] = String(vis[k]); }); return out;
+  }
   var inP = function (c) { return c === null || c === undefined ? '—' : (typeof c === 'number' && c > 0 && c < IN_MIN_N) ? 'פחות מ-' + IN_MIN_N : String(c); };   // person-counts only
   var inMean1 = function (v) { return v === null || v === undefined || v === '' ? '—' : String(v); };
   function inCourseModel(R, ctx) {
@@ -2311,20 +2357,22 @@ var RK = (function () {
     var nav = g('nav.summary'), fit = g('fitness.summary'), fc = g('fitness.completion'), mk = g('mk.summary'), ex = g('exams.summary'), at = g('attendance.summary'), ma = g('marches.summary'), rd = g('readiness.summary'), al = g('alerts.counts'), ng = g('nav.groups');
     var sec = function (key, title, src, rows, note, go_) { S_.push({ key: key, title: title, source: src, rows: rows, note: note || '', go: go_ || '' }); };
     if (nav) sec('navigation', 'ניווט', 'nav.summary', [['תוצאות שנרשמו', nav.count], ['ממוצע ציון סופי', inMean1(nav.mean_display)]].concat(ng && ng.data !== undefined ? [] : []), nav.note, 'insight');
-    if (ng) { var c = ng.course || (ng.data && ng.data.course); if (c) sec('navigation', 'ניווט — כיסוי', 'nav.groups', [['חניכים בקורס', c.soldiers], ['חניכים עם תוצאה', c.soldiers_with_results === undefined ? '—' : inP(c.soldiers_with_results)]], c.note, 'insight'); }
-    if (fit) sec('fitness', 'כושר גופני (כש״ג)', 'fitness.summary · fitness.completion', [['תוצאות', fit.count], ['ממוצע', fit.mean_display || 'ממתין לגרסת ניקוד מאושרת'], ['נתונים מלאים', fc && fc.counts ? inP(fc.counts.complete) : '—'], ['חסרי נתונים', fc && fc.counts ? inP(fc.counts.incomplete) : '—']].concat(Object.keys(fit.by_component || {}).map(function (k) { var x = fit.by_component[k]; return [x.label, x.count ? 'ממוצע ' + inMean1(x.mean_display) : 'אין נתונים']; })), fit.note, 'd/fitness');
+    if (ng) { var c = ng.course || (ng.data && ng.data.course); if (c) sec('navigation', 'ניווט — כיסוי', 'nav.groups', [['חניכים בקורס', typeof c.soldiers === 'number' ? inP(c.soldiers) : '—'], ['חניכים עם תוצאה', c.soldiers_with_results === undefined ? '—' : inPart({ w: c.soldiers_with_results }, typeof c.soldiers === 'number' ? c.soldiers : undefined).w]], c.note, 'insight'); }
+    var fcp = fc && fc.counts ? inPart({ c: fc.counts.complete, i: fc.counts.incomplete }, typeof fc.counts.soldiers === 'number' ? fc.counts.soldiers : undefined) : null;
+    if (fit) sec('fitness', 'כושר גופני (כש״ג)', 'fitness.summary · fitness.completion', [['תוצאות', fit.count], ['ממוצע', fit.mean_display || 'ממתין לגרסת ניקוד מאושרת'], ['נתונים מלאים', fcp ? fcp.c : '—'], ['חסרי נתונים', fcp ? fcp.i : '—']].concat(Object.keys(fit.by_component || {}).map(function (k) { var x = fit.by_component[k]; return [x.label, x.count ? 'ממוצע ' + inMean1(x.mean_display) : 'אין נתונים']; })), fit.note, 'd/fitness');
     if (ex) sec('exams', 'מבחנים עיוניים', 'exams.summary', (ex.exams || []).map(function (e) { return [e.exam_name, e.suppressed ? 'מוסתר (קבוצה קטנה)' : (e.pass_rate_display !== null && e.pass_rate_display !== undefined ? 'אחוז עוברים ' + e.pass_rate_display + '%' : 'אין נתונים')]; }), ex.note, 'd/exams');
     if (mk) sec('shooting', 'קליעה', 'mk.summary', [['תוצאות רגילה', mk.regular ? mk.regular.count : '—'], ['ממוצע רגילה', mk.regular ? inMean1(mk.regular.mean_display) : '—'], ['תוצאות יל״מ', mk.ylm ? mk.ylm.count : '—'], ['ממוצע יל״מ', mk.ylm ? inMean1(mk.ylm.mean_display) : '—']], mk.note, 'd/mk');
     if (at) sec('attendance', 'נוכחות', 'attendance.summary', [['נוכחות מצטברת', at.percent_display ? at.percent_display + '%' : '—'], ['סה״כ רישומים', at.total], ['יציאות מוקדמות', at.early_exits_suppressed ? 'מוסתר' : inP(at.early_exits)]], at.note, 'd/attendance');
     if (ma) sec('marches', 'מסעות', 'marches.summary', [['מסעות', ma.marches_total], ['סה״כ ק״מ', ma.total_km]], ma.note, 'd/marches');
-    if (rd && rd.counts) sec('readiness', 'כשירות מבצעית', 'readiness.summary', [['כשירים', inP(rd.counts.fit)], ['כשירים עם מגבלות', inP(rd.counts.fit_with_restrictions)], ['לא כשירים', inP(rd.counts.unfit)], ['טרם הוזנו', inP(rd.counts.not_entered)]], '', 'd/readiness');
+    var rdp = rd && rd.counts ? inPart({ f: rd.counts.fit, r: rd.counts.fit_with_restrictions, u: rd.counts.unfit, n: rd.counts.not_entered }, typeof rd.total === 'number' ? rd.total : undefined) : null;
+    if (rd && rd.counts) sec('readiness', 'כשירות מבצעית', 'readiness.summary', [['כשירים', rdp.f], ['כשירים עם מגבלות', rdp.r], ['לא כשירים', rdp.u], ['טרם הוזנו', rdp.n]], '', 'd/readiness');
     var ins = (g('analytics.insights') || {}).items || [], att = [];
     if (al && al.open) att.push({ text: al.open + ' התראות פתוחות (' + (al.red || 0) + ' אדומות)', go: 'd/alerts' });
-    if (rd && rd.counts && rd.counts.not_entered >= IN_MIN_N) att.push({ text: rd.counts.not_entered + ' חניכים ללא סטטוס כשירות מבצעית', go: 'd/readiness' });
-    if (fc && fc.counts && fc.counts.incomplete >= IN_MIN_N) att.push({ text: fc.counts.incomplete + ' חניכים עם נתוני כש״ג חסרים', go: 'd/fitness' });
+    if (rd && rd.counts && rdp && /^\d+$/.test(rdp.n) && rd.counts.not_entered >= IN_MIN_N) att.push({ text: rd.counts.not_entered + ' חניכים ללא סטטוס כשירות מבצעית', go: 'd/readiness' });
+    if (fc && fc.counts && fcp && /^\d+$/.test(fcp.i) && fc.counts.incomplete >= IN_MIN_N) att.push({ text: fc.counts.incomplete + ' חניכים עם נתוני כש״ג חסרים', go: 'd/fitness' });
     var cs = ng && (ng.course || (ng.data && ng.data.course)); if (cs && cs.soldiers && cs.soldiers_with_results !== undefined && cs.soldiers - cs.soldiers_with_results >= IN_MIN_N) att.push({ text: (cs.soldiers - cs.soldiers_with_results) + ' חניכים ללא תוצאת ניווט כלל', go: 'd/nav' });
     var soldiers = (g('dash.overview') || {}).active_soldiers;
-    return { v: 1, version: 'insight-1', generatedAt: ctx.now || new Date().toISOString(), course: ctx.course || '', soldiers: soldiers === undefined ? null : soldiers, sections: S_, insights: ins.map(function (x) { return { title: x.title, text: x.text, n: x.n, window: x.window, source: (x.source || []).join(', '), caveat: x.caveat }; }), attention: att, failed: Object.keys(R).filter(function (k) { return !R[k].ok; }) };
+    return { v: 1, version: 'insight-1', generatedAt: ctx.now || new Date().toISOString(), course: ctx.course || '', soldiers: (soldiers === undefined || (typeof soldiers === 'number' && soldiers < IN_MIN_N)) ? null : soldiers, sections: S_, insights: ins.map(function (x) { return { title: x.title, text: x.text, n: x.n, window: x.window, source: (x.source || []).join(', '), caveat: x.caveat }; }), attention: att, failed: Object.keys(R).filter(function (k) { return !R[k].ok; }) };
   }
   var CI_ROUTES = ['nav.summary', 'nav.groups', 'fitness.summary', 'fitness.completion', 'mk.summary', 'exams.summary', 'attendance.summary', 'marches.summary', 'readiness.summary', 'alerts.counts', 'analytics.insights', 'dash.overview'];
   function inCourseLoad() {
@@ -2350,9 +2398,8 @@ var RK = (function () {
     return RK.xlsx({ sheets: sh });
   }
   function inCourseFile(m, cat, kind) {
-    var pdf = kind === 'pdf', bytes; try { bytes = pdf ? inCoursePdf(m, cat) : inCourseXlsx(m, cat); } catch (e) { toast('יצירת הקובץ נכשלה: ' + e.message, 'err'); return; }
-    if (!inCheck(bytes, pdf ? 'pdf' : 'xlsx')) { toast('הקובץ שנוצר לא עבר בדיקת תקינות — לא הורד.', 'err'); return; }
-    inSave(bytes, 'maslul-course-' + cat + '_' + String(m.generatedAt).slice(0, 10) + '_v1.' + (pdf ? 'pdf' : 'xlsx'), pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); toast('הקובץ נוצר ונבדק — ההורדה החלה (בדקו בתיקיית ההורדות)');
+    var pdf = kind === 'pdf';
+    return inGated('course', pdf ? 'pdf' : 'xlsx', cat, function () { return pdf ? inCoursePdf(m, cat) : inCourseXlsx(m, cat); }, 'maslul-course-' + cat + '_' + String(m.generatedAt).slice(0, 10) + '_v1.' + (pdf ? 'pdf' : 'xlsx'));
   }
   function CourseInsight(cat0) {
     var cat = CI_CATS.some(function (c) { return c[0] === cat0; }) ? cat0 : 'all', body = h('div', { 'aria-live': 'polite' }, [skeleton(3)]), model = null;
@@ -2403,6 +2450,111 @@ var RK = (function () {
   }
   window.__insight = { courseModel: inCourseModel, coursePdf: inCoursePdf, courseXlsx: inCourseXlsx, build: inBuildModel, pdf: inNavPdf, xlsx: inNavXlsx, load: inLoad, min: IN_MIN_N, model: null };
 
+
+/* ===== EXAMS insight ("דוח מבחן"): attempts A/B/C per soldier → first-attempt pass, final pass, outcome stages, A-score distribution, units; real PDF + XLSX.
+   Rules are the APPROVED exam rules only (Exams.gs): pass score = the exam's own/course pass score; A<pass ⇒ B; B<pass ⇒ C. No weighted score is recomputed here; no per-person ranking; no prediction.
+   Same small-cell policy as the navigation report: the group-facing projection `pub` (screen, PDF, Excel) vs the operational zone `ops` (screen only). ===== */
+var IN_EX_MD = { version: 'insight-exam-1', source: 'exams.defs · exams.attempts · soldiers.list' };
+/* a rate must not reveal a small cell: k passers of n. k in 1..4 or (n-k) in 1..4 ⇒ no percentage (the percentage times N would recover the small count). */
+function inRate(k, n) { if (!n) return { pct: null, txt: '—', short: '—' }; if (k > 0 && k < IN_MIN_N) return { pct: null, txt: 'פחות מ-' + IN_MIN_N + ' חניכים', short: 'פחות מ-' + IN_MIN_N }; if (n - k > 0 && n - k < IN_MIN_N) return { pct: null, txt: 'כמעט כולם (פחות מ-' + IN_MIN_N + ' לא עברו)', short: 'כמעט כולם' }; var v = 100 * k / n; return { pct: v, txt: String(Math.round(v)) + '%', short: String(Math.round(v)) + '%' }; }
+function inFmtP(v) { return v === null || v === undefined ? '—' : String(Math.round(v)) + '%'; }
+function inExamBuild(attempts, def, soldiers, ctx) {
+  ctx = ctx || {}; var pass = def && def.pass_score !== null && def.pass_score !== undefined && def.pass_score !== '' && inNum(Number(def.pass_score)) ? Number(def.pass_score) : null, by = {}, cancelledSoldiers = 0, cancelledRecs = 0, dup = 0;
+  (attempts || []).forEach(function (a) { if (a.exam_id !== def.id) return; if (a.record_status === 'cancelled') { cancelledRecs++; return; } if (a.soldier_cancelled) { cancelledSoldiers++; return; } var s = by[a.soldier_id] = by[a.soldier_id] || {}, p = s[a.attempt]; if (p) { dup++; if (String(a.updated_at || '') < String(p.updated_at || '')) return; } s[a.attempt] = a; });
+  var sol = {}, active = {}; (soldiers || []).forEach(function (s) { sol[s.id] = s; if (s.active !== false && s.record_status !== 'cancelled') active[s.id] = 1; });
+  var rows = [], pend = { B: [], C: [] }, odd = 0;
+  Object.keys(by).forEach(function (id) { var s = by[id], A = s.A && inNum(s.A.score) ? s.A.score : null, B = s.B && inNum(s.B.score) ? s.B.score : null, C = s.C && inNum(s.C.score) ? s.C.score : null; if (A === null) { odd++; return; }
+    var st = pass === null ? 'noPass' : A >= pass ? 'A' : B === null ? 'pendB' : B >= pass ? 'B' : C === null ? 'pendC' : C >= pass ? 'C' : 'failC', so = sol[id] || {};
+    var r = { soldier_id: id, soldier_name: (s.A.soldier_name) || so.full_name || id, department_id: so.department_id, department_name: so.department_name, team_id: so.team_id, team_name: so.team_name, final_score: A, st: st, pass1: pass !== null && A >= pass, passFinal: st === 'A' || st === 'B' || st === 'C' };
+    if (st === 'pendB') pend.B.push(r); if (st === 'pendC') pend.C.push(r); rows.push(r); });
+  var elig = Object.assign({}, active); rows.forEach(function (r) { elig[r.soldier_id] = 1; }); var eligible = Object.keys(elig).length, recorded = rows.length, hiddenAll = recorded < IN_MIN_N || pass === null;
+  var m = { v: 1, kind: 'exam', version: IN_EX_MD.version, examId: def.id, examName: def.name, pass: pass, course: ctx.course || '', generatedAt: ctx.now || new Date().toISOString(), source: IN_EX_MD.source };
+  var cnt = function (k) { return rows.filter(function (r) { return r.st === k; }).length; };
+  m.ops = { recorded: recorded, eligible: eligible, missing: eligible - recorded, stages: { A: cnt('A'), B: cnt('B'), C: cnt('C'), failC: cnt('failC'), pendB: cnt('pendB'), pendC: cnt('pendC') }, pend: pend, odd: odd, dup: dup, cancelledRecs: cancelledRecs, cancelledSoldiers: cancelledSoldiers, attention: [] };
+  if (m.ops.missing > 0) m.ops.attention.push({ id: 'missing', text: m.ops.missing + ' חניכים ללא ניסיון א׳ במבחן', go: 'd/exams' });
+  if (m.ops.stages.pendB) m.ops.attention.push({ id: 'pendB', text: m.ops.stages.pendB + ' חניכים ממתינים למועד ב׳', go: 'd/exams' });
+  if (m.ops.stages.pendC) m.ops.attention.push({ id: 'pendC', text: m.ops.stages.pendC + ' חניכים ממתינים למועד ג׳', go: 'd/exams' });
+  if (m.ops.stages.failC) m.ops.attention.push({ id: 'failC', text: m.ops.stages.failC + ' חניכים לא עברו גם במועד ג׳', go: 'd/exams' });
+  if (odd) m.ops.attention.push({ id: 'odd', text: odd + ' חניכים עם מועד ב׳/ג׳ ללא מועד א׳ (חריגה בנתונים)', go: 'd/exams' });
+  var pub = { eligible: eligible, basis: 'חניכים פעילים כיום בהיקף ההרשאה, בתוספת חניכים שיש להם ניסיון א׳ (אין תיעוד היסטורי של הרכב הקורס)', hidden: hiddenAll, reason: pass === null ? 'לא הוגדר ציון עובר' : '', recorded: hiddenAll ? null : recorded, pct: hiddenAll || !eligible ? null : Math.round(100 * recorded / eligible) };
+  if (!hiddenAll) {
+    var p1 = rows.filter(function (r) { return r.pass1; }).length, pf = rows.filter(function (r) { return r.passFinal; }).length, sc = rows.map(function (r) { return r.final_score; });
+    pub.score = { n: recorded, mean: inMean(sc), median: inMedian(sc), bins: inMergeBins(sc) }; pub.firstPass = inRate(p1, recorded); pub.finalPass = inRate(pf, recorded);
+    var parts = inPart({ A: m.ops.stages.A, B: m.ops.stages.B, C: m.ops.stages.C, failC: m.ops.stages.failC, pend: m.ops.stages.pendB + m.ops.stages.pendC }, recorded);
+    pub.stages = [['עברו במועד א׳', parts.A], ['עברו במועד ב׳', parts.B], ['עברו במועד ג׳', parts.C], ['לא עברו גם במועד ג׳', parts.failC], ['ממתינים למועד הבא', parts.pend]];
+    var cur = inUnitsOf(rows, recorded), rate = {}; ['department_id', 'team_id'].forEach(function (k) { var g = {}; rows.forEach(function (r) { if (r[k]) { (g[r[k]] = g[r[k]] || []).push(r); } }); Object.keys(g).forEach(function (id) { rate[id] = g[id].length >= IN_MIN_N ? inRate(g[id].filter(function (r) { return r.pass1; }).length, g[id].length) : { pct: null, txt: '—' }; }); });
+    pub.departments = cur.departments; pub.teams = cur.teams; pub.departments.concat(pub.teams).forEach(function (u) { if (!u.hidden) u.pass1 = rate[u.id]; });
+  } else { pub.score = { hidden: true, reason: pass === null ? 'לא הוגדר ציון עובר למבחן' : 'פחות מ-' + IN_MIN_N + ' תוצאות — אין מספיק נתונים' }; pub.stages = []; pub.departments = []; pub.teams = []; }
+  pub.attention = []; if (!hiddenAll) { var ms = eligible - recorded; if (ms > 0) pub.attention.push({ id: 'missing', text: (ms >= IN_MIN_N ? ms : 'פחות מ-' + IN_MIN_N) + ' חניכים ללא ניסיון א׳' }); var pd = inPart({ pend: m.ops.stages.pendB + m.ops.stages.pendC }, recorded).pend; if (/^\d+$/.test(pd) && +pd > 0) pub.attention.push({ id: 'pend', text: pd + ' חניכים ממתינים למועד הבא' }); }
+  pub.findings = [];
+  if (hiddenAll) pub.findings.push(pass === null ? 'לא הוגדר ציון עובר למבחן, ולכן אין חישוב עמידה.' : 'פחות מ-' + IN_MIN_N + ' חניכים עם תוצאה: לא מוצגים ממוצע, אחוזי עמידה או התפלגות.');
+  else { pub.findings.push('עמידה במועד א׳: ' + pub.firstPass.txt + ' (N=' + recorded + ', ציון עובר ' + pass + '); עמידה סופית לאחר מועדים נוספים: ' + pub.finalPass.txt + '.'); pub.findings.push('ממוצע מועד א׳ ' + inFmt(pub.score.mean) + ', חציון ' + inFmt(pub.score.median) + '.'); var vu = pub.departments.filter(function (u) { return !u.hidden && u.pass1 && u.pass1.pct !== null; }).sort(function (a, b) { return b.pass1.pct - a.pass1.pct; }); if (vu.length >= 2) pub.findings.push('הפער בעמידה במועד א׳ בין המחלקות הגלויות: ' + Math.round(vu[0].pass1.pct - vu[vu.length - 1].pass1.pct) + ' נקודות אחוז (' + vu[0].name + ' לעומת ' + vu[vu.length - 1].name + '); תיאור בלבד, לא מסקנה סיבתית.'); }
+  m.pub = pub; m.rows = rows; return m;
+}
+function inExamPdf(m, logos) {
+  var p = m.pub, d = RK.Pdf({ title: 'דוח מבחן — ' + m.examName, stamp: inStamp(m.generatedAt), logos: logos || [] }), T = RK.colors.TEAL, R = RK.colors.RED;
+  d.header('דוח מבחן עיוני — תמונת מצב', m.examName + ' · ' + (m.course || 'קורס'), ['נוצר: ' + String(m.generatedAt).slice(0, 16).replace('T', ' ') + ' (UTC) · גרסת שיטה ' + m.version + ' · מקור: ' + m.source, 'ספירות קטנות מ-' + IN_MIN_N + ' מוסתרות · ללא שמות, מספרים אישיים או דירוג אישי · ציון עובר: ' + (m.pass === null ? 'לא הוגדר' : m.pass)]);
+  d.kpis([{ label: 'כיסוי מועד א׳', value: p.hidden ? 'אין מספיק נתונים' : p.recorded + '/' + p.eligible, note: p.hidden ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : p.pct + '% מהחניכים' }, { label: 'עמידה במועד א׳', value: p.hidden ? '—' : p.firstPass.short, note: p.hidden ? '' : 'N=' + p.recorded }, { label: 'עמידה סופית', value: p.hidden ? '—' : p.finalPass.short, note: p.hidden ? '' : 'לאחר מועדים ב׳/ג׳' }, { label: 'ציון א׳ ממוצע', value: p.hidden ? '—' : inFmt(p.score.mean), note: p.hidden ? '' : 'חציון ' + inFmt(p.score.median), accent: T }]);
+  d.h2('מסקנות עיקריות'); p.findings.forEach(function (t) { d.callout(t); });
+  if (!p.hidden) {
+    d.h2('מסלול העמידה'); d.hbars({ title: 'חניכים לפי מועד העמידה', note: 'ספירות קטנות מ-' + IN_MIN_N + ' מוסתרות; הסתרה משלימה מונעת חישוב בהפרש', max: p.recorded, rowH: 22, rows: p.stages.map(function (s) { var n = /^\d+$/.test(s[1]) ? +s[1] : null; return { label: s[0], value: n, text: s[1], color: s[0].indexOf('לא עברו') === 0 ? R : T }; }) });
+    if (p.score.bins.length >= 2) d.histogram({ title: 'התפלגות ציון מועד א׳', note: 'ציר מספרי משמאל לימין · כל עמודה ≥ ' + IN_MIN_N + ' חניכים · ציון עובר ' + m.pass, h: 130, bins: p.score.bins }); else d.callout('מספר החניכים קטן מכדי להציג התפלגות מפורטת.');
+    d.pageBreak(); var vu = p.departments.filter(function (u) { return !u.hidden; }), hid = p.departments.length - vu.length; d.h2('יחידות');
+    if (vu.length) { d.hbars({ title: 'עמידה במועד א׳ לפי מחלקה', note: 'רק יחידות עם N≥' + IN_MIN_N + (hid ? ' · ' + hid + ' יחידות הוסתרו' : ''), max: 100, rowH: 20, rows: vu.map(function (u) { return { label: u.name, value: u.pass1 && u.pass1.pct !== null ? u.pass1.pct : null, text: (u.pass1 ? u.pass1.short : '—') + ' · N=' + u.n }; }) }); d.table(['יחידה', 'N', 'עמידה במועד א׳', 'ממוצע א׳'], vu.concat(p.teams.filter(function (u) { return !u.hidden; })).map(function (u) { return [u.name, String(u.n), u.pass1 ? u.pass1.txt : '—', inFmt(u.mean)]; })); } else d.p('כל היחידות קטנות מ-' + IN_MIN_N + ' או הוסתרו — אין פירוט לפי יחידה.');
+  }
+  d.banner('איכות הנתונים והיקף', '', 'מה נספר, מה חסר ומה הוסתר'); d.p('בסיס הכיסוי: ' + p.basis + '.', { size: 9 });
+  d.table(['פריט', 'ערך'], [['חניכים בהיקף (מכנה)', String(p.eligible)], ['חניכים עם ניסיון א׳', p.hidden ? 'פחות מ-' + IN_MIN_N : String(p.recorded)], ['ציון עובר', m.pass === null ? 'לא הוגדר' : String(m.pass)]]);
+  if (p.attention.length) { d.h2('מה דורש טיפול'); p.attention.forEach(function (a) { d.callout(a.text, { accent: R }); }); }
+  d.h2('הגדרות ושיטה'); d.table(['מדד', 'הגדרה'], [['עמידה במועד א׳', 'חניכים שציון מועד א׳ שלהם ≥ ציון עובר, מתוך החניכים עם ניסיון א׳'], ['עמידה סופית', 'חניכים שעברו באחד המועדים א׳/ב׳/ג׳ (לפי כללי המבחנים המאושרים), מתוך אותם חניכים'], ['ממתינים למועד הבא', 'נכשלו במועד האחרון שנרשם ועדיין אין מועד נוסף'], ['לא נכלל', 'ציון משוקלל, דירוג אישי, חיזוי או ספי עמידה שלא הוגדרו']]);
+  d.p('כל המספרים נגזרים מאותו מודל כמו המסך. ספירה קטנה מ-' + IN_MIN_N + ' אינה מוצגת; אין מינימום/מקסימום; הסתרה משלימה בין יחידות. מידע סינתטי בלבד בסביבת בדיקה.', { size: 8, color: RK.colors.GREY });
+  return d.build();
+}
+function inExamXlsx(m) {
+  var p = m.pub, sh = [], c = function (v) { return v === null || v === undefined ? 'מוסתר' : v; };
+  sh.push({ name: 'סיכום', header: ['מדד', 'ערך', 'הערה'], rows: [['מבחן', m.examName, ''], ['קורס', m.course, ''], ['ציון עובר', m.pass === null ? 'לא הוגדר' : m.pass, ''], ['חניכים בהיקף (מכנה)', p.eligible, p.basis], ['חניכים עם ניסיון א׳', p.hidden ? 'פחות מ-' + IN_MIN_N : p.recorded, ''], ['עמידה במועד א׳', p.hidden ? 'מוסתר' : p.firstPass.txt, ''], ['עמידה סופית', p.hidden ? 'מוסתר' : p.finalPass.txt, ''], ['ציון א׳ ממוצע', p.hidden ? 'מוסתר' : inR1(p.score.mean), p.hidden ? '' : 'N=' + p.score.n], ['כלל הסתרה', 'ספירה קטנה מ-' + IN_MIN_N + ' אינה מוצגת', ''], ['נוצר (UTC)', m.generatedAt, 'גרסה ' + m.version]] });
+  sh.push({ name: 'מסלול עמידה', header: ['שלב', 'חניכים'], rows: p.stages.length ? p.stages.map(function (s) { return [s[0], /^\d+$/.test(s[1]) ? +s[1] : s[1]]; }) : [['אין מספיק נתונים', '']] });
+  sh.push({ name: 'התפלגות', header: ['טווח ציון', 'חניכים'], rows: p.hidden ? [['אין מספיק נתונים', '']] : p.score.bins.map(function (b) { return [b.label, b.n]; }) });
+  var ur = function (lvl) { return function (u) { return [lvl, u.name, u.hidden ? 'מוסתר' : u.n, u.hidden ? 'מוסתר' : inR1(u.mean), u.hidden ? 'מוסתר' : (u.pass1 ? u.pass1.txt : '—'), u.reason || '']; }; };
+  sh.push({ name: 'יחידות', header: ['רמה', 'יחידה', 'N', 'ממוצע א׳', 'עמידה במועד א׳', 'הערה'], rows: p.departments.map(ur('מחלקה')).concat(p.teams.map(ur('צוות'))) });
+  sh.push({ name: 'מה דורש טיפול', header: ['פריט'], rows: p.attention.length ? p.attention.map(function (a) { return [a.text]; }) : [['אין פריטים']] });
+  return RK.xlsx({ sheets: sh });
+}
+function inExamLoad(examId) {
+  var cid = S.course.id; return Promise.all([api('soldiers.list', { courseId: cid, opts: {} }, 'fresh'), api('exams.defs', { courseId: cid, opts: {} }, 'fresh'), api('exams.attempts', { courseId: cid, opts: {} }, 'fresh')]).then(function (rr) {
+    for (var i = 0; i < 3; i++) if (!rr[i].ok) return rr[i]; var def = (rr[1].data || []).filter(function (x) { return x.id === examId; })[0]; if (!def) return { ok: false, code: 'NOT_FOUND', message: 'המבחן לא נמצא.' };
+    return { ok: true, model: inExamBuild(rr[2].data || [], def, rr[0].data || [], { course: S.course && S.course.name }) };
+  });
+}
+function inExamFile(m, kind) { var pdf = kind === 'pdf'; return inGated('exams', pdf ? 'pdf' : 'xlsx', m.examId, function () { return pdf ? inExamPdf(m) : inExamXlsx(m); }, 'maslul-exam_' + String(m.examId).replace(/[^A-Za-z0-9-]/g, '') + '_' + String(m.generatedAt).slice(0, 10) + '_v1.' + (pdf ? 'pdf' : 'xlsx')); }
+function ExamInsight(examId) {
+  var body = h('div', { 'aria-live': 'polite' }, [skeleton(3)]);
+  mount('more', [h('button', { class: 'back', type: 'button', id: 'exBack', onclick: function () { go('insight'); }, text: '→ חזרה לתובנות ודוחות' }), h('h1', { class: 'page', text: 'ניתוח מבחן' }), body], 'ניתוח מבחן');
+  function draw() {
+    body.replaceChildren(skeleton(3)); inExamLoad(examId).then(function (r) {
+      body.replaceChildren(); if (!r.ok) { body.append(errBox(r, draw), h('p', { class: 'muted', text: 'לא מוצגים נתונים או תובנות כשהקריאה מהשרת נכשלה.' })); return; }
+      var m = r.model, P = m.pub, O = m.ops; window.__insight.exam = m;
+      body.append(h('p', { class: 'in-sub', id: 'exSub', text: m.examName + ' · ' + (m.course || '') + ' · ציון עובר ' + (m.pass === null ? 'לא הוגדר' : m.pass) }), h('details', { class: 'in-meta', id: 'exStamp' }, [h('summary', { text: 'נקרא מהשרת ' + new Date(m.generatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) + ' · מקור ומכנה' }), h('p', { text: 'מקור: ' + m.source + ' · מכנה: ' + P.eligible + ' חניכים (' + P.basis + ')' })]));
+      if (!O.recorded) { body.append(emptyBox('אין עדיין ניסיונות א׳ במבחן זה — אין מה לנתח.')); return; }
+      body.append(h('div', { class: 'in-kpis' }, [kpi('כיסוי מועד א׳', P.hidden ? 'אין מספיק נתונים' : P.recorded + '/' + P.eligible, P.hidden ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : P.pct + '%', 'exK1', '', P.hidden ? undefined : P.pct), kpi('עמידה במועד א׳', P.hidden ? '—' : P.firstPass.short, P.hidden ? '' : 'N=' + P.recorded, 'exK2'), kpi('עמידה סופית', P.hidden ? '—' : P.finalPass.short, P.hidden ? '' : 'לאחר מועדים ב׳/ג׳', 'exK3'), kpi('ממוצע מועד א׳', P.hidden ? '—' : inFmt(P.score.mean), P.hidden ? '' : 'חציון ' + inFmt(P.score.median), 'exK4')]));
+      var act = h('div', { class: 'btns in-act' }); if (isAdmin()) act.append(h('button', { class: 'primary', type: 'button', id: 'exPdf', text: 'יצירת דוח PDF', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inExamFile(m, 'pdf').then(function () { busy(b, false); }); }, 30); } }), h('button', { class: 'secondary', type: 'button', id: 'exXlsx', text: 'ייצוא נתונים (Excel)', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inExamFile(m, 'xlsx').then(function () { busy(b, false); }); }, 30); } })); else act.append(h('p', { class: 'muted', id: 'exNoExport', text: 'הפקת קבצים מותרת למנהל בלבד. הכפתורים מוסתרים כאן, וההרשאה נבדקת ונרשמת גם בשרת בכל הפקה.' }));
+      act.append(h('button', { class: 'secondary', type: 'button', id: 'exRefresh', text: 'רענון', onclick: draw })); body.append(act);
+      body.append(sectionHead('ממצאים', null), h('ul', { class: 'in-find', id: 'exFind' }, P.findings.map(function (t) { return h('li', { text: t }); })));
+      if (P.hidden) body.append(h('div', { class: 'msg', id: 'exInsufficient', role: 'status', text: (P.score.reason || 'אין מספיק נתונים') + '. כל המדדים הקבוצתיים מוסתרים; הנתונים המבצעיים למטה מיועדים למורשים בלבד.' }));
+      else {
+        body.append(sectionHead('מסלול העמידה', null), h('table', { class: 'in-table', id: 'exStages' }, [h('thead', {}, [h('tr', {}, ['שלב', 'חניכים'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, P.stages.map(function (s) { return h('tr', {}, [h('td', { text: s[0] }), h('td', { text: s[1] })]); }))]));
+        body.append(sectionHead('התפלגות ציון מועד א׳', 'כל עמודה ≥ ' + IN_MIN_N), chartFigure('exHist', 'התפלגות ציון מועד א׳ · N=' + P.score.n, histChart(P, function () {}, -1), 'התפלגות ציון מועד א׳: ' + P.score.bins.map(function (b) { return b.label + ' — ' + b.n; }).join('; '), ['טווח', 'חניכים'], P.score.bins.map(function (b) { return [b.label, b.n]; })));
+        var us = P.departments.concat(P.teams); if (us.length) { body.append(sectionHead('יחידות', 'N≥' + IN_MIN_N)); body.append(h('table', { class: 'in-table', id: 'exUnits' }, [h('thead', {}, [h('tr', {}, ['יחידה', 'N', 'עמידה במועד א׳', 'ממוצע'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, us.map(function (u) { return h('tr', {}, [h('td', { text: u.name }), h('td', { text: u.hidden ? 'מוסתר' : String(u.n) }), h('td', { text: u.hidden ? u.reason : (u.pass1 ? u.pass1.txt : '—') }), h('td', { text: u.hidden ? 'מוסתר' : inFmt(u.mean) })]); }))])); }
+      }
+      var opBox = h('section', { class: 'in-op', id: 'exOps', 'aria-label': 'תצוגה מבצעית' }, [h('h3', { text: 'תצוגה מבצעית — מספרים מדויקים (לא נכללים בקבצים)' }), h('p', { class: 'muted', id: 'exOpsLine', text: O.recorded + ' עם ניסיון א׳ · ' + O.eligible + ' בהיקף · ' + O.missing + ' ללא ניסיון · עברו א׳/ב׳/ג׳: ' + O.stages.A + '/' + O.stages.B + '/' + O.stages.C + ' · לא עברו: ' + O.stages.failC + ' · ממתינים: ' + (O.stages.pendB + O.stages.pendC) })]);
+      O.attention.forEach(function (a) { opBox.append(card(a.text, 'פתיחת המסך הרלוונטי', null, function () { go(a.go); })); });
+      var pl = O.pend.B.concat(O.pend.C); if (pl.length) { opBox.append(h('h4', { text: 'ממתינים למועד הבא (מבצעי)' })); pl.slice(0, 60).forEach(function (x) { opBox.append(card(x.soldier_name, 'ציון מועד א׳: ' + inFmt(x.final_score), null, function () { go('soldier/' + x.soldier_id); })); }); }
+      body.append(opBox);
+    });
+  }
+  draw();
+}
+window.__insight.examBuild = inExamBuild; window.__insight.examPdf = inExamPdf; window.__insight.examXlsx = inExamXlsx;
+
   /* ---------- router ---------- */
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
   function render() {
@@ -2414,7 +2566,7 @@ var RK = (function () {
       if (adm) { emp[0].append(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; this.setAttribute('aria-busy', 'true'); var b = this; api('gw:seed', {}).then(function (x) { if (!x.ok) { b.disabled = false; b.removeAttribute('aria-busy'); toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
         emp.push(sectionHead('מה יקרה אחרי הטעינה', null), card('חניכים וצוותים', 'רשימה, חיפוש וסינון לפי מחלקה', null), card('מעקבים ומסעות', 'משימות, מסע עם חסרים ועריכת משתתפים אחרי שמירה', null), card('הזמנת מפקדים', 'בלשונית "עוד" → אישור בקשות; כל מפקד רואה רק את הצוות שלו', null)); }
       mount('home', emp); return; }
-    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); if (r === 'entry') return EntryHub(); if (r === 'insight') return InsightHub(); var ci = /^insight\/course(?:\/([a-z]+))?$/.exec(r); if (ci) return CourseInsight(ci[1] || 'all'); var ni = /^insight\/nav\/([^\/]+)\/(\d{4}-\d{2}-\d{2})(?:\/([^\/]+))?$/.exec(r); if (ni) return NavInsight(ni[1], ni[2], ni[3]); if (r === 'followups' || r === 'tasks') return Tasks(); var fn = /^followup-new\/(.+)$/.exec(r); if (fn) return FollowForm(fn[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
+    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); if (r === 'entry') return EntryHub(); if (r === 'insight') return InsightHub(); var ie = /^insight\/exam\/([A-Za-z0-9-]+)$/.exec(r); if (ie) return ExamInsight(ie[1]); var ci = /^insight\/course(?:\/([a-z]+))?$/.exec(r); if (ci) return CourseInsight(ci[1] || 'all'); var ni = /^insight\/nav\/([^\/]+)\/(\d{4}-\d{2}-\d{2})(?:\/([^\/]+))?$/.exec(r); if (ni) return NavInsight(ni[1], ni[2], ni[3]); if (r === 'followups' || r === 'tasks') return Tasks(); var fn = /^followup-new\/(.+)$/.exec(r); if (fn) return FollowForm(fn[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
   /* Read warm-up (server mode only): the data a tab needs is requested on touch-down (before the click completes) and once when the app is ready; the client's short read memo hands it over, so the screen paints real content instead of a skeleton. Reads only, same arguments as the screens use. */
   var WARM = { soldiers: [['soldiers.list', { opts: {} }]], tasks: [['followups.list', { opts: {} }], ['tasks.list', { opts: {} }], ['soldiers.list', { opts: {} }]] };

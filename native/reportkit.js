@@ -14,7 +14,10 @@ var RK = (function () {
   /* ---------- bidi: one RTL paragraph, simplified UBA (same rules as backend_next/export_formats.js plus attached number signs; a test asserts identical output on text without signed numbers) ---------- */
   var isHeb = function (c) { return (c >= 0x590 && c <= 0x5ff) || c === 0x200f; }, isLat = function (c) { return (c >= 65 && c <= 90) || (c >= 97 && c <= 122); }, isDig = function (c) { return c >= 48 && c <= 57; };
   var MIRROR = { 40: 41, 41: 40, 91: 93, 93: 91, 60: 62, 62: 60, 123: 125, 125: 123 };
+  /* the embedded font has no ≥ ≤ → ← × glyph: spell them so a PDF never shows a replacement box */
+  function pdfSafe(str) { return String(str).replace(/N\s?≥\s?(\d+)/g, 'N לפחות $1').replace(/≥\s?(\d+)/g, 'לפחות $1').replace(/≤\s?(\d+)/g, 'עד $1').replace(/≥/g, 'לפחות').replace(/≤/g, 'עד').replace(/[→←⇒]/g, ' ').replace(/×/g, 'x').replace(/Σ/g, 'סכום'); }
   function bidiVisual(str) {
+    str = pdfSafe(str);
     var cp = Array.from(str).map(function (ch) { return ch.codePointAt(0); }).filter(function (c) { return c !== 0x200e && c !== 0x200f; }), n = cp.length, t = new Array(n), i;
     for (i = 0; i < n; i++) t[i] = isHeb(cp[i]) ? 'R' : isLat(cp[i]) ? 'L' : isDig(cp[i]) ? 'N' : 'O';
     for (i = 1; i < n - 1; i++) if (t[i] === 'O' && [46, 44, 58, 47, 45, 43, 0x2013].indexOf(cp[i]) !== -1 && t[i - 1] === 'N' && t[i + 1] === 'N') t[i] = 'N';

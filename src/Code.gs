@@ -134,6 +134,8 @@ const API_ = {
   'reports.build': function (ctx, a) { return Reports.build(ctx, a.courseId, a.spec); },
   'reports.preview': function (ctx, a) { return Reports.preview(ctx, a.courseId, a.spec); },
   'reports.generate': function (ctx, a) { return Reports.generate(ctx, a.courseId, a.spec, a.format); },
+  'reports.exportAuthorize': function (ctx, a) { return Reports.exportAuthorize(ctx, a.courseId, a.req); },
+  'reports.exportComplete': function (ctx, a) { return Reports.exportComplete(ctx, a.courseId, a.req); },
   'reports.fullExport': function (ctx, a) { return Reports.fullExport(ctx, a.courseId, a.include_private === true); },
   'reports.download': function (ctx, a) { return Reports.download(ctx, a.id); },
   'reports.jobs': function (ctx, a) { return Reports.jobs(ctx, a.courseId); },

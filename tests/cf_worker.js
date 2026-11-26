@@ -191,6 +191,19 @@ await T('S24 PIN-only pilot login: exactly 4 digits; weak PINs refused WITHOUT c
     // file-backed routes: HTTP 501 + ok:false + NOT_CONNECTED (a 200 would look like success to any client that checks only the status)
     for (const [m, a] of [['backup.create', { kind: 'manual' }], ['backup.restore', { id: 'x' }], ['reports.fullExport', { courseId: cid }]]) { const r = await admin.api(m, a); assert.equal(r._status, 501, m + ' status'); assert.equal(r.ok, false); assert.equal(r.code, 'NOT_CONNECTED', m); }
     const nonAdmin = await A.c.api('backup.create', { kind: 'manual' }); assert.equal(nonAdmin._status, 403, 'a commander is refused before anything else'); });
+  await T('S17b report-file gate on the real Worker + D1: commander/foreign/anonymous are refused by the SERVER (403/401, no ticket) and the refusal is audited; the admin gets a single-use ticket whose completion (size + SHA-256) is stored in D1 and readable via audit.list; reuse, wrong actor and bad hashes are refused', async () => {
+    const body = { courseId: cid, req: { kind: 'course', format: 'pdf', scope: 'all' } }, SHA = 'b'.repeat(64);
+    for (const who of [A, B, C]) { const r = await who.c.api('reports.exportAuthorize', body); assert.equal(r.ok, false, JSON.stringify(r)); assert.equal(r.code, 'FORBIDDEN'); assert.equal(r.data, undefined); }
+    assert.equal((await anon.api('reports.exportAuthorize', body))._status, 401);
+    const a = await admin.api('reports.exportAuthorize', body); assert.ok(a.ok, JSON.stringify(a)); const t = a.data.ticket;
+    { const r = await A.c.api('reports.exportComplete', { courseId: cid, req: { ticket: t, sha256: SHA, bytes: 4000, pages: 2 } }); assert.equal(r.ok, false); assert.equal(r.code, 'FORBIDDEN', 'a commander cannot complete the admin ticket'); }
+    assert.equal((await admin.api('reports.exportComplete', { courseId: cid, req: { ticket: t, sha256: 'zz', bytes: 4000, pages: 2 } })).ok, false, 'bad hash');
+    const c = await admin.api('reports.exportComplete', { courseId: cid, req: { ticket: t, sha256: SHA, bytes: 4000, pages: 2 } }); assert.ok(c.ok, JSON.stringify(c));
+    assert.equal((await admin.api('reports.exportComplete', { courseId: cid, req: { ticket: t, sha256: SHA, bytes: 4000, pages: 2 } })).ok, false, 'single use');
+    const au = await admin.api('audit.list', { courseId: cid }); assert.ok(au.ok); const acts = au.data.filter(x => /^REPORT_EXPORT_/.test(x.action)); const kinds = acts.map(x => x.action);
+    assert.ok(kinds.includes('REPORT_EXPORT_DENIED') && kinds.includes('REPORT_EXPORT_AUTHORIZED') && kinds.includes('REPORT_EXPORT_COMPLETED'), kinds.join());
+    const done = acts.filter(x => x.action === 'REPORT_EXPORT_COMPLETED').map(x => JSON.parse(x.after_json)); assert.ok(done.some(x => x.sha256 === SHA && x.bytes === 4000), 'sha + size stored');
+    { const r = await A.c.api('audit.list', { courseId: cid }); assert.equal(r.ok, false); assert.equal(r.code, 'FORBIDDEN', 'a commander cannot read the audit'); } });
   await T('S18 security headers on API responses', async () => { const r = await admin('GET', '/auth/me'); for (const [k, v] of [['x-content-type-options', 'nosniff'], ['x-frame-options', 'DENY'], ['referrer-policy', 'no-referrer']]) assert.equal(r._h.get(k), v); assert.match(r._h.get('content-security-policy'), /default-src 'self'/); assert.match(r._h.get('strict-transport-security'), /max-age/); assert.equal(r._h.get('cache-control'), 'no-store'); });
   if (!HTTP) {
     await T('S19 Free-plan query budget: every request stays far below 50 D1 statements per invocation; row counts recorded', async () => {
