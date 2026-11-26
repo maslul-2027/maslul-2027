@@ -5,7 +5,7 @@
 ## ארבע סביבות, ארבע רמות הוכחה
 | סביבה | מה זה | הוכחה | מה אסור להסיק |
 |---|---|---|---|
-| 1. דמו ציבורי בדפדפן | מנוע מקומי ב-localStorage, נתונים סינתטיים, ללא שרת | 158 מתוך 176 נתיבים מסומנים PASS_SYNTH_E2E: בדפדפן, בקריאות שמקורן בממשק ומתואמות לקלט/תנועת משתמש (`interaction_verified` בלדג׳ר). זו הוכחה שהמסך קורא לנתיב אחרי תנועה, **לא** אימות סמנטי מלא של 158 התהליכים | לא מוכיח הרשאות שרת, התמדה בין מכשירים, קבצים או גיבוי |
+| 1. דמו ציבורי בדפדפן | מנוע מקומי ב-localStorage, נתונים סינתטיים, ללא שרת | 160 מתוך 178 נתיבים מסומנים PASS_SYNTH_E2E: בדפדפן, בקריאות שמקורן בממשק ומתואמות לקלט/תנועת משתמש (`interaction_verified` בלדג׳ר). זו הוכחה שהמסך קורא לנתיב אחרי תנועה, **לא** אימות סמנטי מלא של 158 התהליכים | לא מוכיח הרשאות שרת, התמדה בין מכשירים, קבצים או גיבוי |
 | 2. שרת TEST מקומי מאומת (HTTPS, loopback / חבילת Windows) | אותו UI מול שרת אמיתי: כניסה, סשנים, הרשאות, קבצים מוצפנים | **הוכחות הרצה ב-HTTPS (דחיות הרשאה והמסלול המלא):** `tests/secure_test_server.js`, `tests/marches_server.js`, `tests/documents_server.js`, `tests/report_export.js`, `tests/backup_restore.js`, `tests/full_backup.js`, `scripts/e2e_secure_browser.js`, `scripts/e2e_report_export_browser.js`, `scripts/e2e_backup_restore_browser.js`, `scripts/e2e_documents_browser.js`, `scripts/e2e_release_package.js` (Windows ב-CI). אין כאן טענה שכל 176 הנתיבים הורצו ב-HTTPS | מחשב אחד בלבד; לא נגיש ממכשיר אחר |
 | 2א. שומרי סיווג והרשאה בלי הרצת HTTPS (לא נחשבים הוכחת שרת) | בדיקות Node על המנוע בזיכרון עם זהות מדומה | `tests/route_table.js` הוא שומר **מלאי וסיווג** (כל נתיב מסווג ידנית, רשימת חסומים) ואינו בודק הרשאה בזמן ריצה; `tests/d7_authz.js`, `tests/v1_pentest.js`, `tests/uxqa_server.js` הן סריקות הרשאה על המנוע, לא על שרת HTTPS | לא להציג כ"בדיקת שרת מאובטח" |
 | 3. שרת TEST פרטי משותף מתארח | אותו קוד על מארח מאושר, שני מכשירים | **NOT_DEPLOYED. אין הוכחה.** תנאי הקבלה בשני טלפונים מתוארים ב-`docs/PRIVATE_TEST_SERVER.md` (סעיף "שני טלפונים פיזיים"); תסריט מפורט מוצע ב-PR #85 שטרם מוזג. הכול NOT_RUN | לא ניתן לטעון שהוא קיים |
@@ -71,7 +71,7 @@
 | qual | 10 | 10 | 0 |
 | readiness | 4 | 4 | 0 |
 | record | 4 | 4 | 2 |
-| reports | 6 | 2 | 6 |
+| reports | 8 | 4 | 6 |
 | settings | 2 | 2 | 1 |
 | snote | 3 | 3 | 0 |
 | soldiers | 9 | 9 | 5 |
@@ -79,10 +79,10 @@
 | users | 3 | 3 | 1 |
 
 ## התאמה לחוזה המקורי (174 נתיבים) — נבדק אוטומטית
-- 174/174 preserved; additions fitness.preview, fitness.reference; current 176/176 classified
+- 174/174 preserved; additions fitness.preview, fitness.reference, reports.exportAuthorize, reports.exportComplete; current 178/178 classified
 - מקורות: `docs/capability-inventory.json` (174 נתיבי החוזה המקורי, לא נערך), `src/Code.gs` (רשימת API_) ו-`docs/route-evidence-ledger.json`. הבדיקה: `scripts/check_contract_route_parity.js` (נכשלת על נתיב חסר, כפול או תוספת לא מוצהרת).
-- התוספות המוצהרות והמאושרות בלבד: `fitness.preview`, `fitness.reference` (תכונת ציון הכושר הרגיל). הן מסווגות ואינן מוסתרות.
-- זו בדיקת סיווג בלבד: היא **אינה** טוענת ש-176 הנתיבים פעילים בכל סביבה; ראו טבלאות הסביבות למעלה.
+- התוספות המוצהרות והמאושרות בלבד: `fitness.preview`, `fitness.reference`, `reports.exportAuthorize`, `reports.exportComplete` (תכונת ציון הכושר הרגיל). הן מסווגות ואינן מוסתרות.
+- זו בדיקת סיווג בלבד: היא **אינה** טוענת ש-178 הנתיבים פעילים בכל סביבה; ראו טבלאות הסביבות למעלה.
 
 ## עדיין חסום (ללא שינוי)
 OCR (אין ספק/מנוע), הגירה (`migration.run`), חיבורי Drive/Google, טבלאות ניקוד כש״ג N1–N8 (DRAFT, לא מאושרות מקצועית), שרת פרטי מתארח.
