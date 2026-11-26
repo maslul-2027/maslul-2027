@@ -35,6 +35,10 @@ if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
     await hook(p, "function (m, a, s) { if (m === 'nav.create') { var d = Object.assign({}, a.data, { plan_score: (a.data.plan_score + 1) % 6 }); return o(m, Object.assign({}, a, { data: d }), s); } return o(m, a, s); }");
     await p.click('#beSave'); await waitRes(p); const r = await result(p); assert.ok(!/ok/.test(r.cls), 'no success styling: ' + r.cls); assert.doesNotMatch(r.txt, /נשמרו \d+ רשומות ואומתו/); assert.match(r.txt, /נכשלו או לא אומתו: 4/); assert.match(await p.textContent('.be-fails'), /השרת החזיר ערך שונה מהנשלח/); assert.equal(await p.locator('.be-row.be-failed').count(), 4); assert.equal(await p.locator('#view .toast:has-text("נשמר ואומת")').count(), 0);
     await unhook(p); });
+  await t('A FIELD THE SERVER SHOULD RETURN IS MISSING in the read-back (shared test fields): NOT verified — "present" is never assumed', async () => {
+    const set = sol.slice(22, 24); await openBulk(p, TY, '2026-12-16', '4', '8'); await fill(p, set, V);
+    await hook(p, "function (m, a, s) { if (m === 'nav.list') return o(m, a, s).then(function (r) { if (r && r.ok && Array.isArray(r.data)) r.data = r.data.map(function (x) { var c = Object.assign({}, x); delete c.distance_km; return c; }); return r; }); return o(m, a, s); }");
+    await p.click('#beSave'); await waitRes(p); const r = await result(p); assert.ok(!/ok/.test(r.cls), 'missing shared field must not be green: ' + r.cls); assert.match(r.txt, /נכשלו או לא אומתו: 2/); assert.match(await p.textContent('.be-fails'), /פרטי המבחן שנשמרו שונים מהנשלח/); await unhook(p); });
   await t('RECORD MISSING: the server answers ok but nothing was written → not verified, named, retry writes it once', async () => {
     const set = sol.slice(5, 8); await openBulk(p, TY, '2026-12-02', '4', '8'); await fill(p, set, V);
     await hook(p, "function (m, a, s) { if (m === 'nav.create') return Promise.resolve({ ok: true, data: { id: 'ghost' } }); return o(m, a, s); }");

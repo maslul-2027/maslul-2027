@@ -34,7 +34,7 @@ const T = async (n, f) => { try { await f(); pass++; console.log('PASS', n); } c
   await T('cold first visit of Soldiers (server latency ' + LAT + 'ms): content appears, motion class is the tab motion', async () => {
     const r = await nav(click('.tab[data-go=soldiers]'), '#people .card'); R.soldiersCold = r; assert.ok(r.contentMs !== null, 'content never appeared'); assert.ok(r.classes.includes('rt-tab'), JSON.stringify(r)); assert.ok(r.minOpacity >= 0.99, 'translucent frame ' + r.minOpacity); });
   await T('revisit within the memo window: Tasks → Soldiers shows content at once (no skeleton frames)', async () => {
-    await nav(click('.tab[data-go=tasks]'), '#view .card, #view .empty'); const r = await nav(click('.tab[data-go=soldiers]'), '#people .card'); R.soldiersRevisit = r;
+    await nav(click('.tab[data-go=entry]'), '.eh-tile, #view .empty'); const r = await nav(click('.tab[data-go=soldiers]'), '#people .card'); R.soldiersRevisit = r;
     assert.ok(r.contentMs !== null && r.contentMs < LAT / 2, 'revisit content took ' + r.contentMs + 'ms (server latency ' + LAT + ')'); assert.equal(r.skeletonFrames, 0, 'skeleton frames on revisit: ' + r.skeletonFrames); assert.ok(r.minOpacity >= 0.99); });
   await T('open a soldier card = push motion; browser Back = pop motion; list scroll/position intact; no blank frame', async () => {
     await p.waitForSelector('#people .card'); const push = await nav(click('#people .card'), 'h1, h2'); R.push = push; assert.ok(push.classes.includes('rt-push'), JSON.stringify(push)); assert.ok(push.minOpacity >= 0.99);

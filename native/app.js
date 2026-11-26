@@ -38,7 +38,7 @@
     [].slice.call(view.querySelectorAll('.card,.stat,.section,dl.kv')).forEach(function (el) { if (el.dataset.rv || el.getBoundingClientRect().top < innerHeight) return; el.dataset.rv = '1'; el.classList.add('rv-init'); rvIO.observe(el); });
     clearTimeout(rvT); rvT = setTimeout(function () { [].slice.call(view.querySelectorAll('.rv-init')).forEach(function (el) { el.classList.add('rv-in'); }); }, 1500); }
   /* Navigation feel: per-route scroll memory (back / tab return restore, a new screen starts at the top), route-enter only for deeper screens, reveal wired once per mount (no observers on every DOM change). */
-  var scrollMem = Object.create(null), curKey = null, navPop = false, forceTop = false, userScrolled = false, ROOTS = /^#\/(home|soldiers|tasks|more)?$/;
+  var scrollMem = Object.create(null), curKey = null, navPop = false, forceTop = false, userScrolled = false, ROOTS = /^#\/(home|soldiers|entry|followups|tasks|more)?$/;
   var navSeq = 0, riT = null, wasMounted = false;   // a fragment navigation also fires popstate, so traversal (Back/Forward) is detected from history.state: entries we have already rendered carry {mv}, a freshly pushed one has none
   ['wheel', 'touchmove', 'keydown'].forEach(function (ev) { window.addEventListener(ev, function () { userScrolled = true; }, { passive: true }); });
   function restoreScroll(y) { userScrolled = false; var n = 0; (function step() { if (userScrolled) return; window.scrollTo(0, y); if (++n < 5 && Math.abs(window.scrollY - y) > 2) setTimeout(step, n * 120); })(); }
@@ -132,7 +132,7 @@
   function hhmm(iso) { try { var d = new Date(iso); return d.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } }
   function parseTrend(it) { var m = /הוא ([\d.\-]+) לעומת ([\d.\-]+) בחודש ([\d-]+) \(([+\-]?[\d.]+)\)/.exec(it.text || ''); return m ? { b: +m[1], a: +m[2], delta: m[4], from: m[3] } : null; }
   function miniChart(t) { var mx = Math.max(t.a, t.b, 1), W = 120, H = 34, svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="ממוצע קודם ' + t.a + ', נוכחי ' + t.b + '"><rect x="4" y="' + (H - 4 - (t.a / mx) * (H - 8)) + '" width="40" height="' + ((t.a / mx) * (H - 8)) + '" rx="4" fill="#cce5e4"/><rect x="64" y="' + (H - 4 - (t.b / mx) * (H - 8)) + '" width="40" height="' + ((t.b / mx) * (H - 8)) + '" rx="4" fill="#007f83"/></svg>', w = document.createElement('span'); w.innerHTML = svg; return w; }
-  var CTA = { followups: ['d/none', 'tasks', 'למעקבים'], coverage: 'd/insights', trend: 'd/insights', attendance: 'd/attendance', group_gap: 'd/insights', distribution: 'd/insights' };
+  var CTA = { followups: ['d/none', 'followups', 'למעקבים'], coverage: 'd/insights', trend: 'd/insights', attendance: 'd/attendance', group_gap: 'd/insights', distribution: 'd/insights' };
   function insightCard(o) { var b = h('div', { class: 'card', style: 'display:block' }, [h('h3', { text: o.title }), h('p', { text: o.text, style: 'line-height:1.6;margin:6px 0' }), o.chart || null, h('p', { class: 'muted', text: o.meta || '', style: 'margin:6px 0 8px' }), h('button', { class: 'secondary', type: 'button', text: o.cta + ' ←', onclick: function () { go(o.go); } })]); return b; }
   function Home() {
     var kp = [h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k1' }), h('small', { text: 'חניכים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k2' }), h('small', { text: 'מעקבים פתוחים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k3' }), h('small', { text: 'התראות פתוחות' })])];
@@ -145,7 +145,7 @@
       sectionHead('תמונת מצב פיקודית', null), brief, more, ask,
       sectionHead('גישה מהירה', 'הכי שימושי'),
       card('חיפוש חניך', 'מוצאים אדם בשניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldiers'); }),
-      card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('tasks'); }),
+      card('מעקבים לטיפול', 'מה צריך לעשות היום?', h('span', { class: 'arrow', text: '←' }), function () { go('followups'); }),
       (C.mode === 'server' && C.role === 'viewer') ? null : card('אירוע נוכחות חדש', 'בחרו סוג פעילות וסמנו רק את החניכים שחסרים', h('span', { class: 'arrow', text: '←' }), function () { go('d/attendance/0'); }),
       (C.mode === 'server' && C.role === 'viewer') ? null : card('מסע חדש', 'מזינים פרטי מסע ובוחרים מי חסר', h('span', { class: 'arrow', text: '←' }), function () { go('d/marches/0'); }),
       (C.mode === 'server' && !isAdmin()) ? null : card('הוספת חניך', 'כרטיס חדש בכמה שניות', h('span', { class: 'arrow', text: '←' }), function () { go('soldier-new'); })
@@ -171,12 +171,12 @@
       /* ONE contextual next action (counts are the same group/role-scoped numbers shown in the tiles above; no names, no per-person data) */
       (function () { var b = $('#heroCta'), w = $('#heroWhy'); if (!b) return; var t = null;
         if (st.overdue > 0) t = { why: st.overdue + ' משימות באיחור דורשות טיפול.', text: 'לטיפול במשימות באיחור ←', go: 'mgmt' };
-        else if (st.follow + st.tasks > 0) t = { why: 'יש ' + (st.follow + st.tasks) + ' מעקבים/משימות פתוחים.', text: 'לטיפול במעקבים הפתוחים ←', go: 'tasks' };
+        else if (st.follow + st.tasks > 0) t = { why: 'יש ' + (st.follow + st.tasks) + ' מעקבים/משימות פתוחים.', text: 'לטיפול במעקבים הפתוחים ←', go: 'followups' };
         else if (st.alerts > 0) t = { why: st.alerts + ' התראות פתוחות.', text: 'לצפייה בהתראות ←', go: 'd/alerts' };
         if (!t) return; b.textContent = t.text; b.onclick = function () { go(t.go); }; if (w) w.textContent = t.why; })();
       var by = function (k) { return items.filter(function (i) { return i.kind === k; }); };
       var cards = [];
-      if (st.follow + st.tasks + st.overdue > 0) cards.push({ title: 'יש מעקבים פתוחים', text: st.follow + ' מעקבים אישיים' + (st.tasks ? ' ו-' + st.tasks + ' משימות פתוחות' : '') + (st.overdue ? ' (' + st.overdue + ' באיחור)' : '') + ' ממתינים לטיפול.', meta: 'מקור: מעקבים ומשימות · עודכן עכשיו', cta: 'למעקבים', go: 'tasks' });
+      if (st.follow + st.tasks + st.overdue > 0) cards.push({ title: 'יש מעקבים פתוחים', text: st.follow + ' מעקבים אישיים' + (st.tasks ? ' ו-' + st.tasks + ' משימות פתוחות' : '') + (st.overdue ? ' (' + st.overdue + ' באיחור)' : '') + ' ממתינים לטיפול.', meta: 'מקור: מעקבים ומשימות · עודכן עכשיו', cta: 'למעקבים', go: 'followups' });
       by('coverage').slice(0, 1).forEach(function (i) { cards.push({ title: i.title, text: i.text.length > 150 ? i.text.slice(0, 147) + '…' : i.text, meta: 'N=' + i.n + ' · ' + (gen ? 'עודכן ' + hhmm(gen) : ''), cta: 'להשלמת נתונים', go: 'more' }); });
       by('trend').sort(function (x, y) { var a = parseTrend(x), b = parseTrend(y); return Math.abs(b ? +b.delta : 0) - Math.abs(a ? +a.delta : 0); }).slice(0, 1).forEach(function (i) { var t = parseTrend(i); cards.push({ title: i.title, text: i.text, chart: t ? miniChart(t) : null, meta: 'חלון ' + (i.window.from || '') + '–' + (i.window.to || '') + ' · N=' + i.n + ' · פרשנות תיאורית, לא סיבתית', cta: 'לכל התובנות', go: 'd/insights' }); });
       if (cards.length < 3) by('attendance').slice(0, 1).forEach(function (i) { cards.push({ title: i.title, text: i.text, meta: 'N=' + i.n, cta: 'לנוכחות', go: 'd/attendance' }); });
@@ -218,7 +218,7 @@
     function mk() { return [chip('הכול', 'all')].concat(((S.org || {}).departments || []).map(function (d) { return chip(d.name.replace(/\s*\(זמני\)/, ''), d.id); })); }
     chips.replaceChildren.apply(chips, mk());
     var head = h('div', { class: 'section' }, [h('h2', { text: 'חניכים' }), count]);
-    mount('soldiers', [head, (C.mode === 'server' && !isAdmin()) ? null : h('div', { class: 'btns', style: 'margin:0 0 10px' }, [h('button', { class: 'primary', type: 'button', text: '+ הוספת חניך', onclick: function () { go('soldier-new'); } })]), q, chips, list], 'חניכים');
+    mount('soldiers', [head, (C.mode === 'server' && !isAdmin()) ? null : h('div', { class: 'btns', style: 'margin:0 0 10px' }, [h('button', { class: 'primary', type: 'button', text: '+ הוספת חניך', onclick: function () { go('soldier-new'); } })]), (C.mode === 'server' && !isAdmin()) ? null : h('div', { class: 'btns', style: 'margin:0 0 10px' }, [h('button', { class: 'secondary', type: 'button', id: 'fuLink', text: '☑ מעקבים אישיים', onclick: function () { go('followups'); } })]), q, chips, list], 'חניכים');
     list.append(skeleton(4));
     function draw() {
       var all = cache.soldiers || [], t = q.value.trim().toLowerCase(); S.q = q.value;
@@ -247,10 +247,25 @@
       else btns.append(h('button', { class: 'danger', type: 'button', text: 'ביטול חניך', onclick: function () { reasonDialog('ביטול חניך', true, function (reason, msg) { return api('soldiers.cancel', { id: s.id, reason: reason }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('החניך בוטל'); SoldierCard(s.id); }); }); } }));
       var nav = c.navigation, extra = [];
       if (nav && nav.count !== undefined) extra.push(h('div', { class: 'card' }, [h('div', {}, [h('h3', { text: 'ניווט' }), h('p', { text: nav.count ? ('ממוצע ' + (nav.mean_display || '—') + ' · ' + nav.count + ' מבחנים') : 'עדיין אין מבחני ניווט' })])]));
-      var priv = h('div', { id: 'priv' }, skeleton(1)), emBox = h('div', { id: 'emBox' }); mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), h('div', { class: 'section' }, [h('h2', { text: s.full_name }), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active)]), h('div', { class: 'card', style: 'display:block' }, [kv]), isAdmin() ? emBox : null, btns].filter(Boolean).concat(extra, [priv]), s.full_name); if (isAdmin()) emergencyBlock(s, emBox); SoldierExtras(s, priv, cancelled);
+      var priv = h('div', { id: 'priv' }, skeleton(1)), emBox = h('div', { id: 'emBox' }), fuBox = (C.mode === 'server' && !isAdmin()) ? null : h('div', { id: 'fuCardBox' }, skeleton(1)); mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), h('div', { class: 'section' }, [h('h2', { text: s.full_name }), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active)]), h('div', { class: 'card', style: 'display:block' }, [kv]), isAdmin() ? emBox : null, btns].filter(Boolean).concat(extra, [fuBox, priv]).filter(Boolean), s.full_name); if (isAdmin()) emergencyBlock(s, emBox); SoldierExtras(s, priv, cancelled); if (fuBox) soldierFollowups(s, fuBox, cancelled);
     });
   }
   /* ---------- soldier card extras (batch 4): reassign / active, private notes, assessments, favourite, emergency contact ---------- */
+  /* personal follow-ups of ONE soldier, inside his card (same followups.* API; the global list is under חניכים ← מעקבים אישיים) */
+  function soldierFollowups(s, box, cancelled) {
+    function load() {
+      box.replaceChildren(sectionHead('מעקבים אישיים', null), skeleton(1));
+      api('followups.list', { courseId: S.course.id, opts: {} }).then(function (r) {
+        box.replaceChildren(sectionHead('מעקבים אישיים', null));
+        if (!r.ok) { box.append(r.code === 'FORBIDDEN' ? emptyBox('אין הרשאה לצפות במעקבים אישיים.') : errBox(r, load)); return; }
+        var mine = (r.data || []).filter(function (f) { return f.soldier_id === s.id; });
+        if (!cancelled) box.append(h('div', { class: 'btns', style: 'margin-top:0' }, [h('button', { class: 'secondary', type: 'button', id: 'fuCardAdd', text: '+ מעקב חדש לחניך', onclick: function () { go('followup-new/' + s.id); } })]));
+        if (!mine.length) { box.append(emptyBox('אין מעקבים אישיים לחניך זה.')); return; }
+        mine.forEach(function (f) { box.append(card(f.what_to_check, f.due_date ? 'עד ' + f.due_date : null, f.status === 'open' ? status('פתוח', true) : status(f.status === 'done' ? 'הושלם' : 'בוטל'), null)); });
+      });
+    }
+    load();
+  }
   function SoldierExtras(s, box, cancelled) {
     var cid = S.course.id, reload = function () { SoldierCard(s.id); };
     box.replaceChildren(sectionHead('פעולות נוספות', null));
@@ -317,7 +332,7 @@
   function Tasks() {
     /* The "מעקבים" tab shows ONLY trainee follow-ups. Management tasks live in "ניהול וישיבות" (#/mgmt) and never mix with trainee data. */
     var body = h('div', { 'aria-live': 'polite', id: 'fuBody' });
-    mount('tasks', [sectionHead('מעקבי חניכים', 'נתונים סינתטיים'), body], 'מעקבי חניכים'); S.reloadTasks = function () { load(); };
+    mount('soldiers', [h('button', { class: 'back', type: 'button', id: 'fuBack', onclick: function () { go('soldiers'); }, text: '→ חזרה לחניכים' }), sectionHead('מעקבים אישיים', 'מעקבי חניכים · נתונים סינתטיים'), body], 'מעקבים אישיים'); S.reloadTasks = function () { load(); };
     function load() {
       body.replaceChildren(skeleton(3));
       Promise.all([api('followups.list', { courseId: S.course.id, opts: {} }), cache.soldiers ? Promise.resolve({ ok: true, data: cache.soldiers }) : api('soldiers.list', { courseId: S.course.id, opts: {} })]).then(function (r) {
@@ -338,19 +353,19 @@
     if (t.meeting_id && D.meetings) det.append(h('button', { class: 'secondary', type: 'button', id: 'taskMeeting', text: 'פתיחת סיכום הישיבה' + (t.meeting_subject ? ': ' + t.meeting_subject : ''), onclick: function () { document.querySelectorAll('dialog').forEach(function (x) { x.close(); }); D.meetings.lists[0].click({ id: t.meeting_id, subject: t.meeting_subject || 'סיכום', meeting_at: '' }); } }));
     dialog(t.title, [det, field('סטטוס', sel), field('הערה', note)], function (msg) { return api('tasks.setStatus', { id: t.id, status: sel.value, note: note.value, expected_version: t.version }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('הסטטוס עודכן'); Tasks(); }); }, 'עדכון');
   }
-  function FollowForm() {
+  function FollowForm(presetSoldier) {
     var f = h('form', { novalidate: 'true' }), msg = h('div', { role: 'alert' }), sol = h('select', { id: 'fuS' }, [h('option', { value: '', text: 'בחרו חניך…' })].concat((cache.soldiers || []).filter(function (x) { return x.active; }).map(function (x) { return h('option', { value: x.id, text: x.full_name }); })));
-    var what = h('input', { id: 'fuW' }), due = h('input', { id: 'fuD', type: 'date' }), save = h('button', { class: 'primary', type: 'submit', text: 'שמירה' }); var a = field('חניך', sol), b = field('מה לבדוק', what), c = field('תאריך', due);
-    f.append(a, b, c, msg, h('div', { class: 'btns' }, [save, h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { go('tasks'); } })]));
+    if (presetSoldier) sol.value = presetSoldier; var what = h('input', { id: 'fuW' }), due = h('input', { id: 'fuD', type: 'date' }), save = h('button', { class: 'primary', type: 'submit', text: 'שמירה' }); var a = field('חניך', sol), b = field('מה לבדוק', what), c = field('תאריך', due);
+    f.append(a, b, c, msg, h('div', { class: 'btns' }, [save, h('button', { class: 'secondary', type: 'button', text: 'ביטול', onclick: function () { history.length > 1 ? history.back() : go('followups'); } })]));
     f.addEventListener('submit', function (e) { e.preventDefault(); clearErr(f); var bad = false; if (!sol.value) { fieldErr(a, 'יש לבחור חניך.'); bad = true; } if (!what.value.trim()) { fieldErr(b, 'יש לציין מה לבדוק.'); bad = true; } if (bad) return; busy(save, true, 'שמירה');
       var data = { soldier_id: sol.value, what_to_check: what.value.trim() }; if (due.value) data.due_date = due.value;
-      api('followups.create', { courseId: S.course.id, data: data }).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast('המעקב נשמר'); S.seg = 'follow'; go('tasks'); }); });
-    mount('tasks', [h('button', { class: 'back', type: 'button', onclick: function () { go('tasks'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: 'מעקב חדש' }), f], 'מעקב חדש');
+      api('followups.create', { courseId: S.course.id, data: data }).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast('המעקב נשמר'); S.seg = 'follow'; go(presetSoldier ? 'soldier/' + presetSoldier : 'followups'); }); });
+    mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { history.length > 1 ? history.back() : go('followups'); }, text: '→ חזרה' }), h('h1', { class: 'page', text: 'מעקב חדש' }), f], 'מעקב חדש');
   }
 
   /* ---------- MORE ---------- */
   var DOMAINS = [
-    ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבי חניכים', 'מעקבים אישיים של חניכים', 'tasks', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'd/alerts', true], ['🗓', 'ניהול וישיבות', 'סיכומי ישיבות, כל המשימות ומשימות באחריותי', 'mgmt', true], ['📊', 'לוח קורס', 'סקירה קבוצתית, מחלקות/צוותים והשוואת קורסים', 'd/dash', true], ['🧠', 'תמונת מצב קבוצתית', 'מדדים ותובנות ברמת קבוצה בלבד', 'd/insights', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
+    ['ביצוע ומעקב', [['👥', 'חניכים', 'כרטיסים, הוספה, עריכה, ביטול ושחזור', 'soldiers', true], ['☑', 'מעקבי חניכים', 'מעקבים אישיים של חניכים', 'followups', true], ['📅', 'נוכחות ואירועים', 'אירועים, היעדרויות, יציאות מוקדמות', 'd/attendance', true], ['⚠', 'התראות', 'התראות פתוחות וטיפול בהן', 'd/alerts', true], ['🗓', 'ניהול וישיבות', 'סיכומי ישיבות, כל המשימות ומשימות באחריותי', 'mgmt', true], ['📊', 'לוח קורס', 'סקירה קבוצתית, מחלקות/צוותים והשוואת קורסים', 'd/dash', true], ['🧠', 'תמונת מצב קבוצתית', 'מדדים ותובנות ברמת קבוצה בלבד', 'd/insights', true], ['🏃', 'כשירות גופנית', 'הזנת מבחן וציונים', 'd/fitness', true], ['🧭', 'ניווט', 'מבחני ניווט', 'd/nav', true], ['🎯', 'קליעה', 'תוצאות קליעה', 'd/mk', true], ['📝', 'מבחנים עיוניים', 'ניסיונות ותוצאות', 'd/exams', true], ['🥾', 'מסעות', 'מסעות ותוצאות', 'd/marches', true], ['🩺', 'כשירות מבצעית', 'סטטוס כשירות ומגבלות', 'd/readiness', true], ['🏅', 'אירועים והישגים', 'אירועים והישגים לחניך', 'd/events', true], ['🎖', 'הסמכות', 'הגדרת הסמכות ויעדים', 'd/qual', true], ['🗒', 'הערות פרטיות', 'הערות מפקד', 'd/notes', true]]],
     ['דוחות ונתונים', [['📄', 'דוחות וייצוא', 'תצוגה קבוצתית בלבד (N≥5); ייצוא חסום', 'd/reports', true], ['📎', 'ייבוא ומסמכים', 'ייבוא CSV עם תצוגה מקדימה, אישור וביטול', 'd/imports', true], ['📑', 'מסמכים וקישורים', 'בקשות קישור, אישורן וראיות להסמכות', 'd/docs', true], ['ℹ️', 'אודות / מידע מקצועי', 'טבלאות ניקוד כש״ג — לקריאה בלבד', 'd/fitref', true], ['🔎', 'OCR לבדיקה', 'טיוטות חילוץ ואישור שורה-שורה (מנהל)', 'd/ocr', true], ['✉', 'טפסי חיילים', 'קישורי טפסים ואישור עדכונים', 'd/forms', true], ['✔', 'תיקונים', 'בקשות תיקון ואישורן', 'd/corrections', true]]],
     ['ניהול', [['🏫', 'קורסים', 'יצירה, ארכוב, פתיחה מחדש', null, false], ['🔐', 'משתמשים וקורסים', 'משתמשים, תפקידים וקורס חדש', 'd/admin', true], ['🧩', 'שיוך מפקדים', 'שיוך מפקד לקורס, מחלקה או צוות', 'd/assign', true], ['🏷', 'שמות מחלקות וצוותים', 'שינוי שמות יחידות', 'd/org', true], ['⚙', 'הגדרות', 'פרמטרים מקצועיים והיסטוריה', 'd/settings', true], ['💾', 'גיבוי ובדיקות מערכת', 'גיבוי, Preflight', 'd/backup', true], ['📜', 'יומן פעולות', 'Audit', 'd/audit', true], ['📈', 'סיכומי תחומים', 'סיכומים קבוצתיים לכל תחום', 'd/summaries', true], ['🧮', 'גרסאות ניקוד כש״ג', 'טיוטה, אימות ואישור טבלאות', 'd/fitadmin', true], ['📥', 'ייבוא ו-OCR', 'ייבוא קבצים וטיוטות OCR', null, false]]]
   ];
@@ -402,7 +417,7 @@
       if (adm) { emp[0].append(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; this.setAttribute('aria-busy', 'true'); var b = this; api('gw:seed', {}).then(function (x) { if (!x.ok) { b.disabled = false; b.removeAttribute('aria-busy'); toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
         emp.push(sectionHead('מה יקרה אחרי הטעינה', null), card('חניכים וצוותים', 'רשימה, חיפוש וסינון לפי מחלקה', null), card('מעקבים ומסעות', 'משימות, מסע עם חסרים ועריכת משתתפים אחרי שמירה', null), card('הזמנת מפקדים', 'בלשונית "עוד" → אישור בקשות; כל מפקד רואה רק את הצוות שלו', null)); }
       mount('home', emp); return; }
-    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
+    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); if (r === 'entry') return EntryHub(); if (r === 'followups' || r === 'tasks') return Tasks(); var fn = /^followup-new\/(.+)$/.exec(r); if (fn) return FollowForm(fn[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
   /* Read warm-up (server mode only): the data a tab needs is requested on touch-down (before the click completes) and once when the app is ready; the client's short read memo hands it over, so the screen paints real content instead of a skeleton. Reads only, same arguments as the screens use. */
   var WARM = { soldiers: [['soldiers.list', { opts: {} }]], tasks: [['followups.list', { opts: {} }], ['tasks.list', { opts: {} }], ['soldiers.list', { opts: {} }]] };

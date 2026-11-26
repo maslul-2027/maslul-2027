@@ -118,7 +118,7 @@
     }
     /* ---- verification: a saved record counts only if its id, its soldier, EVERY sent value and the shared test fields equal what was sent ---- */
     function sharedMatch(rec, o, names) {
-      return names.every(function (n) { var f = cfg.shared.filter(function (x) { return x.n === n; })[0]; if (!f) return true; var want = o[n], got = rec[n]; if (got === undefined || got === null || got === '') return String(want == null ? '' : want).trim() === '' || got === undefined; if (String(want).trim() === '') return true;
+      return names.every(function (n) { var f = cfg.shared.filter(function (x) { return x.n === n; })[0]; if (!f) return true; var want = o[n], got = rec[n]; if (String(want == null ? '' : want).trim() === '') return true; if (got === undefined || got === null || got === '') return false;   /* a field the server should return but did not is NOT verified */
         if (f.t === 'number') return numParse(want).n === Number(got); if (f.t === 'date') return String(got).slice(0, 10) === String(want).slice(0, 10); return String(got).trim() === String(want).trim(); });
     }
     function verifyRow(r, by2, preIds, o) {   // → '' when verified, otherwise the reason
