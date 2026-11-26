@@ -168,7 +168,7 @@
           var parts = ['אומתו בשרת: ' + verified.length]; if (bad) parts.push('נכשלו או לא אומתו: ' + bad); if (pend.length) parts.push('בקשות תיקון שנשלחו וממתינות לאישור מנהל: ' + pend.length + ' (הערכים השמורים טרם שונו)');
           var box = [h('div', { class: 'msg' + (allGood ? ' ok' : bad ? ' err' : ''), role: bad ? 'alert' : 'status', id: 'beResult', text: (allGood ? 'נשמרו ' + verified.length + ' רשומות ואומתו בשרת (מזהה, חניך וכל הערכים תואמים לנשלח). ' : '') + (allGood ? '' : parts.join(' · ') + '.') })];
           var list = fail.concat(unv); if (list.length) box.push(h('ul', { class: 'be-fails' }, list.map(function (r) { return h('li', { text: r.s.full_name + ' — ' + r.fail }); })), h('p', { class: 'muted', text: 'לחיצה על "ניסיון חוזר" תבדוק מחדש מול השרת ותשלח רק את מה שעדיין חסר; שאר החניכים לא ישתנו ולא ייווצרו כפילויות.' }));
-          summary.replaceChildren.apply(summary, box); if (allGood) toast('נשמר ואומת בשרת'); else if (!bad && pend.length) toast('בקשות התיקון נשלחו לאישור', 'ok'); else if (list[0]) list[0].node.scrollIntoView({ block: 'center' });
+          summary.replaceChildren.apply(summary, box); if (allGood && cfg.domain === 'nav') NavAfterSave(summary, o.navigation_type_id, o.test_date); if (allGood) toast('נשמר ואומת בשרת'); else if (!bad && pend.length) toast('בקשות התיקון נשלחו לאישור', 'ok'); else if (list[0]) list[0].node.scrollIntoView({ block: 'center' });
         }).catch(crash);
       }).catch(crash);
     }
