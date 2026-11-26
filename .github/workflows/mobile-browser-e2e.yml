@@ -36,7 +36,9 @@ on:
       - 'scripts/e2e_native_insight.js'
       - 'scripts/e2e_native_course_privacy.js'
       - 'scripts/e2e_native_exam_insight.js'
+      - 'scripts/e2e_native_shoot_insight.js'
       - 'native/insight_exams.js'
+      - 'native/insight_shoot.js'
       - 'scripts/e2e_native_insight_privacy.js'
       - 'scripts/test_reportkit.js'
       - 'scripts/lib/reportkit_node.js'
@@ -155,6 +157,7 @@ jobs:
       - run: node scripts/e2e_native_insight_privacy.js preview
       - run: node scripts/e2e_native_course_privacy.js preview
       - run: node scripts/e2e_native_exam_insight.js preview artifacts/exam_screens
+      - run: node scripts/e2e_native_shoot_insight.js preview artifacts/shoot_screens
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
         run: |
           node tests/selfsigned.js

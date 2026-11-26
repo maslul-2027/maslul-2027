@@ -9,7 +9,7 @@
 # Fresh-install proof: refuses a package that already contains node_modules; npm ci from the lock only; pinned Playwright re-checked; Chromium downloaded into a NEW folder; then npm run test:ci.
 # NOT YET EXECUTED on a real clean machine (see docs/INSTALL_CLEAN_MACHINE.md). Only the failure paths were exercised in the build environment.
 set -u
-EXP_NODE="v22.23.4"; EXP_SUITES=81; EXP_MUT=167
+EXP_NODE="v22.23.4"; EXP_SUITES=82; EXP_MUT=167
 ZIP="${1:-}"; SHA="${2:-}"; MUT="${3:-}"
 ORIG="$(pwd -P)"; OUT="$ORIG/return"; WORK="$ORIG/work"          # absolute, fixed BEFORE any cd
 case "$ZIP" in /*|"") ;; *) ZIP="$ORIG/$ZIP";; esac
