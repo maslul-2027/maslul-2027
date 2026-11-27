@@ -208,9 +208,11 @@
     var bins = p.score.bins, n = bins.length, W = 320, H = 160, gap = 10, bw = Math.min(70, (W - 40 - gap * (n - 1)) / n), x0 = (W - (n * bw + (n - 1) * gap)) / 2, max = Math.max.apply(null, bins.map(function (b) { return b.n; }).concat([1]));
     var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'in-svg' }); svg.append(sv('line', { x1: 10, x2: W - 10, y1: 126, y2: 126, class: 'in-axis' }));
     bins.forEach(function (b, i) { var x = x0 + i * (bw + gap), hh = Math.max(3, 96 * b.n / max), on = picked === i;
-      var bar = sv('rect', { x: x, y: 126 - hh, width: bw, height: hh, rx: 4, class: 'in-bar' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': 'טווח ' + b.label + ': ' + b.n + ' חניכים. הקשה מסננת את הרשימה המבצעית', 'data-bin': i });
+      var vis = sv('rect', { x: x, y: 126 - hh, width: bw, height: hh, rx: 4, class: 'in-bv' + (on ? ' on' : ''), 'aria-hidden': 'true' });
+      /* the interactive target is the WHOLE column (≥44 CSS px tall even for a 1-soldier bar); the painted bar keeps the true proportional height */
+      var bar = sv('rect', { x: x - gap / 2, y: 28, width: bw + gap, height: 116, class: 'in-bar' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': 'טווח ' + b.label + ': ' + b.n + ' חניכים. הקשה מסננת את הרשימה המבצעית', 'data-bin': i });
       bar.addEventListener('click', function () { onPick(on ? -1 : i); }); bar.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(on ? -1 : i); } });
-      svg.append(bar, stext(x + bw / 2, 126 - hh - 5, String(b.n), { class: 'in-t in-tv' }), stext(x + bw / 2, 143, b.label)); });
+      svg.append(vis, stext(x + bw / 2, 126 - hh - 5, String(b.n), { class: 'in-t in-tv' }), stext(x + bw / 2, 143, b.label), bar); });
     return svg;
   }
   function lineChart(m) {

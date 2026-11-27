@@ -14,6 +14,8 @@ on:
       - 'scripts/e2e_cf_browser.js'
       - 'scripts/e2e_cf_motion.js'
       - 'scripts/e2e_cf_bulk.js'
+      - 'scripts/e2e_cf_resume.js'
+      - 'scripts/qa_*.js'
       - 'scripts/e2e_cf_bulk_modules.js'
       - 'scripts/cf_auth_screens.js'
       - 'scripts/lib/cf_harness.js'
@@ -83,6 +85,16 @@ jobs:
         env:
           NODE_PATH: ${{ runner.temp }}/pw/node_modules
         run: bash scripts/ci_cf_workerd.sh
+      - name: Zero-touch QA in the isolated sandbox (Issue #98) — navigation continuity + fitness selector, domain workflows, insight to real PDF/XLSX, every route x 4 roles x viewports
+        timeout-minutes: 40
+        env:
+          NODE_PATH: ${{ runner.temp }}/pw/node_modules
+        run: |
+          set -e
+          node scripts/e2e_cf_resume.js
+          node scripts/qa_domain_workflows.js
+          node scripts/qa_export_flow.js artifacts/qa_export
+          node scripts/qa_product_audit.js artifacts/qa_audit
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -90,6 +102,8 @@ jobs:
           path: |
             artifacts/cf_browser
             artifacts/cf_screens
+            artifacts/qa_export
+            artifacts/qa_audit
             ${{ runner.temp }}/dryrun.txt
             ${{ runner.temp }}/wrangler.log
             ${{ runner.temp }}/wrangler2.log

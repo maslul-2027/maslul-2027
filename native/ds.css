@@ -58,3 +58,12 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
 @media(prefers-reduced-motion:reduce){button.stat,.rtile{transition:none}}
 .rtile,button.stat{min-width:0;overflow-wrap:anywhere}.rtile b,.rtile small{max-width:100%}
 @media(max-width:359px){.rtiles{grid-template-columns:1fr}.hero{padding:16px 14px}}
+
+/* QA audit fixes */
+.in-bar{fill:transparent;stroke:none!important;filter:none!important}.in-bv{fill:var(--teal);pointer-events:none}.in-bv.on{fill:#0b5c5f;stroke:#10181d;stroke-width:2}
+.in-svg:has(.in-bar:hover) .in-bv{opacity:1}.in-bar:focus-visible{outline:3px solid #161b20;outline-offset:-3px}
+@media(max-width:279px){.in-table td:not(:first-child),.in-table th:not(:first-child){white-space:normal}.in-table th,.in-table td{padding:8px 4px}}
+#view .card a[href]{display:inline-block;padding-block:12px;min-height:44px}
+#view .card>div,#view .card h3,#view .card p{min-width:0;overflow-wrap:anywhere}
+#view button,#view .chip,#view select,#view input{max-width:100%;overflow-wrap:anywhere}#view button{white-space:normal}
+.fixed-choice{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:6px 0;border:1px solid var(--line);border-radius:var(--r);background-color:#f1f8f8}.fixed-choice small{color:var(--muted);font-size:14px}.fixed-choice b{font-size:16px}
