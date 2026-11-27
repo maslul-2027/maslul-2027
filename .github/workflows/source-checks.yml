@@ -46,6 +46,8 @@ jobs:
           if-no-files-found: ignore
       - name: Install browser dependencies
         run: npx playwright install --with-deps chromium
+      - name: PDF/XLSX verification tools (qpdf, poppler, openpyxl) — the privacy tests parse the real generated files
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf poppler-utils python3-openpyxl
       - name: Source identity + strict test run (Node + UI, 0 skips allowed)
         run: npm run test:ci
 

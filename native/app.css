@@ -136,3 +136,44 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
 @media (min-width:720px){.eh-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.eh-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .eh-tile{min-width:0;max-width:100%;box-sizing:border-box}.eh-tx strong,.eh-tx small{overflow-wrap:anywhere}
 @media (max-width:200px){.eh-tile{padding:8px;gap:6px}.eh-ic{font-size:18px}}
+/* insights (navigation event dashboard): same tokens as the rest of the app — turquoise/red accents, 44px targets, RTL, reduced motion honoured by the global rule */
+.in-sub{margin:0 0 6px;font-weight:700;font-size:15px}
+.in-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+@media(min-width:720px){.in-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.in-kpi{background:#fff;border:1px solid var(--line);border-top:3px solid var(--teal);border-radius:14px;padding:12px;min-width:0}
+.in-kpi.neg{border-top-color:var(--red)}
+.in-kpi small{display:block;color:#4a575e;font-size:13px;font-weight:600}
+.in-kpi b{display:block;font-size:26px;line-height:1.2;overflow-wrap:anywhere;margin:2px 0}
+.in-kpi span{display:block;color:#4a575e;font-size:13px;overflow-wrap:anywhere}
+.in-prog{display:block;height:6px;border-radius:3px;background:#e1e9eb;margin-top:8px;overflow:hidden}.in-prog i{display:block;height:100%;background:var(--teal);border-radius:3px}
+.in-act{margin-top:4px}
+.in-find{list-style:none;margin:8px 0 14px;padding:0;display:grid;gap:8px}
+.in-find li{background:#fff;border:1px solid var(--line);border-inline-start:5px solid var(--teal);border-radius:12px;padding:12px 14px;font-size:16px;line-height:1.55}
+.in-sub{font-size:16px}
+.in-meta{margin:6px 0 10px;border:0;background:transparent;padding:0}.in-meta summary{min-height:44px;color:#4a575e;font-weight:600;font-size:13px}.in-meta p{margin:0 0 8px;font-size:13px;color:#4a575e;line-height:1.5}
+.in-fig{margin:10px 0;padding:12px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.in-fig figcaption{font-weight:700;font-size:14px;margin-bottom:6px}
+.in-svg{width:100%;height:auto;display:block;direction:ltr}
+.in-axis{stroke:#cfd8dc;stroke-width:1}
+.in-bar{fill:var(--teal);cursor:pointer;transition:opacity var(--t-press) var(--ease)}
+.in-bar:hover{opacity:.85}.in-bar.on{fill:#0b5c5f;stroke:#161b20;stroke-width:2}
+.in-bar:focus-visible,.in-pt:focus-visible{outline:3px solid #161b20;outline-offset:2px}
+.in-line{stroke:var(--teal);stroke-width:2}
+.in-pt{fill:var(--teal);stroke:#fff;stroke-width:2;cursor:pointer}.in-pt.on{fill:var(--red)}
+.in-t{font-size:10px;fill:#38454c;font-family:inherit}.in-tv{font-weight:700;fill:#161b20}.in-ty{text-anchor:end}
+.in-link{background:none;border:0;color:#00696c;text-decoration:underline;min-height:44px;padding:0 4px;font:inherit;cursor:pointer}
+.in-table{width:100%;border-collapse:collapse;font-size:13px;margin:6px 0 10px;background:#fff}
+.in-table th,.in-table td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:start;overflow-wrap:anywhere}
+.in-table th{background:#eef3f4}
+.in-det{margin:12px 0;border:1px solid var(--line);border-radius:14px;background:#fff;padding:0 12px}
+.in-det summary{min-height:44px;display:flex;align-items:center;font-weight:700;cursor:pointer}
+.in-after{margin-top:10px}
+
+.in-op{margin:16px 0;padding:12px;border:1px dashed #9aa9b0;border-radius:14px;background:#fbfcfc}
+.in-op h3{margin:0 0 6px;font-size:14px}.in-op h4{margin:10px 0 4px;font-size:13px}
+.in-chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.in-chip{min-height:44px;padding:0 14px;border:1px solid var(--line);border-radius:22px;background:#fff;font:inherit;cursor:pointer;transition:background var(--t-press) var(--ease)}
+.in-chip[aria-pressed=true]{background:var(--teal);color:#fff;border-color:var(--teal)}
+.in-chip:focus-visible{outline:3px solid #161b20;outline-offset:2px}
+.in-bars{margin:6px 0 10px}.in-barrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto;gap:8px;align-items:center;min-height:30px;font-size:13px}
+.in-bl{overflow-wrap:anywhere}.in-bt{display:block;height:12px;background:#e8eef0;border-radius:6px;overflow:hidden}.in-bt i{display:block;height:100%;background:var(--teal)}

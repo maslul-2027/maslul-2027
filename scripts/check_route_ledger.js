@@ -7,7 +7,7 @@ const rows = x.rows || [], total = rows.length;
 const counts = {};
 rows.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
 const violations = [];
-if (total !== 176 || x.summary.total !== 176) violations.push('route inventory must be exactly 176');
+if (total !== 178 || x.summary.total !== 178) violations.push('route inventory must be exactly 178');
 for (const r of rows) {
   if (r.status === 'PASS_SYNTH_E2E' && !(r.native_screen === 'yes' && r.ui_ok_calls > 0))
     violations.push(r.route + ': PASS without a successful UI-originated call (direct test API calls do not count)');

@@ -33,6 +33,18 @@ on:
       - 'scripts/e2e_native_mgmt.js'
       - 'scripts/e2e_native_bulk_reliability.js'
       - 'scripts/e2e_native_entry.js'
+      - 'scripts/e2e_native_insight.js'
+      - 'scripts/e2e_native_course_privacy.js'
+      - 'scripts/e2e_native_exam_insight.js'
+      - 'scripts/e2e_native_shoot_insight.js'
+      - 'scripts/e2e_native_fit_insight.js'
+      - 'scripts/e2e_native_cover_privacy.js'
+      - 'native/insight_exams.js'
+      - 'native/insight_shoot.js'
+      - 'native/insight_fit.js'
+      - 'scripts/e2e_native_insight_privacy.js'
+      - 'scripts/test_reportkit.js'
+      - 'scripts/lib/reportkit_node.js'
       - 'native/entry.js'
       - 'scripts/test_hebrew_lint.js'
       - 'native/mgmt.js'
@@ -63,7 +75,7 @@ permissions:
 jobs:
   browser:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Checkout pinned original PR 10 visual reference
@@ -141,6 +153,16 @@ jobs:
       - run: node scripts/e2e_native_mgmt.js preview
       - run: node scripts/e2e_native_bulk_reliability.js preview
       - run: node scripts/e2e_native_entry.js preview
+      - name: PDF/XLSX verification tools (qpdf, poppler, openpyxl) — real files are opened and parsed, not assumed
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq qpdf poppler-utils python3-openpyxl
+      - run: node scripts/test_reportkit.js
+      - run: E2E_CALLS_OUT=artifacts/calls_native_insight.json node scripts/e2e_native_insight.js preview artifacts/insight_screens
+      - run: node scripts/e2e_native_insight_privacy.js preview
+      - run: node scripts/e2e_native_course_privacy.js preview
+      - run: node scripts/e2e_native_exam_insight.js preview artifacts/exam_screens
+      - run: node scripts/e2e_native_shoot_insight.js preview artifacts/shoot_screens
+      - run: node scripts/e2e_native_fit_insight.js preview artifacts/fit_screens
+      - run: node scripts/e2e_native_cover_privacy.js preview artifacts/cover_screens
       - name: One-action TEST package (Issue #70) — Linux E2E of a clean extraction (the distributable ZIP + Windows proof are built by release-package.yml)
         run: |
           node tests/selfsigned.js

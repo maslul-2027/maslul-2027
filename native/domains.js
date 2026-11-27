@@ -229,6 +229,7 @@
         if (bad) return; busy(save, true, 'שמירה');
         var data; try { data = spec.build ? spec.build(x, req) : Object.assign({ request_id: req }, x); } catch (er) { busy(save, false, 'שמירה'); msg.textContent = er.message; msg.className = 'msg err'; return; } var args = spec.rawKey ? Object.fromEntries([[spec.rawKey, data]]) : (spec.raw ? data : { courseId: S.course.id, data: data });
         api(spec.m, args).then(function (r) { busy(save, false, 'שמירה'); if (!r.ok) { msg.textContent = msgOf(r); msg.className = 'msg err'; return; } toast((r.data && r.data.duplicate) ? 'הרשומה כבר נשמרה' : id === 'marches' || id === 'attendance' && idx === 0 ? 'נשמר. לחצו על האירוע כדי לערוך משתתפים.' : 'נשמר');
+          var newId = r.data && ((r.data.record && r.data.record.id) || r.data.id); if (spec.m === 'nav.create' && newId && args && args.data) { go('insight/nav/' + args.data.navigation_type_id + '/' + String(args.data.test_date).slice(0, 10) + '/' + newId); return; }
           go('d/' + id); }); });
       holder.replaceWith(f);
     });

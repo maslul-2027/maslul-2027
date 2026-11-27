@@ -24,8 +24,9 @@ await p.goto(base+'/');await p.waitForSelector('#k1');let pass=0,fail=0;
 for(const c of CASES){const name=c.d+'#'+c.i;try{await p.evaluate(h=>{location.hash=h},'#/d/'+c.d+'/'+c.i);await p.waitForSelector('form',{timeout:8000});
  for(const[k,v] of Object.entries(c.fill)){const sel='#'+k;if(v&&v.i!==undefined)await p.selectOption(sel,{index:v.i});else if((await p.getAttribute(sel,'type'))==='date'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='INPUT'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='TEXTAREA')await p.fill(sel,v);else await p.selectOption(sel,v);}
  if(c.tick){await p.waitForSelector(c.tick,{timeout:8000});const bx=await p.$$(c.tick);assert.ok(bx.length,'missing-trainee checkboxes exist');await bx[0].check();if(c.d==='marches')assert.match(await p.textContent('#view'),/חסרים 1 מתוך/);}
- await p.click('button[type=submit]');await p.waitForFunction(()=>/#\/d\/[a-z]+$/.test(location.hash)||document.querySelector('.msg.err'),null,{timeout:8000});
+ await p.click('button[type=submit]');await p.waitForFunction(()=>/#\/d\/[a-z]+$/.test(location.hash)||/#\/insight\/nav\//.test(location.hash)||document.querySelector('.msg.err'),null,{timeout:8000});
  const err=await p.$('.msg.err');if(err)throw new Error('backend: '+(await err.textContent()));
+ if(/#\/insight\/nav\//.test(await p.evaluate(()=>location.hash))){await p.waitForSelector('#inVerified.ok',{timeout:8000});await p.evaluate(()=>{location.hash='#/d/nav';});}
  await p.waitForSelector('.section',{timeout:5000});await p.waitForTimeout(400);
  if(c.read){await p.waitForFunction(t=>document.getElementById('view').textContent.includes(t),c.read,{timeout:6000}).catch(async()=>{throw new Error('read-back missing: '+c.read+' | view='+(await p.textContent('#view')).slice(0,300))});}
  if(c.d==='marches'){
