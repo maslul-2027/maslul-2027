@@ -1,6 +1,6 @@
 // Loads the Apps Script sources into one Node VM context (no Apps Script APIs => in-memory Db).
 const fs = require('fs'), path = require('path'), vm = require('vm');
-const order = ['Config', 'Util', 'Calc', 'Scoring', 'Policy', 'Store', 'AuthAudit', 'Records', 'Courses', 'Navigation', 'Soldiers', 'Assignments', 'Snapshot', 'Settings', 'FitnessDraft', 'Fitness', 'Modules', 'Marksmanship', 'Exams', 'Attendance', 'Readiness', 'Qualifications', 'Private', 'EmergencyContact', 'Alerts', 'Forms', 'Dashboard', 'Analytics', 'Adapters', 'Documents', 'Reports', 'Import', 'Ocr', 'Assistant', 'Backup', 'Preflight', 'Migration', 'Card', 'Meetings', 'Setup', 'Code'];
+const order = ['Config', 'Util', 'Calc', 'Scoring', 'Policy', 'Store', 'AuthAudit', 'Records', 'Courses', 'Navigation', 'NavEvents', 'Soldiers', 'Assignments', 'Snapshot', 'Settings', 'FitnessDraft', 'Fitness', 'Modules', 'Marksmanship', 'Exams', 'Attendance', 'Readiness', 'Qualifications', 'Private', 'EmergencyContact', 'Alerts', 'Forms', 'Dashboard', 'Analytics', 'Adapters', 'Documents', 'Reports', 'Import', 'Ocr', 'Assistant', 'Backup', 'Preflight', 'Migration', 'Card', 'Meetings', 'Setup', 'Code'];
 // every top-level const/class of the sources is exported to tests (so new modules need no harness edit)
 const TOP = src => Array.from(src.matchAll(/^(?:const|class) ([A-Za-z_][A-Za-z0-9_]*)/gm)).map(m => m[1]);
 

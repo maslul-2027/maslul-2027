@@ -18,12 +18,25 @@ const Navigation = {
       const type = Db.get('NavigationTypes', typeId);
       if (!type || type.course_id !== courseId || !Util.isTrue(type.active)) throw new AppError('VALIDATION', 'סוג ניווט לא תקין.');
       const date = Util.isoDate(Util.cellToIsoDate(data.test_date), 'תאריך ניווט');
-      const n = Calc.navNormalize(data);
+      /* Issue #97 PR-A: a NEW result may point to a durable navigation event. The event's shared settings are authoritative (blank → taken from it; a different value → 409, never silently chosen). Edits keep the original link. */
+      let evId = existing ? Util.str(existing.event_id) : Util.str(data.event_id), src = data;
+      if (!existing) {
+        if (!evId) { const same = Db.where('NavigationEvents', function (e) { return e.course_id === courseId && e.record_status === RECORD_STATUS.ACTIVE && e.navigation_type_id === typeId && Util.cellToIsoDate(e.test_date) === date; }); if (same.length > 1) throw new AppError('VALIDATION', 'קיימים כמה אירועי ניווט באותו סוג ותאריך — יש לבחור אירוע.'); if (same.length === 1) evId = same[0].id; }
+        if (evId) {
+          const ev = Db.get('NavigationEvents', evId);
+          if (!ev || ev.course_id !== courseId || ev.record_status !== RECORD_STATUS.ACTIVE) throw new AppError('VALIDATION', 'אירוע ניווט לא תקין.');
+          if (ev.navigation_type_id !== typeId || Util.cellToIsoDate(ev.test_date) !== date) throw new AppError('VALIDATION', 'סוג או תאריך התוצאה אינם תואמים לאירוע.');
+          if (ev.status === 'COMPLETE') throw new AppError('VALIDATION', 'האירוע סומן כהושלם. יש לפתוח אותו מחדש (עם נימוק) לפני הוספת תוצאות.');
+          src = Object.assign({}, data);
+          ['distance_km', 'points_total'].forEach(function (k) { if (Util.isBlank(src[k])) src[k] = ev[k]; else if (Number(src[k]) !== Number(ev[k])) throw new AppError('CONFLICT', 'ההגדרה "' + (k === 'distance_km' ? 'מרחק' : 'סך נקודות') + '" שונה מהמוגדר באירוע (' + ev[k] + ').', { event_id: ev.id, field: k, event_value: Number(ev[k]) }); });
+        }
+      }
+      const n = Calc.navNormalize(src);
       const c = Calc.navCompute(n);
       const notes = Util.str(data.notes);
       if (notes.length > 1000) throw new AppError('VALIDATION', 'הערות ארוכות מדי.');
       return Object.assign({ soldier_id: soldierId, test_date: date, navigation_type_id: typeId, notes: notes,
-        formula_version: Calc.NAV_FORMULA_VERSION }, n, c);
+        formula_version: Calc.NAV_FORMULA_VERSION }, existing ? {} : { event_id: evId || '' }, n, c);
     }
   },
 

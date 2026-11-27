@@ -15,6 +15,7 @@ on:
       - 'scripts/e2e_cf_motion.js'
       - 'scripts/e2e_cf_bulk.js'
       - 'scripts/e2e_cf_resume.js'
+      - 'scripts/e2e_cf_nav_events.js'
       - 'scripts/qa_*.js'
       - 'scripts/e2e_cf_bulk_modules.js'
       - 'scripts/cf_auth_screens.js'
@@ -92,6 +93,7 @@ jobs:
         run: |
           set -e
           node scripts/e2e_cf_resume.js
+          node scripts/e2e_cf_nav_events.js
           node scripts/qa_domain_workflows.js
           node scripts/qa_export_flow.js artifacts/qa_export
           node scripts/qa_product_audit.js artifacts/qa_audit

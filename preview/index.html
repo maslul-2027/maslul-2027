@@ -251,6 +251,10 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
 #view button,#view .chip,#view select,#view input{max-width:100%;overflow-wrap:anywhere}#view button{white-space:normal}
 .fixed-choice{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:6px 0;border:1px solid var(--line);border-radius:var(--r);background-color:#f1f8f8}.fixed-choice small{color:var(--muted);font-size:14px}.fixed-choice b{font-size:16px}
 
+/* PR-A event panel */
+#beEventPanel button,#beEventPanel select,#beEventPanel input{min-height:44px}
+#beEventBar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="entry"><i>✎</i>הזנה</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
@@ -1451,6 +1455,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function BulkEntry(cfg) {
     if (C.mode === 'server' && C.role === 'viewer') return Domain(cfg.domain);
+    if (cfg.domain === 'nav') cfg._eventId = '';
     var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, loaded = false, loadSeq = 0, autoFill = {}, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
     var progress = h('div', { class: 'be-progress', id: 'beProgress', role: 'status', 'aria-live': 'polite' }), list = h('div', { class: 'be-list', id: 'beList' }), summary = h('div', { id: 'beSummary', 'aria-live': 'polite' });
     var shHost = h('div', { class: 'be-shared', id: 'beShared' }), holder = h('div', {}, skeleton(3));
@@ -1488,7 +1493,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
     function refreshAll() { rows.forEach(paintRow); paintProgress(); }
     function paintProgress() { var p = pctLine(); progress.replaceChildren(h('strong', { text: p.text }), h('div', { class: 'be-bar', 'aria-hidden': 'true' }, [h('span', { style: 'width:' + Math.round(100 * p.entered / Math.max(1, rows.length)) + '%' })])); var sv = $('#beSave'); if (sv) { var n = p.cnt.new + p.cnt.edited, rf = p.cnt.failed; sv.disabled = saving || !loaded || (n === 0 && rf === 0); sv.textContent = saving ? 'שומר…' : !loaded ? 'טוען תוצאות שמורות…' : rf > 0 ? 'ניסיון חוזר ל-' + rf + ' שנכשלו' + (n ? ' + שמירת ' + n : '') : n ? 'שמירה (' + n + ' רשומות)' : 'אין שינויים לשמירה'; } }
     function paintRow(r) { var st = statusOf(r); r.node.className = 'be-row be-' + st.k; r.msg.textContent = st.t; r.msg.className = 'be-msg' + (st.k === 'invalid' || st.k === 'partial' || st.k === 'failed' ? ' err' : st.k === 'saved' ? ' ok' : ''); r.cells.forEach(function (x) { var e = cellErr(r, x.c, shared()); x.inp.setAttribute('aria-invalid', e ? 'true' : 'false'); var ap = !cfg.colApplies || cfg.colApplies(x.c, shared(), P); if (!ap && x.inp.value) { x.inp.value = ''; r.vals[x.c.n] = ''; } x.inp.disabled = !!r.state || (r.rec && !r.editable) || saving || !ap; x.inp.title = ap ? '' : 'הרכיב אינו חלק מסוג המבחן שנבחר'; }); r.sel.disabled = !!r.rec || saving; }
-    function visible(r) { var s = r.s, t = filt.q.trim().toLowerCase(); if (filt.dep && s.department_id !== filt.dep) return false; if (filt.team && s.team_id !== filt.team) return false; if (t && !((s.full_name || '').toLowerCase().includes(t) || String(s.personal_number).includes(t))) return false; var k = statusOf(r).k; if (filt.st === 'missing') return k === 'empty'; if (filt.st === 'entered') return k === 'saved' || k === 'edited' || k === 'new' || k === 'locked' || k === 'pending'; if (filt.st === 'fix') return k === 'partial' || k === 'invalid' || k === 'failed'; return true; }
+    function visible(r) { var s = r.s, t = filt.q.trim().toLowerCase(); if (filt.dep && s.department_id !== filt.dep) return false; if (filt.team && s.team_id !== filt.team) return false; if (t && !((s.full_name || '').toLowerCase().includes(t) || String(s.personal_number).includes(t))) return false; var k = statusOf(r).k; if (filt.st === 'missing') return k === 'empty' || (!r.rec && r.touched && k !== 'skip'); if (filt.st === 'entered') return k === 'saved' || k === 'edited' || k === 'new' || k === 'locked' || k === 'pending'; if (filt.st === 'fix') return k === 'partial' || k === 'invalid' || k === 'failed'; return true; }
     function applyFilter() { var shown = 0; rows.forEach(function (r) { var v = visible(r); r.node.hidden = !v; if (v) shown++; }); var em = $('#beEmpty'); if (em) em.hidden = shown > 0; }
     function focusCell(r, ci) { if (!r) return; var x = r.cells[ci]; if (x && !x.inp.disabled) { x.inp.focus(); try { x.inp.select(); } catch (e) {} } }
     function nextVisible(i, dir) { for (var j = i + dir; j >= 0 && j < rows.length; j += dir) if (!rows[j].node.hidden) return rows[j]; return null; }
@@ -1534,6 +1539,42 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
         overlay(); refreshAll(); applyFilter();
       }, function () { if (seq === loadSeq) loadFailed(null); });
     }
+    function sq(q) { return shHost.querySelector(q); }
+    /* ---- PR-A: durable navigation event — pick / open / continue / complete. The server owns the shared settings; results link by event_id. ---- */
+    function evLabel(e) { var nt = (P['navtypes.list'] || []).filter(function (t) { return t.id === e.navigation_type_id; })[0]; return (nt ? nt.name : 'ניווט') + ' · ' + String(e.test_date).slice(0, 10) + (e.label ? ' · ' + e.label : '') + ' — הוזנו ' + e.entered + ' מתוך ' + e.eligible + (e.status === 'COMPLETE' ? ' · הושלם' : ''); }
+    function evList() { return (P['navevents.list'] || []).filter(function (e) { return e && e.record_status !== 'cancelled'; }); }
+    function evCur() { return evList().filter(function (e) { return e.id === cfg._eventId; })[0] || null; }
+    function evReload(sel) { return api('navevents.list', CID(), 'fresh').then(function (r) { if (r.ok) P['navevents.list'] = r.data; paintEvent(sel === undefined ? cfg._eventId : sel); }); }
+    function evLock(on) { ['navigation_type_id', 'test_date', 'distance_km', 'points_total'].forEach(function (n) { var el = sq('#be_' + n); if (el) el.disabled = !!on; }); }
+    function paintEvent(id) {
+      var sel = sq('#be_event'); if (!sel) return; var list = evList();
+      sel.replaceChildren.apply(sel, [h('option', { value: '', text: 'ללא אירוע שמור (לפי סוג ותאריך)' })].concat(list.map(function (e) { return h('option', { value: e.id, text: evLabel(e) }); }))); sel.value = id || ''; cfg._eventId = sel.value;
+      var ev = evCur(), info = sq('#beEventInfo'), bar = sq('#beEventBar'); info.replaceChildren(); bar.replaceChildren(); evLock(!!ev);
+      if (!ev) { info.append(h('span', { class: 'muted', text: 'בחרו אירוע קיים להמשך הזנה, או פתחו אירוע חדש לפי הסוג/התאריך/ההגדרות שמולאו.' })); bar.append(h('input', { id: 'beEventLabel', type: 'text', maxlength: 40, placeholder: 'שם לאירוע (רשות, למשל "לילה")', 'aria-label': 'שם לאירוע חדש', style: 'min-height:44px;flex:1 1 140px;min-width:0' }), h('button', { class: 'btn', type: 'button', id: 'beEventNew', text: 'פתיחת אירוע חדש', onclick: evCreate })); return; }
+      ev.settings_mismatch && info.append(h('div', { class: 'msg err', role: 'alert', id: 'beEventMismatch', text: 'ב־' + ev.settings_mismatch + ' תוצאות שמורות ההגדרות שונות מהאירוע. הן לא שונו; יש לבדוק אותן.' }));
+      info.append(h('div', { id: 'beEventProgress', role: 'status', text: 'הוזנו ' + ev.entered + ' מתוך ' + ev.eligible + (ev.missing ? ' · חסרים ' + ev.missing : ' · אין חסרים') + (ev.status === 'COMPLETE' ? ' · האירוע סגור' : '') }));
+      if (ev.missing) bar.append(h('button', { class: 'btn', type: 'button', id: 'beEventMissing', text: 'הצג רק חסרים', onclick: function () { [].forEach.call(document.querySelectorAll('.filters button'), function (b) { if (/חסרים/.test(b.textContent)) b.click(); }); } }));
+      if (ev.status !== 'COMPLETE') bar.append(h('button', { class: 'btn', type: 'button', id: 'beEventDone', text: 'סימון האירוע כהושלם', onclick: function () { evStatus(ev, 'COMPLETE'); } }));
+      else bar.append(h('button', { class: 'btn', type: 'button', id: 'beEventReopen', text: 'פתיחה מחדש (לתוספת)', onclick: function () { evStatus(ev, 'IN_PROGRESS'); } }));
+    }
+    function evCreate() {
+      var o = shared(), lab = sq('#beEventLabel'), out = sq('#beEventInfo'); out.querySelectorAll('.msg').forEach(function (n) { n.remove(); });
+      if (!o.navigation_type_id || !/^\d{4}-\d{2}-\d{2}$/.test(o.test_date) || !String(o.distance_km).trim() || !String(o.points_total).trim()) { out.append(h('div', { class: 'msg err', role: 'alert', id: 'beEventErr', text: 'למילוי: סוג ניווט, תאריך, מרחק וסך נקודות — ואז פתיחת האירוע.' })); return; }
+      api('navevents.create', { courseId: cid, data: { request_id: 'ne-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8), navigation_type_id: o.navigation_type_id, test_date: o.test_date, distance_km: numParse(o.distance_km).n, points_total: numParse(o.points_total).n, label: lab ? lab.value.trim() : '' } }).then(function (r) {
+        if (!r.ok) { out.append(h('div', { class: 'msg err', role: 'alert', id: 'beEventErr', text: msgOf(r) })); return; }
+        evReload(r.data.event.id).then(function () { loadExisting().then(refreshAll); }); });
+    }
+    function evStatus(ev, to) {
+      var need = to === 'COMPLETE' && ev.missing > 0, txt = to === 'COMPLETE' ? (need ? 'חסרות תוצאות ל־' + ev.missing + ' חניכים. סגירה תסמן שהחסרים מוצדקים. אפשר לפתוח מחדש בהמשך.' : 'לסמן את האירוע כהושלם? אפשר לפתוח מחדש בהמשך.') : 'פתיחה מחדש מאפשרת להוסיף תוצאות.';
+      confirmBox(to === 'COMPLETE' ? 'סיום אירוע' : 'פתיחה מחדש', txt, function () { return api('navevents.setStatus', { id: ev.id, status: to, expected_version: ev.version, opts: { acknowledge_missing: need, reason: to === 'COMPLETE' ? (need ? 'חסרים מוצדקים (סגירה מהמסך)' : 'הושלם') : 'פתיחה מחדש להוספת תוצאות' } }).then(function (r) { if (r.ok) evReload(ev.id); return r; }); }, to === 'COMPLETE' ? 'סימון כהושלם' : 'פתיחה מחדש');
+    }
+    function eventPanel() {
+      var sel = h('select', { id: 'be_event', 'aria-label': 'אירוע ניווט' }); sel.addEventListener('change', function () {
+        var ev = evList().filter(function (e) { return e.id === sel.value; })[0]; cfg._eventId = ev ? ev.id : '';
+        if (ev) { [['navigation_type_id', ev.navigation_type_id], ['test_date', String(ev.test_date).slice(0, 10)], ['distance_km', ev.distance_km], ['points_total', ev.points_total]].forEach(function (x) { var el = sq('#be_' + x[0]); if (el) el.value = x[1]; }); }
+        paintEvent(cfg._eventId); loadExisting().then(refreshAll); });
+      return h('div', { class: 'card', id: 'beEventPanel', style: 'display:block;grid-column:1/-1;flex:1 1 100%;width:100%;box-sizing:border-box;min-width:0' }, [field('אירוע ניווט', sel, 'המשך הזנה לאותו אירוע, או פתיחת אירוע חדש.'), h('div', { id: 'beEventInfo', role: 'status', 'aria-live': 'polite' }), h('div', { id: 'beEventBar', class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap' })]);
+    }
     function build() {
       holder.replaceChildren();
       if (!sols().length) { holder.append(emptyBox('אין חניכים פעילים בהרשאה שלכם.')); return; }
@@ -1547,6 +1588,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
         }
         return field(f.l + (f.req ? ' *' : ''), inp, f.hint); });
       shHost.replaceChildren.apply(shHost, cfgShared);
+      if (cfg.domain === 'nav') { shHost.prepend(eventPanel()); var open = evList().filter(function (e) { return e.status !== 'COMPLETE'; }).sort(function (a, b) { return String(b.test_date).localeCompare(String(a.test_date)); })[0]; paintEvent(open ? open.id : ''); if (open) { ['navigation_type_id', 'test_date', 'distance_km', 'points_total'].forEach(function (n) { var el = sq('#be_' + n); if (el) el.value = n === 'test_date' ? String(open[n]).slice(0, 10) : open[n]; }); } }
       var org = S.org || { departments: [], teams: [] };
       var q = h('input', { class: 'search', id: 'beQ', type: 'search', placeholder: 'חיפוש שם / מספר אישי', 'aria-label': 'חיפוש חניך' }), dep = h('select', { id: 'beDep', 'aria-label': 'סינון לפי מחלקה' }, [h('option', { value: '', text: 'כל המחלקות' })].concat(org.departments.map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); }))), team = h('select', { id: 'beTeam', 'aria-label': 'סינון לפי צוות' }, [h('option', { value: '', text: 'כל הצוותים' })].concat(org.teams.map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, ''), 'data-dep': t.department_id }); })));
       var chips = h('div', { class: 'filters', role: 'group', 'aria-label': 'סינון לפי מצב הזנה' }, [['all', 'הכול'], ['missing', 'חסרים'], ['entered', 'הוזנו'], ['fix', 'דורשי תיקון']].map(function (c) { return h('button', { class: 'chip' + (c[0] === 'all' ? ' active' : ''), type: 'button', 'data-st': c[0], 'aria-pressed': c[0] === 'all' ? 'true' : 'false', text: c[1], onclick: function (ev) { filt.st = c[0]; [].forEach.call(chips.children, function (b) { b.classList.toggle('active', b === ev.currentTarget); b.setAttribute('aria-pressed', b === ev.currentTarget ? 'true' : 'false'); }); applyFilter(); } }); }));
@@ -1633,7 +1675,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
 
   /* ---- navigation: the first module on the shared screen (approved formula unchanged: points = 90*done/total, final = plan + debrief + points — computed by the server) ---- */
   BULK.nav = {
-    domain: 'nav', back: 'd/nav', title: 'הזנה קבוצתית — ניווט', table: 'NavigationTests', createM: 'nav.create', pre: ['navtypes.list'],
+    domain: 'nav', back: 'd/nav', title: 'הזנה קבוצתית — ניווט', table: 'NavigationTests', createM: 'nav.create', pre: ['navtypes.list', 'navevents.list'],
     shared: [{ n: 'navigation_type_id', l: 'סוג ניווט', t: 'select', req: 1, o: function (P) { return (P['navtypes.list'] || []).filter(function (t) { return t.active; }).map(function (t) { return [t.id, t.name]; }); } },
       { n: 'test_date', l: 'תאריך', t: 'date', req: 1, def: 'today' },
       { n: 'distance_km', l: 'מרחק משוער (ק״מ)', t: 'number', req: 1, min: 0.5, max: 100, step: 0.5, hint: 'בקפיצות של 0.5' },
@@ -1643,7 +1685,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
     existingKey: function (o) { return o.navigation_type_id && /^\d{4}-\d{2}-\d{2}$/.test(o.test_date) ? o.navigation_type_id + '|' + o.test_date : ''; },
     existing: function (o, fresh) { return api('nav.list', { courseId: S.course.id, typeId: o.navigation_type_id, from: o.test_date, to: o.test_date }, fresh ? 'fresh' : undefined); },
     recVals: function (r) { return { plan_score: r.plan_score, debrief_score: r.debrief_score, points_completed: r.points_completed, distance_km: r.distance_km, points_total: r.points_total }; },
-    createArgs: function (s, v, o, req) { return { courseId: S.course.id, data: { request_id: req, soldier_id: s.id, navigation_type_id: o.navigation_type_id, test_date: o.test_date, distance_km: numParse(o.distance_km).n, plan_score: v.plan_score, debrief_score: v.debrief_score, points_completed: v.points_completed, points_total: numParse(o.points_total).n, notes: '' } }; }
+    createArgs: function (s, v, o, req) { return { courseId: S.course.id, data: { request_id: req, soldier_id: s.id, navigation_type_id: o.navigation_type_id, test_date: o.test_date, event_id: BULK.nav._eventId || undefined, distance_km: numParse(o.distance_km).n, plan_score: v.plan_score, debrief_score: v.debrief_score, points_completed: v.points_completed, points_total: numParse(o.points_total).n, notes: '' } }; }
   };
 
   /* ---- fitness (regular כש״ג only; the approved scoring tables are applied by the server — nothing is scored here) ---- */
