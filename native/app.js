@@ -136,11 +136,15 @@
   var CTA = { followups: ['d/none', 'followups', 'למעקבים'], coverage: 'd/insights', trend: 'd/insights', attendance: 'd/attendance', group_gap: 'd/insights', distribution: 'd/insights' };
   function insightCard(o) { var b = h('div', { class: 'card', style: 'display:block' }, [h('h3', { text: o.title }), h('p', { text: o.text, style: 'line-height:1.6;margin:6px 0' }), o.chart || null, h('p', { class: 'muted', text: o.meta || '', style: 'margin:6px 0 8px' }), h('button', { class: 'secondary', type: 'button', text: o.cta + ' ←', onclick: function () { go(o.go); } })]); return b; }
   function Home() {
-    var kp = [h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k1' }), h('small', { text: 'חניכים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k2' }), h('small', { text: 'מעקבים פתוחים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k3' }), h('small', { text: 'התראות פתוחות' })])];
+    var kpi3 = function (id, label, to) { return h('button', { class: 'stat', type: 'button', onclick: function () { go(to); } }, [h('strong', { text: '…', id: id }), h('small', { text: label }), h('i', { class: 'go', 'aria-hidden': 'true', text: '←' })]); };
+    var kp = [kpi3('k1', 'חניכים', 'soldiers'), kpi3('k2', 'מעקבים פתוחים', 'followups'), kpi3('k3', 'התראות פתוחות', 'd/alerts')];
+    var hr = new Date().getHours(), greet = hr < 5 ? 'לילה טוב' : hr < 12 ? 'בוקר טוב' : hr < 17 ? 'צהריים טובים' : hr < 21 ? 'ערב טוב' : 'לילה טוב';
+    var rt = function (ico, t, sub, to) { return h('button', { class: 'rtile', type: 'button', onclick: function () { go(to); } }, [h('span', { class: 'ri', 'aria-hidden': 'true', text: ico }), h('b', { text: t }), h('small', { text: sub })]); };
+    var tiles = h('div', { class: 'rtiles' }, [rt('🧭', 'ניווטים', 'ציון, מגמה, סיווג', 'insight'), rt('📝', 'מבחנים', 'א׳ / ב׳ / ג׳', 'insight'), rt('🎯', 'קליעה', 'רגילה ויל״מ', 'insight/shoot'), rt('💪', 'כושר גופני', 'כש״ג לפי רכיב', 'insight/fit')]);
     var today = h('div', { id: 'today', 'aria-busy': 'true' }, skeleton(2)), brief = h('div', { id: 'brief', 'aria-busy': 'true' }, skeleton(1)), more = h('div', { id: 'deep' }), ask = h('div', { id: 'askbox' }), upd = h('span', { class: 'count', id: 'upd', text: 'נתוני הדגמה' });
     mount('home', [
-      h('div', { class: 'hero' }, [h('small', { text: 'בוקר טוב 👋' }), h('h1', { text: 'הכול ברור. אפשר להתקדם.' }), h('p', { id: 'heroWhy', text: 'מסך בית שמציג את הפעולה החשובה הבאה, בלי לחפש בין עשרות תפריטים.' }), h('button', { class: 'primary', id: 'heroCta', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
-      sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp),
+      h('div', { class: 'hero' }, [h('small', { text: greet }), h('h1', { text: 'הפעולה הבאה שלך' }), h('p', { id: 'heroWhy', text: 'אין כרגע משהו דחוף. אפשר להמשיך בחיפוש חניך או בהזנה.' }), h('button', { class: 'primary', id: 'heroCta', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
+      sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp), sectionHead('דוחות ותובנות', 'לחיצה לפתיחה'), tiles,
       h('div', { id: 'lastAct', 'aria-live': 'polite', style: 'min-height:88px' }),
       h('div', { class: 'section' }, [h('h2', { text: 'מה חשוב לדעת היום' }), upd]), today,
       sectionHead('תמונת מצב פיקודית', null), brief, more, ask,

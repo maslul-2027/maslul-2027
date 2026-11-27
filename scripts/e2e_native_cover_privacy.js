@@ -1,4 +1,6 @@
 'use strict';
+/* Orchestrator: each domain runs in its OWN process/browser (one long single browser session exhausted headless Chromium); DOMS=<list> runs that list directly, DOMS=none runs only the shared tail checks. */
+if (!process.env.DOMS) { const cpx = require('child_process'); let bad = 0; for (const d of ['fit', 'shoot', 'exam', 'nav', 'none']) { const r = cpx.spawnSync(process.execPath, [__filename].concat(process.argv.slice(2)), { env: Object.assign({}, process.env, { DOMS: d }), stdio: 'inherit' }); if (r.status) bad++; } console.log('COVER-PRIVACY (all processes) failing processes=' + bad); process.exit(bad ? 1 : 0); }
 // COVERAGE privacy (DOM): model rules, small-cell attacks on the model + the REAL PDF/XLSX bytes, real downloads bound to the server record, commander gets no buttons. Synthetic data only.
 const http = require('http'), fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process'), assert = require('assert/strict'); const { chromium } = require('playwright');
 const dir = path.resolve(process.argv[2] || 'preview'), SHOTS = process.argv[3] ? path.resolve(process.argv[3]) : null, M = { '.html': 'text/html;charset=utf-8', '.js': 'text/javascript', '.svg': 'image/svg+xml' };
@@ -33,14 +35,14 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cover-')), sh = (c, a) => cp.
     if (SHOTS && tag.startsWith('SHOT')) await q.screenshot({ path: path.join(SHOTS, tag.replace(/\W+/g, '_') + '.png'), fullPage: false }); await c.close(); void html;
   };
   const CASES = [[1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [5, 1], [9, 1], [5, 5], [10, 0], [10, 2], [12, 6]];
-  for (const dom of (process.env.DOMS || 'fit,shoot,exam,nav').split(',')) {
+  for (const dom of process.env.DOMS === 'none' ? [] : process.env.DOMS.split(',')) {
     await t(dom + ': every cohort split (1..4 · 5/0 · 5/1 · 9/1 · 5/5 · 10/0 · 10/2 · 12/6): suppressed ⇒ no bar / % / ratio / denominator in text, style, aria, metadata; legal ⇒ the bar equals the true coverage', async () => { for (const [k, m] of CASES) await check(dom, k, m, dom + ' ' + k + '/' + (k + m)); });
   }
-  await t('screenshots of the suppressed states (9/1 and 3) for the report', async () => { for (const [dom, k, m] of [['fit', 9, 1], ['fit', 3, 0], ['shoot', 9, 1], ['nav', 9, 1]]) await check(dom, k, m, 'SHOT ' + dom + ' ' + k + 'of' + (k + m)); });
-  await t('negative control: the OLD behaviour (raw pct bar + k/n + exact denominator) would be caught by the same DOM checks', async () => {
+  if (process.env.DOMS === 'none') await t('screenshots of the suppressed states (9/1 and 3) for the report', async () => { for (const [dom, k, m] of [['fit', 9, 1], ['fit', 3, 0], ['shoot', 9, 1], ['nav', 9, 1]]) await check(dom, k, m, 'SHOT ' + dom + ' ' + k + 'of' + (k + m)); });
+  if (process.env.DOMS === 'none') await t('negative control: the OLD behaviour (raw pct bar + k/n + exact denominator) would be caught by the same DOM checks', async () => {
     const c = await b.newContext({ viewport: { width: 390, height: 844 } }), q = await c.newPage(); await q.goto(base + '/'); await q.waitForSelector('#k1');
     await q.evaluate(() => { const d = document.createElement('div'); d.id = 'fake'; d.innerHTML = '<div class="in-kpi" id="fk"><small>כיסוי</small><b>9/10</b><span>90%</span><span class="in-prog" aria-hidden="true"><i style="width:90%"></i></span></div><details class="in-meta"><summary>x</summary><p>מכנה: 10 חניכים</p></details>'; document.body.append(d); });
     const text = await q.locator('#fk').textContent(), bar = await q.locator('#fk .in-prog').count(), stamp = await q.locator('#fake details').textContent(); const caught = bar > 0 || /%/.test(text) || /\d+\/\d+/.test(text) || /מכנה: \d/.test(stamp); assert.ok(caught, 'the detector must catch the old leak'); await c.close(); });
-  await t('commander (scoped) sessions obey the same projection on all four reports; no page errors', async () => { for (const dom of ['fit', 'shoot', 'exam', 'nav']) await check(dom, 0, 0, dom + ' commander', 'commander'); assert.deepEqual(errs, []); });
+  if (process.env.DOMS === 'none') await t('commander (scoped) sessions obey the same projection on all four reports; no page errors', async () => { for (const dom of ['fit', 'shoot', 'exam', 'nav']) await check(dom, 0, 0, dom + ' commander', 'commander'); assert.deepEqual(errs, []); });
   console.log('COVER-PRIVACY pass=' + pass + ' fail=' + fail); await b.close(); srv.close(); process.exit(fail ? 1 : 0);
 })();

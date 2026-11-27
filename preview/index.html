@@ -231,6 +231,17 @@ button.card:active{background:var(--teal-l);transform:scale(.995)}
 .arrow{color:var(--teal-d)}
 .empty{color:var(--muted)}
 
+/* Home v3: tappable KPIs, report tiles, compact hero */
+button.stat{font:inherit;color:inherit;text-align:start;position:relative;min-height:88px;cursor:pointer;border:0;border-top:3px solid var(--teal);background-color:#fff;transition:transform .15s,box-shadow .15s}
+button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-block-end:8px;inset-inline-end:10px;font-style:normal;color:var(--teal-d);font-size:16px}
+.hero{padding:18px 18px}.hero h1{font-size:22px;margin:2px 0 4px}.hero p{margin:0 0 12px}
+.rtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.rtile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:88px;padding:12px;border:1px solid var(--line);border-radius:var(--r2);background-color:#fff;box-shadow:var(--sh);text-align:start;font:inherit;color:#161b20;cursor:pointer;transition:transform .15s}
+.rtile:active{transform:scale(.97)}.rtile .ri{font-size:22px;line-height:1}.rtile b{font-size:16px}.rtile small{font-size:14px;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){button.stat,.rtile{transition:none}}
+.rtile,button.stat{min-width:0;overflow-wrap:anywhere}.rtile b,.rtile small{max-width:100%}
+@media(max-width:359px){.rtiles{grid-template-columns:1fr}.hero{padding:16px 14px}}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="entry"><i>✎</i>הזנה</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
@@ -374,11 +385,15 @@ button.card:active{background:var(--teal-l);transform:scale(.995)}
   var CTA = { followups: ['d/none', 'followups', 'למעקבים'], coverage: 'd/insights', trend: 'd/insights', attendance: 'd/attendance', group_gap: 'd/insights', distribution: 'd/insights' };
   function insightCard(o) { var b = h('div', { class: 'card', style: 'display:block' }, [h('h3', { text: o.title }), h('p', { text: o.text, style: 'line-height:1.6;margin:6px 0' }), o.chart || null, h('p', { class: 'muted', text: o.meta || '', style: 'margin:6px 0 8px' }), h('button', { class: 'secondary', type: 'button', text: o.cta + ' ←', onclick: function () { go(o.go); } })]); return b; }
   function Home() {
-    var kp = [h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k1' }), h('small', { text: 'חניכים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k2' }), h('small', { text: 'מעקבים פתוחים' })]), h('div', { class: 'stat' }, [h('strong', { text: '…', id: 'k3' }), h('small', { text: 'התראות פתוחות' })])];
+    var kpi3 = function (id, label, to) { return h('button', { class: 'stat', type: 'button', onclick: function () { go(to); } }, [h('strong', { text: '…', id: id }), h('small', { text: label }), h('i', { class: 'go', 'aria-hidden': 'true', text: '←' })]); };
+    var kp = [kpi3('k1', 'חניכים', 'soldiers'), kpi3('k2', 'מעקבים פתוחים', 'followups'), kpi3('k3', 'התראות פתוחות', 'd/alerts')];
+    var hr = new Date().getHours(), greet = hr < 5 ? 'לילה טוב' : hr < 12 ? 'בוקר טוב' : hr < 17 ? 'צהריים טובים' : hr < 21 ? 'ערב טוב' : 'לילה טוב';
+    var rt = function (ico, t, sub, to) { return h('button', { class: 'rtile', type: 'button', onclick: function () { go(to); } }, [h('span', { class: 'ri', 'aria-hidden': 'true', text: ico }), h('b', { text: t }), h('small', { text: sub })]); };
+    var tiles = h('div', { class: 'rtiles' }, [rt('🧭', 'ניווטים', 'ציון, מגמה, סיווג', 'insight'), rt('📝', 'מבחנים', 'א׳ / ב׳ / ג׳', 'insight'), rt('🎯', 'קליעה', 'רגילה ויל״מ', 'insight/shoot'), rt('💪', 'כושר גופני', 'כש״ג לפי רכיב', 'insight/fit')]);
     var today = h('div', { id: 'today', 'aria-busy': 'true' }, skeleton(2)), brief = h('div', { id: 'brief', 'aria-busy': 'true' }, skeleton(1)), more = h('div', { id: 'deep' }), ask = h('div', { id: 'askbox' }), upd = h('span', { class: 'count', id: 'upd', text: 'נתוני הדגמה' });
     mount('home', [
-      h('div', { class: 'hero' }, [h('small', { text: 'בוקר טוב 👋' }), h('h1', { text: 'הכול ברור. אפשר להתקדם.' }), h('p', { id: 'heroWhy', text: 'מסך בית שמציג את הפעולה החשובה הבאה, בלי לחפש בין עשרות תפריטים.' }), h('button', { class: 'primary', id: 'heroCta', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
-      sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp),
+      h('div', { class: 'hero' }, [h('small', { text: greet }), h('h1', { text: 'הפעולה הבאה שלך' }), h('p', { id: 'heroWhy', text: 'אין כרגע משהו דחוף. אפשר להמשיך בחיפוש חניך או בהזנה.' }), h('button', { class: 'primary', id: 'heroCta', type: 'button', onclick: function () { go('soldiers'); }, text: 'מעבר לרשימת החניכים ←' })]),
+      sectionHead('תמונת מצב', 'נתוני הדגמה'), h('div', { class: 'stats' }, kp), sectionHead('דוחות ותובנות', 'לחיצה לפתיחה'), tiles,
       h('div', { id: 'lastAct', 'aria-live': 'polite', style: 'min-height:88px' }),
       h('div', { class: 'section' }, [h('h2', { text: 'מה חשוב לדעת היום' }), upd]), today,
       sectionHead('תמונת מצב פיקודית', null), brief, more, ask,
