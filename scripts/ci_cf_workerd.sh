@@ -27,7 +27,10 @@ echo "== 2/2 two-phone browser E2E on one database (fresh state) =="
 start "$TMP/wrangler2.log" "$TMP/d1b" || exit 1
 ( cd "$ROOT" && CF_BASE_URL="$BASE" timeout 600 node scripts/e2e_cf_browser.js artifacts/cf_browser ) || { RC=1; echo "--- wrangler log ---"; tail -n 120 "$TMP/wrangler2.log"; }
 ( cd "$ROOT" && timeout 300 node scripts/e2e_cf_motion.js artifacts/cf_motion.json ) || RC=1
+# bulk + bulk_modules each start on a FRESH local D1 (an earlier script in the same DB used up the per-IP login window / consumed the empty-course state, which made the next sign-in flaky)
+stop; start "$TMP/wrangler3.log" "$TMP/d1c" || exit 1
 ( cd "$ROOT" && timeout 420 node scripts/e2e_cf_bulk.js ) || RC=1
+stop; start "$TMP/wrangler4.log" "$TMP/d1d" || exit 1
 ( cd "$ROOT" && timeout 400 node scripts/e2e_cf_bulk_modules.js ) || RC=1   # fitness/exams/marksmanship/readiness group entry + group reassign against the real Worker + D1   # group entry (navigation) against the real Worker + D1   # real Worker + D1 shim, 250 ms simulated latency: tab/push/back motion, no skeleton on revisit, no stale read after a save
 echo "== auth screen: 5 viewports x 3 modes + not-configured state (screenshots, layout, keyboard, reduced motion) =="
 ( cd "$ROOT" && timeout 300 node scripts/cf_auth_screens.js artifacts/cf_screens ) || RC=1
