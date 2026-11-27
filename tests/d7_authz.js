@@ -62,8 +62,8 @@ t('hardening', 'D7-GROUP-NAV: nav.groups — group levels (course / departments 
   [admin, cC, cT].forEach(u => { const d = ok(w.as(u, 'nav.groups', { courseId: c1, opts: {} })); const lv = { course: d.course, departments: d.departments, teams: d.teams }; assert.strictEqual(mentioned(lv, all).size, 0, u.email + ': group levels must hold no soldier identity'); (d.departments || []).concat(d.teams || []).forEach(g => { if (g.suppressed) { assert.strictEqual(g.soldiers, null); assert.strictEqual(g.id, null); } }); });
 });
 
-t('hardening', 'D7-ROUTE-MAP: all 178 routes carry an explicit classification (G group / O operational individual / P personal restricted / A admin only / N no soldier data); no route is missing and none is stale', () => {
-  const w = W(); const keys = Object.keys(w.X.API_).sort(); assert.strictEqual(keys.length, 178);
+t('hardening', 'D7-ROUTE-MAP: all 185 routes carry an explicit classification (G group / O operational individual / P personal restricted / A admin only / N no soldier data); no route is missing and none is stale', () => {
+  const w = W(); const keys = Object.keys(w.X.API_).sort(); assert.strictEqual(keys.length, 185);
   assert.deepStrictEqual(Object.keys(CLASSES).sort(), keys, 'route_classes.json lists exactly the API routes'); Object.values(CLASSES).forEach(c => assert.ok('GOPAN'.includes(c) && c.length === 1, 'class ' + c));
 });
 

@@ -8,7 +8,7 @@
 // (adding a route needs a deliberate edit here, in the same reviewed PR); each addition has a real dispatch function;
 // ledger == whitelist == 174 + additions. It says nothing about whether routes are operational: that is the evidence ledger's job.
 const fs = require('fs'), path = require('path'); const root = path.join(__dirname, '..');
-const REVIEWED_ADDITIONS = { 'fitness.preview': 'Fitness.preview', 'fitness.reference': 'Fitness.reference', 'reports.exportAuthorize': 'Reports.exportAuthorize', 'reports.exportComplete': 'Reports.exportComplete' };   // fitness regular-scoring feature, reviewed in PR #88
+const REVIEWED_ADDITIONS = { 'fitness.preview': 'Fitness.preview', 'fitness.reference': 'Fitness.reference', 'reports.exportAuthorize': 'Reports.exportAuthorize', 'reports.exportComplete': 'Reports.exportComplete', 'navevents.adopt': 'NavEvents.adopt', 'navevents.create': 'NavEvents.create', 'navevents.get': 'NavEvents.get', 'navevents.legacy': 'NavEvents.legacy', 'navevents.list': 'NavEvents.list', 'navevents.setStatus': 'NavEvents.setStatus', 'navevents.update': 'NavEvents.update' };   // fitness regular-scoring feature, reviewed in PR #88
 const EXPECTED_ORIGINAL = 174;
 function load(opts) {
   opts = opts || {}; const rd = f => fs.readFileSync(path.join(root, f), 'utf8');

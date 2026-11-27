@@ -5,7 +5,7 @@
 ## ארבע סביבות, ארבע רמות הוכחה
 | סביבה | מה זה | הוכחה | מה אסור להסיק |
 |---|---|---|---|
-| 1. דמו ציבורי בדפדפן | מנוע מקומי ב-localStorage, נתונים סינתטיים, ללא שרת | 160 מתוך 178 נתיבים מסומנים PASS_SYNTH_E2E: בדפדפן, בקריאות שמקורן בממשק ומתואמות לקלט/תנועת משתמש (`interaction_verified` בלדג׳ר). זו הוכחה שהמסך קורא לנתיב אחרי תנועה, **לא** אימות סמנטי מלא של 158 התהליכים | לא מוכיח הרשאות שרת, התמדה בין מכשירים, קבצים או גיבוי |
+| 1. דמו ציבורי בדפדפן | מנוע מקומי ב-localStorage, נתונים סינתטיים, ללא שרת | 161 מתוך 185 נתיבים מסומנים PASS_SYNTH_E2E: בדפדפן, בקריאות שמקורן בממשק ומתואמות לקלט/תנועת משתמש (`interaction_verified` בלדג׳ר). זו הוכחה שהמסך קורא לנתיב אחרי תנועה, **לא** אימות סמנטי מלא של 158 התהליכים | לא מוכיח הרשאות שרת, התמדה בין מכשירים, קבצים או גיבוי |
 | 2. שרת TEST מקומי מאומת (HTTPS, loopback / חבילת Windows) | אותו UI מול שרת אמיתי: כניסה, סשנים, הרשאות, קבצים מוצפנים | **הוכחות הרצה ב-HTTPS (דחיות הרשאה והמסלול המלא):** `tests/secure_test_server.js`, `tests/marches_server.js`, `tests/documents_server.js`, `tests/report_export.js`, `tests/backup_restore.js`, `tests/full_backup.js`, `scripts/e2e_secure_browser.js`, `scripts/e2e_report_export_browser.js`, `scripts/e2e_backup_restore_browser.js`, `scripts/e2e_documents_browser.js`, `scripts/e2e_release_package.js` (Windows ב-CI). אין כאן טענה שכל 176 הנתיבים הורצו ב-HTTPS | מחשב אחד בלבד; לא נגיש ממכשיר אחר |
 | 2א. שומרי סיווג והרשאה בלי הרצת HTTPS (לא נחשבים הוכחת שרת) | בדיקות Node על המנוע בזיכרון עם זהות מדומה | `tests/route_table.js` הוא שומר **מלאי וסיווג** (כל נתיב מסווג ידנית, רשימת חסומים) ואינו בודק הרשאה בזמן ריצה; `tests/d7_authz.js`, `tests/v1_pentest.js`, `tests/uxqa_server.js` הן סריקות הרשאה על המנוע, לא על שרת HTTPS | לא להציג כ"בדיקת שרת מאובטח" |
 | 3. שרת TEST פרטי משותף מתארח | אותו קוד על מארח מאושר, שני מכשירים | **DEPLOYED (Cloudflare Workers Free + D1, TEST סינתטי בלבד):** SHA `fe0a22fefd486e8f9c7e3d3e9966019471977dbd`, הרצת Actions 45992678902 (verify + deploy) הסתיימה בהצלחה וה-smoke מ-GitHub החזיר READY (`/auth/status` מוגדר, `/api` ללא כניסה נסגר). **Hosted signed-in E2E: NOT_RUN** — אין הוכחה ממארח לתהליכים מאומתים, לתפקידים חיים או ל-D1 מרוחק תחת השהיה אמיתית; הוכחת התהליכים היא בסנדבוקס מבודד (`scripts/qa_zero_touch.js`: Worker אמיתי + D1 מקומי). טלפונים פיזיים: NOT_RUN | ירוק ב-CI אינו הוכחה שהאתר המתארח נבדק מאומת |
@@ -64,6 +64,7 @@
 | migration | 1 | 0 | 1 |
 | mk | 3 | 3 | 0 |
 | nav | 4 | 4 | 2 |
+| navevents | 7 | 1 | 0 |
 | navtypes | 4 | 4 | 0 |
 | notes | 2 | 2 | 0 |
 | ocr | 5 | 4 | 0 |
@@ -79,10 +80,10 @@
 | users | 3 | 3 | 1 |
 
 ## התאמה לחוזה המקורי (174 נתיבים) — נבדק אוטומטית
-- 174/174 preserved; additions fitness.preview, fitness.reference, reports.exportAuthorize, reports.exportComplete; current 178/178 classified
+- 174/174 preserved; additions fitness.preview, fitness.reference, navevents.adopt, navevents.create, navevents.get, navevents.legacy, navevents.list, navevents.setStatus, navevents.update, reports.exportAuthorize, reports.exportComplete; current 185/185 classified
 - מקורות: `docs/capability-inventory.json` (174 נתיבי החוזה המקורי, לא נערך), `src/Code.gs` (רשימת API_) ו-`docs/route-evidence-ledger.json`. הבדיקה: `scripts/check_contract_route_parity.js` (נכשלת על נתיב חסר, כפול או תוספת לא מוצהרת).
-- התוספות המוצהרות והמאושרות בלבד: `fitness.preview`, `fitness.reference`, `reports.exportAuthorize`, `reports.exportComplete` (תכונת ציון הכושר הרגיל). הן מסווגות ואינן מוסתרות.
-- זו בדיקת סיווג בלבד: היא **אינה** טוענת ש-178 הנתיבים פעילים בכל סביבה; ראו טבלאות הסביבות למעלה.
+- התוספות המוצהרות והמאושרות בלבד: `fitness.preview`, `fitness.reference`, `navevents.adopt`, `navevents.create`, `navevents.get`, `navevents.legacy`, `navevents.list`, `navevents.setStatus`, `navevents.update`, `reports.exportAuthorize`, `reports.exportComplete` (תכונת ציון הכושר הרגיל). הן מסווגות ואינן מוסתרות.
+- זו בדיקת סיווג בלבד: היא **אינה** טוענת ש-185 הנתיבים פעילים בכל סביבה; ראו טבלאות הסביבות למעלה.
 
 ## עדיין חסום (ללא שינוי)
 OCR (אין ספק/מנוע), הגירה (`migration.run`), חיבורי Drive/Google, טבלאות ניקוד כש״ג N1–N8 (DRAFT, לא מאושרות מקצועית), שרת פרטי מתארח.

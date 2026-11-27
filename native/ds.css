@@ -67,3 +67,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
 #view .card>div,#view .card h3,#view .card p{min-width:0;overflow-wrap:anywhere}
 #view button,#view .chip,#view select,#view input{max-width:100%;overflow-wrap:anywhere}#view button{white-space:normal}
 .fixed-choice{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:6px 0;border:1px solid var(--line);border-radius:var(--r);background-color:#f1f8f8}.fixed-choice small{color:var(--muted);font-size:14px}.fixed-choice b{font-size:16px}
+
+/* PR-A event panel */
+#beEventPanel button,#beEventPanel select,#beEventPanel input{min-height:44px}
+#beEventBar{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
