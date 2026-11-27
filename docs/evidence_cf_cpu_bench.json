@@ -1,0 +1,122 @@
+{
+ "note": "Node proxy, synthetic data; Cloudflare enforcement NOT_RUN",
+ "startupMs": 87,
+ "rows": [
+  {
+   "name": "login (access code + TOTP, session create)",
+   "cold": 0.909,
+   "warm": 0.977,
+   "st": 5
+  },
+  {
+   "name": "GET /auth/me (session check)",
+   "ok": true,
+   "cold": 0.297,
+   "warm": 0.19,
+   "p95": 0.32,
+   "st": 1,
+   "rr": 1,
+   "rw": 0
+  },
+  {
+   "name": "soldiers.list (60 rows)",
+   "ok": true,
+   "cold": 3.168,
+   "warm": 0.854,
+   "p95": 3.179,
+   "st": 3,
+   "rr": 75,
+   "rw": 0
+  },
+  {
+   "name": "courses.org",
+   "ok": true,
+   "cold": 0.526,
+   "warm": 0.434,
+   "p95": 0.832,
+   "st": 3,
+   "rr": 14,
+   "rw": 0
+  },
+  {
+   "name": "marches.list",
+   "ok": true,
+   "cold": 0.645,
+   "warm": 0.558,
+   "p95": 1.13,
+   "st": 3,
+   "rr": 67,
+   "rw": 0
+  },
+  {
+   "name": "marches.create (write, roster saved)",
+   "ok": true,
+   "cold": 3.137,
+   "warm": 1.16,
+   "p95": 1.801,
+   "st": 6,
+   "rr": 475,
+   "rw": 21
+  },
+  {
+   "name": "meetings.save with a task (write)",
+   "ok": true,
+   "cold": 3.586,
+   "warm": 1.642,
+   "p95": 3.499,
+   "st": 6,
+   "rr": 196,
+   "rw": 12
+  },
+  {
+   "name": "tasks.list",
+   "ok": true,
+   "cold": 2.596,
+   "warm": 1.377,
+   "p95": 2.042,
+   "st": 3,
+   "rr": 71,
+   "rw": 0
+  },
+  {
+   "name": "attendance.summary",
+   "ok": true,
+   "cold": 2.444,
+   "warm": 0.544,
+   "p95": 1.471,
+   "st": 3,
+   "rr": 8,
+   "rw": 0
+  },
+  {
+   "name": "dash.home (analytics, cache MISS each time: args vary)",
+   "ok": true,
+   "cold": 11.932,
+   "warm": 9.568,
+   "p95": 15.443,
+   "st": 7,
+   "rr": 955,
+   "rw": 1
+  },
+  {
+   "name": "soldiers.card",
+   "ok": true,
+   "cold": 9.294,
+   "warm": 0.657,
+   "p95": 9.423,
+   "st": 3,
+   "rr": 19,
+   "rw": 0
+  },
+  {
+   "name": "reports.preview",
+   "ok": true,
+   "cold": 15.305,
+   "warm": 8.809,
+   "p95": 15.568,
+   "st": 7,
+   "rr": 959,
+   "rw": 1
+  }
+ ]
+}

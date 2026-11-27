@@ -136,5 +136,38 @@ const Reports = {
   jobs(ctx, courseId) { Records.guardCourse_(ctx, 'report.generate', courseId); return Db.where('ReportJobs', function (j) { return j.course_id === courseId; }).map(function (j) { return { id: j.id, format: j.format, requested_by: j.requested_by, requested_at: j.requested_at, rows_count: Number(j.rows_count), include_private: Util.isTrue(j.include_private) }; }); },
 
   /** Full Excel export of one course: every section, all history rows (admin). Private sheets only on explicit request. */
+  /**
+   * Server-side gate + audit for REPORT FILES THAT THE BROWSER BUILDS (free TEST has no file storage; see docs/INSIGHT_REPORTS_SLICE1.md).
+   * Step 1 exportAuthorize: the SERVER checks the role/course ('report.generate' = admin only; unchanged policy, nothing widened), validates kind/format/scope
+   *   and appends an AuditLog row (REPORT_EXPORT_AUTHORIZED); the row id is a single-use ticket (actor-bound, course-bound, 15 minutes). A refused attempt is audited too (REPORT_EXPORT_DENIED).
+   * Step 2 exportComplete: the browser reports the byte size + SHA-256 of the file it produced; the server binds it to the ticket exactly once (REPORT_EXPORT_COMPLETED).
+   * Honest limit: the server cannot see the bytes the browser builds, so this gates + records the sanctioned path; it is not DRM. The DATA the file is built from is only what the actor's own scoped reads already return.
+   */
+  EXPORT_KINDS: ['navigation', 'course', 'exams', 'shooting', 'fitness'],
+  exportAuthorize(ctx, courseId, req) {
+    req = req || {}; const kind = Util.str(req.kind), format = Util.str(req.format), scope = Util.str(req.scope);
+    try { Records.guardCourse_(ctx, 'report.generate', courseId); }
+    catch (e) { Audit.log(ctx, { courseId: String(courseId || ''), action: 'REPORT_EXPORT_DENIED', table: 'ReportExports', recordId: '', after: { kind: kind.slice(0, 40), format: format.slice(0, 8), role: ctx && ctx.role ? ctx.role : '' } }); throw e; }
+    if (Reports.EXPORT_KINDS.indexOf(kind) === -1) throw new AppError('VALIDATION', 'סוג דוח לא מוכר.');
+    if (format !== 'pdf' && format !== 'xlsx') throw new AppError('VALIDATION', 'פורמט: pdf או xlsx.');
+    if (scope.length > 160 || /[\u0000-\u001f]/.test(scope)) throw new AppError('VALIDATION', 'היקף לא תקין.');
+    const id = Audit.log(ctx, { courseId: courseId, action: 'REPORT_EXPORT_AUTHORIZED', table: 'ReportExports', recordId: '', after: { kind: kind, format: format, scope: scope } });
+    return { ticket: id, kind: kind, format: format, expires_in_sec: 900 };
+  },
+  exportComplete(ctx, courseId, req) {
+    req = req || {}; Records.guardCourse_(ctx, 'report.generate', courseId);
+    const t = Util.str(req.ticket), sha = Util.str(req.sha256).toLowerCase(), bytes = Number(req.bytes), pages = req.pages === undefined || req.pages === null ? 0 : Number(req.pages);
+    if (!/^[A-Za-z0-9-]{4,64}$/.test(t) || !/^[0-9a-f]{64}$/.test(sha) || !Number.isInteger(bytes) || bytes < 100 || bytes > 52428800 || !Number.isInteger(pages) || pages < 0 || pages > 500) throw new AppError('VALIDATION', 'אישור הורדה לא תקין.');
+    return Locks.run(function () {
+      const rows = Db.where('AuditLog', function (r) { return r.id === t || (r.record_id === t && r.action === 'REPORT_EXPORT_COMPLETED'); });
+      const auth = rows.filter(function (r) { return r.id === t; })[0];
+      if (!auth || auth.action !== 'REPORT_EXPORT_AUTHORIZED' || String(auth.actor_email).toLowerCase() !== String(ctx.email).toLowerCase() || auth.course_id !== courseId) throw new AppError('FORBIDDEN', 'כרטיס הורדה לא תקף.');
+      if (rows.some(function (r) { return r.action === 'REPORT_EXPORT_COMPLETED'; })) throw new AppError('CONFLICT', 'כרטיס ההורדה כבר נוצל.');
+      const age = Util.now().getTime() - Date.parse(auth.timestamp); if (!(age >= 0 && age <= 900000)) throw new AppError('FORBIDDEN', 'כרטיס ההורדה פג תוקף.');
+      let a = {}; try { a = JSON.parse(auth.after_json || '{}'); } catch (e) { a = {}; }
+      Audit.log(ctx, { courseId: courseId, action: 'REPORT_EXPORT_COMPLETED', table: 'ReportExports', recordId: t, after: { kind: a.kind, format: a.format, scope: a.scope, bytes: bytes, pages: pages, sha256: sha } });
+      return { ok: true, ticket: t, recorded: true };
+    });
+  },
   fullExport(ctx, courseId, includePrivate) { return Reports.generate(ctx, courseId, { sections: Reports.SECTIONS.slice(), include_private: includePrivate === true }, 'xlsx'); }
 };

@@ -6,26 +6,27 @@ const T='2026-11-15';
 const CASES=[
  {d:'attendance',i:1,fill:{x_name:'פעילות בדיקה'}},
  {d:'attendance',i:0,fill:{x_event_date:T,x_activity_type_id:{i:1}},tick:'#x_absent input',read:T},
- {d:'fitness',i:0,fill:{x_soldier_id:{i:1},x_test_type_id:{i:1},x_test_date:T,x_pullups:'8',x_parallel_bars:'20',x_trap_bar:'10',x_run150x2:'00:55',x_run3km:'13:30'},read:T},
- {d:'exams',i:0,fill:{x_name:'מבחן בדיקה'}},
- {d:'exams',i:1,fill:{x_soldier_id:{i:1},x_exam_id:{i:1},x_attempt:'A',x_attempt_date:T,x_score:'85'},read:'ציון 85'},
- {d:'nav',i:1,fill:{x_name:'ניווט בדיקה'}},
- {d:'nav',i:0,fill:{x_soldier_id:{i:1},x_navigation_type_id:{i:1},x_test_date:T,x_distance_km:'3',x_plan_score:'4',x_debrief_score:'4',x_points_completed:'4',x_points_total:'5'},read:T},
- {d:'mk',i:0,fill:{x_soldier_id:{i:1},x_test_date:T,x_weapon_type:'M16',x_distance_m:'100',x_examiner_score:'80'},read:T},
+ {d:'fitness',i:1,fill:{x_soldier_id:{i:1},x_test_type_id:{i:1},x_test_date:T,x_pullups:'8',x_parallel_bars:'20',x_trap_bar:'10',x_run150x2:'00:55',x_run3km:'13:30'},read:T},
+ {d:'exams',i:1,fill:{x_name:'מבחן בדיקה'}},
+ {d:'exams',i:2,fill:{x_soldier_id:{i:1},x_exam_id:{i:1},x_attempt:'A',x_attempt_date:T,x_score:'85'},read:'ציון 85'},
+ {d:'nav',i:2,fill:{x_name:'ניווט בדיקה'}},
+ {d:'nav',i:1,fill:{x_soldier_id:{i:1},x_navigation_type_id:{i:1},x_test_date:T,x_distance_km:'3',x_plan_score:'4',x_debrief_score:'4',x_points_completed:'4',x_points_total:'5'},read:T},
+ {d:'mk',i:2,fill:{x_soldier_id:{i:1},x_test_date:T,x_weapon_type:'M16',x_distance_m:'100',x_examiner_score:'80'},read:T},
  {d:'marches',i:0,fill:{x_march_date:T,x_location:'מסע בדיקה',x_km_no_stretcher:'10',x_km_stretcher:'2'},tick:'#x_absent input',read:'מסע בדיקה'},
- {d:'readiness',i:0,fill:{x_soldier_id:{i:1},x_status:{i:1},x_start_date:T}},
+ {d:'readiness',i:1,fill:{x_soldier_id:{i:1},x_status:{i:1},x_start_date:T}},
  {d:'events',i:0,fill:{x_soldier_id:{i:1},x_event_date:T,x_event_type:'achievement',x_description:'הישג בדיקה'},read:'הישג בדיקה'},
- {d:'qual',i:0,fill:{x_name:'הסמכת בדיקה',x_completion_terms:'תנאי',x_scope_type:'course'},read:'הסמכת בדיקה'},
+ {d:'qual',i:1,fill:{x_name:'הסמכת בדיקה',x_completion_terms:'תנאי',x_scope_type:'course'},read:'הסמכת בדיקה'},
  {d:'notes',i:0,fill:{x_soldier_id:{i:1},x_note_text:'הערת בדיקה'}},
  {d:'admin',i:0,fill:{x_email:'cmd1@x.com',x_display_name:'מפקד בדיקה',x_role:'commander'},read:'מפקד בדיקה'},
  {d:'admin',i:1,fill:{x_name:'קורס שני',x_start_date:'2099-02-01'},read:'קורס שני'}];
 (async()=>{await new Promise(r=>srv.listen(0,r));const base='http://127.0.0.1:'+srv.address().port,b=await chromium.launch(),p=await (await b.newContext({viewport:{width:390,height:780}})).newPage(),errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(base+'/');await p.waitForSelector('#k1');let pass=0,fail=0;
 for(const c of CASES){const name=c.d+'#'+c.i;try{await p.evaluate(h=>{location.hash=h},'#/d/'+c.d+'/'+c.i);await p.waitForSelector('form',{timeout:8000});
- for(const[k,v] of Object.entries(c.fill)){const sel='#'+k;if(v&&v.i!==undefined)await p.selectOption(sel,{index:v.i});else if((await p.getAttribute(sel,'type'))==='date'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='INPUT'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='TEXTAREA')await p.fill(sel,v);else await p.selectOption(sel,v);}
+ for(const[k,v] of Object.entries(c.fill)){const sel='#'+k;if(v&&v.i!==undefined){if(k==='x_test_type_id'&&!(await p.isVisible(sel))){{const vv=await p.inputValue(sel);if(!vv)throw new Error('single fitness type must be preselected');}}else await p.selectOption(sel,{index:v.i});}else if((await p.getAttribute(sel,'type'))==='date'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='INPUT'||(await p.evaluate(s=>document.querySelector(s).tagName,sel))==='TEXTAREA')await p.fill(sel,v);else await p.selectOption(sel,v);}
  if(c.tick){await p.waitForSelector(c.tick,{timeout:8000});const bx=await p.$$(c.tick);assert.ok(bx.length,'missing-trainee checkboxes exist');await bx[0].check();if(c.d==='marches')assert.match(await p.textContent('#view'),/חסרים 1 מתוך/);}
- await p.click('button[type=submit]');await p.waitForFunction(()=>/#\/d\/[a-z]+$/.test(location.hash)||document.querySelector('.msg.err'),null,{timeout:8000});
+ await p.click('button[type=submit]');await p.waitForFunction(()=>/#\/d\/[a-z]+$/.test(location.hash)||/#\/insight\/nav\//.test(location.hash)||document.querySelector('.msg.err'),null,{timeout:8000});
  const err=await p.$('.msg.err');if(err)throw new Error('backend: '+(await err.textContent()));
+ if(/#\/insight\/nav\//.test(await p.evaluate(()=>location.hash))){await p.waitForSelector('#inVerified.ok',{timeout:8000});await p.evaluate(()=>{location.hash='#/d/nav';});}
  await p.waitForSelector('.section',{timeout:5000});await p.waitForTimeout(400);
  if(c.read){await p.waitForFunction(t=>document.getElementById('view').textContent.includes(t),c.read,{timeout:6000}).catch(async()=>{throw new Error('read-back missing: '+c.read+' | view='+(await p.textContent('#view')).slice(0,300))});}
  if(c.d==='marches'){

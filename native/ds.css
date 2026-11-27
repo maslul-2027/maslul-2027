@@ -1,0 +1,69 @@
+/* ===== MASLUL design system v2 — ONE layer on the existing tokens (4-tab RTL shell, white / graphite / teal unchanged). Rules: body 16px, secondary ≥14px, captions ≥12.5px, targets ≥44px, AA contrast (muted #4d5b61 on white = 7.1:1), 8px spacing grid, radius 14/18, one elevation, motion 120–280ms and off for reduced-motion. ===== */
+:root{--ink:#10181d;--muted:#43515a;--surface:#fff;--bg:#f4f7f8;--teal-d:#005f63;--teal-l:#e5f5f4;--r1:14px;--r2:18px;--sh:0 1px 2px #10181d0f,0 4px 14px #10181d0a;--s1:8px;--s2:16px;--s3:24px}
+body{font-size:16px;line-height:1.5;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+.subtitle{color:var(--muted);font-size:13.5px;margin:2px 0 8px}
+/* header + demo notice: one quiet line instead of a 3-line block above every screen */
+.top{padding:14px 0 4px}.brand{font-size:20px}.pill{font-size:12px;padding:6px 10px}
+.notice{font-size:12.5px;line-height:1.45;padding:7px 11px;margin:6px 0 10px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.notice{min-height:44px;display:block;padding:11px 12px;line-height:22px}.notice.open{white-space:normal;line-height:1.5}
+/* hierarchy */
+.section{margin:22px 0 10px}.section h2{font-size:19px;letter-spacing:-.1px}.section .count,.section span{font-size:13px;color:var(--muted)}
+h1.page{font-size:24px;line-height:1.25;margin:6px 0 4px}
+.hero{background-color:#15242b;background-image:linear-gradient(160deg,#16272f 0%,#0f1d23 100%);border-radius:var(--r2);padding:22px 20px;box-shadow:var(--sh)}.hero h1{font-size:24px}.hero p{font-size:15px}.hero .primary{width:100%;min-height:52px;font-size:16px;margin-top:6px}
+.primary{min-height:50px;border-radius:var(--r1);font-size:16px;box-shadow:0 2px 0 #028a88}.primary:active{transform:translateY(1px);box-shadow:none}
+.secondary{min-height:48px;border-radius:var(--r1);font-size:15px}
+.stats{gap:10px}.stat{border-radius:var(--r2);box-shadow:var(--sh);border-top:3px solid var(--teal);padding:14px 12px}.stat strong{font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}.stat small{font-size:13.5px;color:var(--muted)}
+.card{border-radius:var(--r2);box-shadow:var(--sh);padding:16px;min-height:64px}.card h3{font-size:16.5px;margin:0 0 4px}.card p{font-size:14px;color:var(--muted);line-height:1.45}
+button.card:active{background:var(--teal-l);transform:scale(.995)}
+.muted{color:var(--muted)}
+/* bottom navigation: readable labels, clear active pill */
+.nav{box-shadow:0 -6px 22px #10181d12}.tab{font-size:12.5px;font-weight:600;min-height:58px;gap:2px;color:var(--muted)}.tab i{font-size:23px}.tab[aria-current=page]{background:var(--teal-l);color:var(--teal-d);font-weight:800}
+.chip{font-size:14px}.chip.active,.chip[aria-pressed=true]{background:var(--teal);color:#fff;border-color:var(--teal)}
+.search,input[type=search]{min-height:50px;font-size:16px;border-radius:var(--r1)}
+/* soldiers: scannable rows */
+.av{flex:none;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:hsl(var(--hue) 55% 22%);background:hsl(var(--hue) 60% 90%);letter-spacing:.5px}.av-lg{width:60px;height:60px;font-size:22px}
+.srow{gap:12px}.srow>div:nth-child(2){flex:1;min-width:0}.srow h3{margin:0 0 2px}
+/* soldier card: identity header + compact facts */
+.shero{display:flex;align-items:center;gap:14px;margin:6px 0 12px}.shero-t{flex:1;min-width:0}.shero h2{margin:0;font-size:22px;line-height:1.2}.shero p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.kvcard dl.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 14px}.kvcard .kvi{min-width:0}.kvcard .kvi dt{font-size:12.5px;color:var(--muted);margin:0 0 2px}.kvcard .kvi dd{margin:0;font-size:16px;font-weight:700}
+/* entry tiles */
+.tile{gap:14px}.tile i{font-size:26px;width:44px}.tile h3{font-size:16.5px}
+/* insight reports: bigger chart type, readable tables, tappable bars */
+.in-t{font-size:12px}.in-kpi small{font-size:13.5px}.in-kpi b{font-size:28px;font-variant-numeric:tabular-nums}
+.in-table{font-size:14.5px}.in-table th,.in-table td{padding:11px 12px}.in-table th{font-size:13px;color:var(--muted)}
+.in-find li{font-size:16px;box-shadow:var(--sh)}
+.in-bar{cursor:pointer;transition:opacity var(--t-press) var(--ease),filter var(--t-press) var(--ease)}.in-bar:hover{filter:brightness(1.08)}.in-bar.on{filter:none;stroke:#10181d;stroke-width:2}
+.in-sheet{margin:10px 0;background:#fff;border:1px solid #cce5e4;border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh);animation:inSheet var(--t-reveal) var(--ease)}.in-sheet h3{margin:0 0 4px;font-size:16.5px}.in-sheet p{margin:2px 0;font-size:14.5px;color:var(--muted)}.in-sheet b{color:var(--ink)}
+.in-sheet .share{height:8px;border-radius:4px;background:#e3eaec;margin:8px 0;overflow:hidden}.in-sheet .share i{display:block;height:100%;background:var(--teal);width:var(--w);transition:width var(--t-reveal) var(--ease)}
+@keyframes inSheet{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.in-act{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:3;background:linear-gradient(#f4f7f800,#f4f7f8 30%);padding:10px 0 4px;margin:10px 0}
+/* focus + motion + zoom */
+:focus-visible{outline:3px solid #009fa4;outline-offset:2px;border-radius:8px}
+@media(max-width:359px){.stats{grid-template-columns:1fr 1fr}.shero h2{font-size:20px}}
+@media(prefers-reduced-motion:reduce){.in-sheet,.in-bar,.in-sheet .share i{animation:none!important;transition:none!important}}
+
+.dirhint{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+.in-table td:not(:first-child),.in-table th:not(:first-child){white-space:nowrap;font-variant-numeric:tabular-nums;unicode-bidi:plaintext}
+.in-kpis:has(>:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}.in-kpis:has(>:nth-child(3):last-child) .in-kpi b{font-size:22px}
+.arrow{color:var(--teal-d)}
+.empty{color:var(--muted)}
+
+/* Home v3: tappable KPIs, report tiles, compact hero */
+button.stat{font:inherit;color:inherit;text-align:start;position:relative;min-height:88px;cursor:pointer;border:0;border-top:3px solid var(--teal);background-color:#fff;transition:transform .15s,box-shadow .15s}
+button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-block-end:8px;inset-inline-end:10px;font-style:normal;color:var(--teal-d);font-size:16px}
+.hero{padding:18px 18px}.hero h1{font-size:22px;margin:2px 0 4px}.hero p{margin:0 0 12px}
+.rtiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.rtile{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:88px;padding:12px;border:1px solid var(--line);border-radius:var(--r2);background-color:#fff;box-shadow:var(--sh);text-align:start;font:inherit;color:#161b20;cursor:pointer;transition:transform .15s}
+.rtile:active{transform:scale(.97)}.rtile .ri{font-size:22px;line-height:1}.rtile b{font-size:16px}.rtile small{font-size:14px;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){button.stat,.rtile{transition:none}}
+.rtile,button.stat{min-width:0;overflow-wrap:anywhere}.rtile b,.rtile small{max-width:100%}
+@media(max-width:359px){.rtiles{grid-template-columns:1fr}.hero{padding:16px 14px}}
+
+/* QA audit fixes */
+.in-bar{fill:transparent;stroke:none!important;filter:none!important}.in-bv{fill:var(--teal);pointer-events:none}.in-bv.on{fill:#0b5c5f;stroke:#10181d;stroke-width:2}
+.in-svg:has(.in-bar:hover) .in-bv{opacity:1}.in-bar:focus-visible{outline:3px solid #161b20;outline-offset:-3px}
+@media(max-width:279px){.in-table td:not(:first-child),.in-table th:not(:first-child){white-space:normal}.in-table th,.in-table td{padding:8px 4px}}
+#view .card a[href]{display:inline-block;padding-block:12px;min-height:44px}
+#view .card>div,#view .card h3,#view .card p{min-width:0;overflow-wrap:anywhere}
+#view button,#view .chip,#view select,#view input{max-width:100%;overflow-wrap:anywhere}#view button{white-space:normal}
+.fixed-choice{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:6px 0;border:1px solid var(--line);border-radius:var(--r);background-color:#f1f8f8}.fixed-choice small{color:var(--muted);font-size:14px}.fixed-choice b{font-size:16px}

@@ -8,7 +8,7 @@ for(const w of[320,360,390,414]){const c=await b.newContext({viewport:{width:w,h
    throw new Error('Home load failed at '+w+': '+JSON.stringify(diag)+'; pageerrors='+errs.join(' | ')+'; '+e.message.split('\n')[0]);
  });
  assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'no horizontal overflow @'+w);
- for(const g of['soldiers','tasks','more','home']){await p.click('[data-go='+g+']');await p.waitForTimeout(250);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,g+' overflow @'+w);}
+ for(const g of['soldiers','entry','more','home']){await p.click('[data-go='+g+']');await p.waitForTimeout(250);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,g+' overflow @'+w);}
  const small=await p.evaluate(()=>[...document.querySelectorAll('button,a,input,select')].filter(e=>e.offsetParent&&(e.getBoundingClientRect().height<44)).map(e=>e.textContent.slice(0,20)));assert.deepEqual(small,[],'targets >=44px @'+w);
  await c.close();}
 ok('no overflow & 44px targets at 320/360/390/414');
@@ -24,7 +24,7 @@ await p.fill('#fReason','תיקון בדיקה');await p.click('button[type=subm
 await p.click('text=ביטול חניך');await p.fill('#reason','בדיקה');await p.click('dialog button[type=submit]');await p.waitForSelector('text=מבוטל');ok('cancel with reason');
 await p.click('button:has-text("שחזור")');await p.click('dialog button[type=submit]');await p.waitForSelector('button:has-text("ביטול חניך")');ok('restore');
 await p.reload();await p.waitForSelector('dl.kv');await p.click('[data-go=home]');await p.waitForFunction(()=>document.getElementById('k1')?.textContent==='61');ok('state persisted across reload: 61');
-await p.click('[data-go=tasks]');await p.click('text=מעקבים אישיים');await p.waitForSelector('#view .card');assert.equal(await p.locator('#view .card').count(),3);await p.click('text=+ מעקב חדש');await p.selectOption('#fuS',{index:1});await p.fill('#fuW','בדיקת מעקב');await p.click('button[type=submit]');await p.waitForSelector('text=בדיקת מעקב');ok('follow-up create');
+await p.click('[data-go=soldiers]');await p.waitForSelector('#fuLink');await p.click('#fuLink');await p.waitForSelector('#fuAdd');await p.waitForSelector('#view .card');assert.equal(await p.locator('#view .card').count(),3);await p.click('text=+ מעקב חדש');await p.selectOption('#fuS',{index:1});await p.fill('#fuW','בדיקת מעקב');await p.click('button[type=submit]');await p.waitForSelector('text=בדיקת מעקב');ok('follow-up create');
 await p.click('text=בדיקת מעקב');await p.click('dialog button[type=submit]');await p.waitForSelector('text=הושלם');ok('follow-up complete');
 
 assert.deepEqual(errs,[],'page errors: '+errs.join('|'));ok('no page errors');if(OUT)fs.writeFileSync(OUT,JSON.stringify(await p.evaluate(()=>appClient.calls)));await b.close();srv.close();console.log('E2E PASS',n,'checks');})().catch(e=>{console.error('E2E FAIL',e.message.split('\n').slice(0,6).join('\n'));process.exit(1)});

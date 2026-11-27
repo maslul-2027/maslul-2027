@@ -1,0 +1,149 @@
+name: Cloudflare TEST deploy (Actions -> Wrangler; manual approval; synthetic data only)
+# Alternative to the Cloudflare GitHub integration (which cannot be connected): this workflow deploys cloudflare/free-shared-test as Worker "maslul-test" with D1 binding DB.
+#  * Nothing deploys by accident. The `verify` job (build + static checks + `wrangler deploy --dry-run`) runs on every push to the dedicated branch and has NO secrets.
+#  * The `deploy` job needs ALL of: (1) repository variable CF_DEPLOY_ENABLED = yes (set by the owner at GO time), (2) the GitHub Environment `cloudflare-test`
+#    with the owner as required reviewer (a human clicks "Approve"), (3) the two Cloudflare secrets, which exist ONLY as secrets of that environment.
+#  * Never main, never Pages. APP_SECRET / BOOTSTRAP_TOKEN are NOT GitHub secrets: they are set once in the Cloudflare dashboard as Worker secrets.
+#  * GitHub shows the "Run workflow" button only for workflows on the default branch; for this branch-only file the approval path is the push run itself
+#    (Actions -> latest run on this branch -> Review deployments -> Approve, or "Re-run all jobs" after setting the variable). workflow_dispatch is declared so that
+#    `gh workflow run cloudflare-deploy-test.yml --ref cloudflare/free-shared-test` also works once the file has run at least once on the branch.
+on:
+  workflow_dispatch:
+  push:
+    branches: [cloudflare/free-shared-test]
+    paths:
+      - 'cloudflare/**'
+      - 'native/**'
+      - 'src/**'
+      - 'backend_next/**'
+      - 'scripts/build_cf_worker.js'
+      - 'scripts/build_native_app.js'
+      - 'scripts/cf_*.js'
+      - 'scripts/e2e_cf_browser.js'
+      - 'scripts/ci_cf_workerd.sh'
+      - 'scripts/lib/cf_harness.js'
+      - 'tests/cf_*.js'
+      - 'tests/lib/d1_shim.js'
+      - 'docs/CLOUDFLARE_FREE_TEST.md'
+      - 'docs/CLOUDFLARE_ROUTE_COVERAGE.md'
+      - '.github/workflows/cloudflare-deploy-test.yml'
+permissions:
+  contents: read
+concurrency:
+  group: cloudflare-deploy-test
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install wrangler (version from package.json) and print it
+        working-directory: cloudflare/free-shared-test
+        run: |
+          npm install --no-audit --no-fund
+          npx wrangler --version
+      - name: Build engine + static app
+        run: |
+          node scripts/build_cf_worker.js
+          node scripts/build_native_app.js --cf
+      - name: Static guards (free-plan shape, no eval, no PIN path, helper + workflow rules)
+        run: node tests/cf_static.js
+      - name: Worker + D1 shim end-to-end tests (must pass before any deploy)
+        run: node tests/cf_worker.js
+      - name: Route inventory and policy coverage
+        run: node scripts/cf_route_survey.js
+      - name: Deploy dry run (uploads nothing, needs no credentials)
+        working-directory: cloudflare/free-shared-test
+        run: |
+          set -euo pipefail
+          npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/dryrun" 2>&1 | tee "$RUNNER_TEMP/dryrun.txt"
+          grep -E "Total Upload|Your Worker|binding|DB" "$RUNNER_TEMP/dryrun.txt"
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/cloudflare/free-shared-test' && vars.CF_DEPLOY_ENABLED == 'yes'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: cloudflare-test
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Preflight (values are never printed)
+        run: |
+          [ -n "$CLOUDFLARE_API_TOKEN" ] && [ -n "$CLOUDFLARE_ACCOUNT_ID" ] || { echo "::error::CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID are missing from the cloudflare-test environment secrets"; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install wrangler
+        working-directory: cloudflare/free-shared-test
+        run: npm install --no-audit --no-fund && npx wrangler --version
+      - name: Build engine + static app
+        run: |
+          node scripts/build_cf_worker.js
+          node scripts/build_native_app.js --cf
+      - name: Who am I (confirms the token reaches the intended Free account; prints no token)
+        working-directory: cloudflare/free-shared-test
+        run: npx wrangler whoami
+      - name: Ensure D1 database maslul-test-db exists and write the deploy-only config
+        run: node scripts/cf_ci_deploy_prepare.js
+      - name: Dry run with the real binding
+        working-directory: cloudflare/free-shared-test
+        run: npx wrangler deploy --config wrangler.deploy.toml --dry-run --outdir "$RUNNER_TEMP/dryrun2"
+      - name: Deploy Worker maslul-test (workers.dev, Free plan)
+        id: deploy
+        working-directory: cloudflare/free-shared-test
+        run: |
+          npx wrangler deploy --config wrangler.deploy.toml 2>&1 | tee "$RUNNER_TEMP/deploy.txt"
+          URL="$(grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' "$RUNNER_TEMP/deploy.txt" | head -1)"
+          [ -n "$URL" ] || { echo "::error::could not find the workers.dev URL in the deploy output"; exit 1; }
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+      - name: Worker pepper secret - generate ONCE inside the runner, send straight to Cloudflare, never stored in GitHub, never printed
+        working-directory: cloudflare/free-shared-test
+        env:
+          OPTIONAL_FIRST_ADMIN_TOKEN: ${{ secrets.WORKER_FIRST_ADMIN_TOKEN }}
+          OPTIONAL_RECOVERY_TOKEN: ${{ secrets.WORKER_ADMIN_RECOVERY_TOKEN }}
+        run: |
+          set -euo pipefail
+          have="$(npx wrangler secret list --config wrangler.deploy.toml --format json)"
+          # Created only when ABSENT: replacing the pepper would invalidate every PIN/e-mail hash (all accounts).
+          if echo "$have" | grep -q '"APP_SECRET"'; then echo "pepper secret already present - left untouched"; else
+            v="$(openssl rand -hex 32)"; echo "::add-mask::$v"
+            printf '%s' "$v" | npx wrangler secret put APP_SECRET --config wrangler.deploy.toml >/dev/null
+            echo "pepper secret created in Cloudflare (value not shown, not stored in GitHub)"
+          fi
+          # Optional: the owner may hand the first-admin token to Cloudflare through an Environment secret instead of the dashboard.
+          if [ -n "${OPTIONAL_FIRST_ADMIN_TOKEN:-}" ] && ! echo "$have" | grep -q '"BOOTSTRAP_TOKEN"'; then
+            printf '%s' "$OPTIONAL_FIRST_ADMIN_TOKEN" | npx wrangler secret put BOOTSTRAP_TOKEN --config wrangler.deploy.toml >/dev/null; echo "first-admin token forwarded to Cloudflare"
+          fi
+          # Optional owner-only admin RECOVERY value (a different secret from the set-up token). Forwarded when present; the Worker refuses reuse of a value it has already honoured.
+          if [ -n "${OPTIONAL_RECOVERY_TOKEN:-}" ]; then
+            printf '%s' "$OPTIONAL_RECOVERY_TOKEN" | npx wrangler secret put ADMIN_RECOVERY_TOKEN --config wrangler.deploy.toml >/dev/null; echo "recovery value forwarded to Cloudflare"
+          fi
+      - name: D1 account-state diagnostic (READ-ONLY, counts only - no e-mail, no hash, no token is selected or printed)
+        continue-on-error: true
+        working-directory: cloudflare/free-shared-test
+        run: |
+          q() { npx wrangler d1 execute DB --remote --config wrangler.deploy.toml --json --command "$1" 2>&1 | head -c 2500; echo; }
+          echo "users by role/status/active/has-pin:"; q "SELECT role, status, active, (access_h IS NOT NULL) AS has_pin, COUNT(*) AS n FROM users GROUP BY 1,2,3,4"
+          echo "enrolment links total/used:"; q "SELECT COUNT(*) AS total, COALESCE(SUM(used),0) AS used FROM enroll"
+          echo "audit events by type:"; q "SELECT ev, COUNT(*) AS n FROM audit GROUP BY ev ORDER BY n DESC LIMIT 25"
+      - name: Smoke test (read-only; fail-closed; READY / NOT_READY_EXPECTED / FAIL)
+        env:
+          URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          # RESULT=READY | RESULT=NOT_READY_EXPECTED (200 + configured:false, first deploy) | RESULT=FAIL (any 404/5xx/fake 200/open route -> this step and the job FAIL).
+          node scripts/cf_ci_smoke.js "$URL" | tee smoke.txt
+          if grep -q '^RESULT=READY$' smoke.txt; then
+            echo "### READY - deployed and configured (synthetic TEST only): $URL" >> "$GITHUB_STEP_SUMMARY"
+          elif grep -q '^RESULT=NOT_READY_EXPECTED$' smoke.txt; then
+            echo "::warning::DEPLOYED BUT NOT READY - the Worker secrets are not set yet. Set them (owner), then re-run this workflow to get READY."
+            echo "### NOT READY (expected on first deploy) - $URL fails closed until the two Worker secrets exist, then re-run." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### FAIL - smoke test did not end in READY or NOT_READY_EXPECTED: $URL" >> "$GITHUB_STEP_SUMMARY"; exit 1
+          fi

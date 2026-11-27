@@ -1,15 +1,15 @@
 {
  "generated_by": "scripts/build_route_ledger.js",
  "summary": {
-  "total": 176,
-  "PASS_SYNTH_E2E": 158,
+  "total": 178,
+  "PASS_SYNTH_E2E": 160,
   "API_ONLY_NOT_UI": 0,
   "POLICY_BLOCKED": 5,
-  "interaction_verified": 158,
+  "interaction_verified": 160,
   "IMPLEMENTED_NOT_E2E": 0,
   "BLOCKED_NOT_CONNECTED": 13,
   "NOT_IMPLEMENTED": 0,
-  "native_screen": 169
+  "native_screen": 171
  },
  "rows": [
   {
@@ -2460,6 +2460,44 @@
    "ui_ok_calls": 0,
    "negative_authz_observed": "no",
    "blocked": "public demo: no file engine (nothing faked). WORKS FOR REAL only in the private TEST server / Windows package (real PDF/XLSX, encrypted at rest): tests/report_export.js + scripts/e2e_report_export_browser.js, see docs/REPORT_EXPORT_TEST.md",
+   "secured_test_e2e": "NOT_RUN",
+   "deployed": "NO"
+  },
+  {
+   "route": "reports.exportAuthorize",
+   "group": "reports",
+   "authz_class": "A",
+   "backend": "yes",
+   "server_authz_test": "tests/report_export_gate.js",
+   "native_screen": "yes",
+   "status": "PASS_SYNTH_E2E",
+   "e2e_ok_calls": 6,
+   "ui_origin_api_ok": 6,
+   "gesture_correlated_ok": 6,
+   "interaction_verified": "yes",
+   "direct_ok_calls": 0,
+   "ui_ok_calls": 6,
+   "negative_authz_observed": "no",
+   "blocked": "",
+   "secured_test_e2e": "NOT_RUN",
+   "deployed": "NO"
+  },
+  {
+   "route": "reports.exportComplete",
+   "group": "reports",
+   "authz_class": "A",
+   "backend": "yes",
+   "server_authz_test": "tests/report_export_gate.js",
+   "native_screen": "yes",
+   "status": "PASS_SYNTH_E2E",
+   "e2e_ok_calls": 6,
+   "ui_origin_api_ok": 6,
+   "gesture_correlated_ok": 6,
+   "interaction_verified": "yes",
+   "direct_ok_calls": 0,
+   "ui_ok_calls": 6,
+   "negative_authz_observed": "no",
+   "blocked": "",
    "secured_test_e2e": "NOT_RUN",
    "deployed": "NO"
   },

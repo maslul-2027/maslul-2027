@@ -16,6 +16,9 @@ module.exports = function seed(X, mem, SEED, save) {
       X.api('exams.attempt',{courseId:c,data:{request_id:'e'+k,soldier_id:sid,exam_id:exd.id,attempt:'A',attempt_date:dd,score:68+b+(i%13)}});
       X.api('mk.create',{courseId:c,data:{request_id:'m'+k,soldier_id:sid,test_date:dd,weapon_type:'M16',distance_m:100,examiner_score:64+b+(i%15),weapon_zeroed:true}});
       if(i<36)X.api('nav.create',{courseId:c,data:{request_id:'n'+k,soldier_id:sid,test_date:dd,navigation_type_id:nvt.id,distance_km:3,plan_score:3+(i%2),debrief_score:3+((i+b)%2),points_completed:3+(i%3),points_total:5}});});}
+    /* fitness (כש״ג): raw component values only — the demo has NO approved scoring table, so the report honestly shows BLOCKED for the weighted score (never a fabricated score) */
+    var ftt=(X.api('fitness.types',{courseId:c}).data||[]).filter(function(x){return !x.is_opening;})[0];
+    if(ftt)for(i=12;i<44;i++){[[prev,0],[cur,1]].forEach(function(pr,j){var b=pr[1];X.api('fitness.create',{courseId:c,data:{request_id:'f-'+i+'-'+j,soldier_id:sol[i].id,test_date:iso(pr[0]),test_type_id:ftt.id,pullups:6+b+(i%7),parallel_bars:12+b+(i%8),trap_bar:6+b+(i%4),run150x2:'00:'+(58-b-(i%6)),run3km:(14-b)+':'+(i%6)+'0'}});});}
     [[prev,5],[cur,2]].forEach(function(pr,j){for(var e=0;e<2;e++){var d=new Date(pr[0].getTime()+e*86400000*2);X.api('attendance.create',{courseId:c,data:{request_id:'seed-a'+j+e,event_date:iso(d),activity_type_id:at.id,scope_type:'course',scope_id:c,absent:sol.slice(e*3,e*3+pr[1]).map(function(x){return {soldier_id:x.id};})}});}});
     save();
 };

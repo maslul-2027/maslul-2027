@@ -1,0 +1,4 @@
+# Copy to .dev.vars for LOCAL development only (never commit .dev.vars). In production these are set as Cloudflare secrets.
+APP_SECRET=replace-with-at-least-32-random-characters
+BOOTSTRAP_TOKEN=replace-with-at-least-16-random-characters
+ALLOW_LOCAL_HTTP=1

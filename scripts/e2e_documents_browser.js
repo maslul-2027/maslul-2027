@@ -25,6 +25,7 @@ function req(m, p, body, jar) { return new Promise(res => { const h = { origin: 
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(2, 0); ihdr.writeUInt32BE(2, 4); ihdr[8] = 8; ihdr[9] = 2;
   const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(Buffer.alloc(14, 0x7f))), chunk('IEND', Buffer.alloc(0))]);
   const PDF = require('../backend_next/export_formats').pdfFromHtml('<h1>מסמך E2E סינתטי</h1>');
+  const ESCD = async p => { await p.keyboard.press('Escape'); await p.waitForTimeout(150); const c = p.locator('.dlg-confirm button:has-text("סגירה בלי לשמור")'); if (await p.locator('dialog.closing,dialog[open]').count()) { if (await c.count()) await c.click(); await p.waitForFunction(() => !document.querySelector('dialog'), null, { timeout: 4000 }).catch(() => {}); } };   // Escape on a dialog with typed input asks before discarding
   const FX = path.join(DIR, 'fx'); fs.mkdirSync(FX, { recursive: true }); fs.writeFileSync(path.join(FX, 'scan.pdf'), PDF); fs.writeFileSync(path.join(FX, 'photo.png'), PNG); fs.writeFileSync(path.join(FX, 'evil.pdf'), Buffer.concat([PDF, Buffer.from('\n<< /S /JavaScript /JS (x) >>\n')])); fs.writeFileSync(path.join(FX, 'fake.pdf'), Buffer.from('MZ' + 'x'.repeat(500))); fs.writeFileSync(path.join(FX, 'big.pdf'), Buffer.concat([PDF, Buffer.alloc(8 * 1024 * 1024 + 10, 0x20)]));
   const A = await open(390); await login(A, 'admin');
   const upload = async (p, file, type, expectOk) => { await p.click('button:has-text("העלאת מסמך")'); await p.waitForSelector('#duFile'); await p.setInputFiles('#duFile', path.join(FX, file)); await p.fill('#duT', type); if (await p.locator('#duS option').count() > 1) await p.selectOption('#duS', { index: 1 }); await p.click('dialog[open] button[type=submit], dialog[open] button:has-text("אישור"), dialog[open] button.primary'); if (expectOk) { await p.waitForSelector('dialog[open]', { state: 'detached', timeout: 20000 }); await p.waitForSelector('#view >> text=' + file, { timeout: 20000 }); } else await p.waitForSelector('dialog[open] .msg.err', { timeout: 20000 }); };
@@ -35,12 +36,12 @@ function req(m, p, body, jar) { return new Promise(res => { const h = { origin: 
   ok('admin uploads a real PDF and a real PNG through the app\'s file picker (rows appear in the list)');
   // 2. refusals shown inside the dialog, nothing stored
   const stored0 = fs.readdirSync(FD).filter(f => /\.enc$/.test(f)).length;
-  for (const f of ['evil.pdf', 'fake.pdf', 'big.pdf']) { await toDocs(A); await A.keyboard.press('Escape').catch(() => {}); await toDocs(A); await upload(A, f, 'בדיקת דחייה', false); await A.keyboard.press('Escape'); }
+  for (const f of ['evil.pdf', 'fake.pdf', 'big.pdf']) { await toDocs(A); await ESCD(A).catch(() => {}); await toDocs(A); await upload(A, f, 'בדיקת דחייה', false); await ESCD(A); }
   assert.equal(fs.readdirSync(FD).filter(f => /\.enc$/.test(f)).length, stored0, 'refused uploads stored nothing');
   ok('active-content PDF, fake (MZ) PDF and >8MB file are refused with a visible error; nothing stored');
   // 3. real browser download, byte-identical
   const open1 = async (txt) => { await A.goto(ORIGIN + '/#/d/docs'); await A.waitForSelector('#view'); await A.waitForTimeout(800); await A.locator('#view').getByText(txt).first().click(); await A.waitForSelector('#dlOpen'); };
-  await open1('scan.pdf'); const d1 = await download(A, () => A.click('#dlOpen'), 'doc'); assert.equal(sha(d1.buf), sha(PDF)); assert.ok(/^maslul-doc-[A-Za-z0-9-]+\.pdf$/.test(d1.name), d1.name); await A.waitForSelector('#dlDone'); await A.keyboard.press('Escape');
+  await open1('scan.pdf'); const d1 = await download(A, () => A.click('#dlOpen'), 'doc'); assert.equal(sha(d1.buf), sha(PDF)); assert.ok(/^maslul-doc-[A-Za-z0-9-]+\.pdf$/.test(d1.name), d1.name); await A.waitForSelector('#dlDone'); await ESCD(A);
   await open1('photo.png'); const d2 = await download(A, () => A.click('#dlOpen'), 'doc'); assert.equal(sha(d2.buf), sha(PNG)); assert.ok(/\.png$/.test(d2.name));
   ok('"פתיחת הקובץ" performs a REAL download; PDF and PNG are byte-identical to the originals (sha256), fixed safe file names');
   // 4. encrypted at rest

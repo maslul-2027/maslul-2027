@@ -1,0 +1,2556 @@
+{
+ "startupMs": 129,
+ "summary": {
+  "IMPLEMENTED": 75,
+  "IMPLEMENTED_NEEDS_INPUT": 93,
+  "UNSUPPORTED": 4,
+  "BLOCKED_BY_POLICY": 6,
+  "DEFECT": 0
+ },
+ "rows": [
+  {
+   "m": "courses.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.62,
+   "cpuMax": 4.43,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "courses.org",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.6,
+   "cpuMax": 2.34,
+   "st": 3,
+   "rr": 14,
+   "tables": [
+    "Courses",
+    "Departments",
+    "Teams"
+   ]
+  },
+  {
+   "m": "users.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.45,
+   "cpuMax": 0.47,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "soldiers.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1,
+   "cpuMax": 1.18,
+   "st": 3,
+   "rr": 75,
+   "tables": [
+    "Courses",
+    "Departments",
+    "Teams",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "soldiers.card",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.63,
+   "cpuMax": 0.96,
+   "st": 3,
+   "rr": 17,
+   "tables": [
+    "Soldiers",
+    "Courses",
+    "Departments",
+    "Teams",
+    "NavigationTests",
+    "NavigationTypes",
+    "Documents",
+    "AuditLog",
+    "FitnessTests",
+    "FitnessTestTypes",
+    "MarksmanshipTests",
+    "TheoreticalExamAttempts",
+    "ExamMeetings",
+    "ExamDefinitions",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Marches",
+    "MarchAttendance",
+    "QualificationAssignments",
+    "Qualifications",
+    "ReadinessRecords",
+    "SoldierEvents",
+    "Alerts",
+    "ThresholdSettings"
+   ]
+  },
+  {
+   "m": "soldiers.private",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 3.92,
+   "cpuMax": 12.77,
+   "st": 3,
+   "rr": 75,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "PrivateNotes",
+    "PersonalFollowUps",
+    "CommanderAssessments",
+    "Favorites",
+    "FollowUpHistory"
+   ]
+  },
+  {
+   "m": "emergency.get",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.76,
+   "cpuMax": 1,
+   "st": 6,
+   "rr": 68,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "SoldierPersonalDetails"
+   ]
+  },
+  {
+   "m": "emergency.orphans",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.46,
+   "cpuMax": 0.47,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "SoldierPersonalDetails",
+    "SoldierUpdateRequests"
+   ]
+  },
+  {
+   "m": "nav.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.91,
+   "cpuMax": 1.73,
+   "st": 3,
+   "rr": 150,
+   "tables": [
+    "Courses",
+    "NavigationTests",
+    "Soldiers",
+    "Departments",
+    "Teams",
+    "NavigationTypes"
+   ]
+  },
+  {
+   "m": "nav.groups",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 3.61,
+   "cpuMax": 4.57,
+   "st": 3,
+   "rr": 150,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "NavigationTests",
+    "Departments",
+    "Teams",
+    "NavigationTypes"
+   ]
+  },
+  {
+   "m": "nav.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.58,
+   "cpuMax": 0.67,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "NavigationTests",
+    "NavigationTypes"
+   ]
+  },
+  {
+   "m": "navtypes.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.42,
+   "cpuMax": 0.53,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "NavigationTypes"
+   ]
+  },
+  {
+   "m": "assignments.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.56,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 16,
+   "tables": [
+    "Courses",
+    "Departments",
+    "Teams",
+    "CommanderAssignments"
+   ]
+  },
+  {
+   "m": "assignments.mine",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.5,
+   "cpuMax": 0.94,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "record.history",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.53,
+   "cpuMax": 1.02,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "correction.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.51,
+   "cpuMax": 0.51,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "CorrectionRequests"
+   ]
+  },
+  {
+   "m": "settings.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.65,
+   "cpuMax": 0.68,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "ThresholdSettings"
+   ]
+  },
+  {
+   "m": "fitness.types",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.5,
+   "cpuMax": 0.55,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "FitnessTestTypes"
+   ]
+  },
+  {
+   "m": "fitness.preview",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.56,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "FitnessTestTypes"
+   ]
+  },
+  {
+   "m": "fitness.reference",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.96,
+   "cpuMax": 1.02,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "FitnessScoringVersions",
+    "FitnessTestTypes"
+   ]
+  },
+  {
+   "m": "fitness.draftSource",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.73,
+   "cpuMax": 0.75,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "fitness.versions",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.57,
+   "cpuMax": 0.98,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "FitnessScoringVersions"
+   ]
+  },
+  {
+   "m": "fitness.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.91,
+   "cpuMax": 2.31,
+   "st": 3,
+   "rr": 69,
+   "tables": [
+    "Courses",
+    "FitnessTests",
+    "Soldiers",
+    "FitnessTestTypes"
+   ]
+  },
+  {
+   "m": "fitness.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.51,
+   "cpuMax": 0.54,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "FitnessTests"
+   ]
+  },
+  {
+   "m": "fitness.completion",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.98,
+   "cpuMax": 2,
+   "st": 3,
+   "rr": 77,
+   "tables": [
+    "Courses",
+    "Departments",
+    "Teams",
+    "Soldiers",
+    "FitnessTestTypes",
+    "FitnessTests"
+   ]
+  },
+  {
+   "m": "fitness.quality",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.81,
+   "cpuMax": 0.85,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "FitnessScoringVersions",
+    "Soldiers",
+    "FitnessTests"
+   ]
+  },
+  {
+   "m": "mk.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.99,
+   "cpuMax": 2.75,
+   "st": 3,
+   "rr": 156,
+   "tables": [
+    "Courses",
+    "MarksmanshipTests",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "mk.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.6,
+   "cpuMax": 2.65,
+   "st": 3,
+   "rr": 7,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "MarksmanshipTests"
+   ]
+  },
+  {
+   "m": "exams.defs",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.53,
+   "cpuMax": 1.11,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "ExamDefinitions",
+    "ThresholdSettings"
+   ]
+  },
+  {
+   "m": "exams.attempts",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.13,
+   "cpuMax": 1.15,
+   "st": 3,
+   "rr": 114,
+   "tables": [
+    "ExamDefinitions",
+    "Courses",
+    "TheoreticalExamAttempts",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "exams.meetings",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.8,
+   "cpuMax": 0.82,
+   "st": 3,
+   "rr": 69,
+   "tables": [
+    "ExamDefinitions",
+    "Courses",
+    "ExamMeetings",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "exams.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.25,
+   "cpuMax": 3.42,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "TheoreticalExamAttempts",
+    "ExamMeetings",
+    "ExamDefinitions",
+    "ThresholdSettings"
+   ]
+  },
+  {
+   "m": "acttypes.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.54,
+   "cpuMax": 0.56,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "ActivityTypes"
+   ]
+  },
+  {
+   "m": "attendance.events",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.61,
+   "cpuMax": 1.8,
+   "st": 3,
+   "rr": 315,
+   "tables": [
+    "Courses",
+    "ActivityTypes",
+    "Soldiers",
+    "AttendanceRecords",
+    "AttendanceEvents"
+   ]
+  },
+  {
+   "m": "attendance.roll",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.53,
+   "cpuMax": 0.6,
+   "st": 3,
+   "rr": 11,
+   "tables": [
+    "Courses",
+    "AttendanceEvents"
+   ]
+  },
+  {
+   "m": "attendance.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.51,
+   "cpuMax": 0.56,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "AttendanceEvents",
+    "AttendanceRecords"
+   ]
+  },
+  {
+   "m": "marches.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.78,
+   "cpuMax": 1.72,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "MarchAttendance",
+    "Marches"
+   ]
+  },
+  {
+   "m": "marches.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.57,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Marches",
+    "MarchAttendance"
+   ]
+  },
+  {
+   "m": "readiness.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.84,
+   "cpuMax": 2.08,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "ReadinessRecords",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "readiness.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.54,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "ReadinessRecords"
+   ]
+  },
+  {
+   "m": "readiness.notEntered",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.88,
+   "cpuMax": 0.89,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "ReadinessRecords"
+   ]
+  },
+  {
+   "m": "events.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.74,
+   "cpuMax": 0.77,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "SoldierEvents",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "qual.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.39,
+   "cpuMax": 3.11,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Qualifications"
+   ]
+  },
+  {
+   "m": "qual.dueHistory",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.55,
+   "cpuMax": 0.56,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Qualifications"
+   ]
+  },
+  {
+   "m": "qual.assignments",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 4.16,
+   "cpuMax": 4.64,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Qualifications",
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "qual.summary",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.55,
+   "cpuMax": 0.63,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Qualifications",
+    "Soldiers",
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "assess.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.81,
+   "cpuMax": 0.84,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "CommanderAssessments"
+   ]
+  },
+  {
+   "m": "notes.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.54,
+   "cpuMax": 0.6,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "PrivateNotes"
+   ]
+  },
+  {
+   "m": "followups.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.98,
+   "cpuMax": 1.32,
+   "st": 3,
+   "rr": 75,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "PersonalFollowUps",
+    "FollowUpHistory"
+   ]
+  },
+  {
+   "m": "favorites.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.82,
+   "cpuMax": 0.86,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Favorites"
+   ]
+  },
+  {
+   "m": "snote.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.53,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "alerts.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.83,
+   "cpuMax": 0.86,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Alerts"
+   ]
+  },
+  {
+   "m": "alerts.counts",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.59,
+   "cpuMax": 1.66,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Alerts"
+   ]
+  },
+  {
+   "m": "forms.generalLink",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.58,
+   "cpuMax": 0.65,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "forms.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.76,
+   "cpuMax": 0.81,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "SoldierUpdateRequests"
+   ]
+  },
+  {
+   "m": "dash.home",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.57,
+   "cpuMax": 0.64,
+   "st": 3,
+   "rr": 13,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "FitnessTests",
+    "MarksmanshipTests",
+    "NavigationTests",
+    "TheoreticalExamAttempts",
+    "ExamMeetings",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Marches",
+    "MarchAttendance",
+    "Qualifications",
+    "QualificationAssignments",
+    "ReadinessRecords",
+    "Alerts",
+    "ThresholdSettings",
+    "NavigationTypes",
+    "ExamDefinitions"
+   ]
+  },
+  {
+   "m": "dash.overview",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.59,
+   "cpuMax": 0.6,
+   "st": 3,
+   "rr": 13,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "FitnessTests",
+    "MarksmanshipTests",
+    "NavigationTests",
+    "TheoreticalExamAttempts",
+    "ExamMeetings",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Marches",
+    "MarchAttendance",
+    "Qualifications",
+    "QualificationAssignments",
+    "ReadinessRecords",
+    "Alerts",
+    "ThresholdSettings",
+    "NavigationTypes",
+    "ExamDefinitions"
+   ]
+  },
+  {
+   "m": "dash.groups",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.65,
+   "cpuMax": 0.66,
+   "st": 5,
+   "rr": 9,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "dash.compareCourses",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.68,
+   "cpuMax": 2.62,
+   "st": 5,
+   "rr": 7,
+   "tables": []
+  },
+  {
+   "m": "dash.strengthsGaps",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.51,
+   "cpuMax": 0.55,
+   "st": 3,
+   "rr": 5,
+   "tables": [
+    "Courses",
+    "ThresholdSettings"
+   ]
+  },
+  {
+   "m": "analytics.insights",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.61,
+   "cpuMax": 1.59,
+   "st": 3,
+   "rr": 13,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "FitnessTests",
+    "NavigationTests",
+    "MarksmanshipTests",
+    "TheoreticalExamAttempts",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Departments",
+    "Teams"
+   ]
+  },
+  {
+   "m": "reports.preview",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.82,
+   "cpuMax": 0.84,
+   "st": 3,
+   "rr": 13,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Departments",
+    "Teams",
+    "FitnessTests",
+    "NavigationTests",
+    "MarksmanshipTests",
+    "TheoreticalExamAttempts",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Marches",
+    "MarchAttendance"
+   ]
+  },
+  {
+   "m": "reports.download",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.51,
+   "cpuMax": 0.54,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "ReportJobs"
+   ]
+  },
+  {
+   "m": "reports.jobs",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.48,
+   "cpuMax": 0.5,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "ReportJobs"
+   ]
+  },
+  {
+   "m": "import.preview",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.55,
+   "cpuMax": 1.92,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "ImportJobs"
+   ]
+  },
+  {
+   "m": "import.jobs",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.53,
+   "cpuMax": 1.42,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "ImportJobs"
+   ]
+  },
+  {
+   "m": "docs.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.78,
+   "cpuMax": 0.79,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Documents"
+   ]
+  },
+  {
+   "m": "docs.download",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.62,
+   "cpuMax": 0.94,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Documents"
+   ]
+  },
+  {
+   "m": "docs.pendingLinks",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.49,
+   "cpuMax": 0.53,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses",
+    "Documents"
+   ]
+  },
+  {
+   "m": "docs.evidence",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.47,
+   "cpuMax": 0.48,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "ocr.rows",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.49,
+   "cpuMax": 0.53,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "OCRJobs"
+   ]
+  },
+  {
+   "m": "ai.ask",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.53,
+   "cpuMax": 0.56,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "backup.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.48,
+   "cpuMax": 0.49,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "BackupJobs"
+   ]
+  },
+  {
+   "m": "backup.verify",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.5,
+   "cpuMax": 0.5,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "BackupJobs"
+   ]
+  },
+  {
+   "m": "backup.plan",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.52,
+   "cpuMax": 0.52,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "BackupJobs"
+   ]
+  },
+  {
+   "m": "preflight.last",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.59,
+   "cpuMax": 4.43,
+   "st": 3,
+   "rr": 292,
+   "tables": [
+    "AuditLog"
+   ]
+  },
+  {
+   "m": "meetings.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.57,
+   "cpuMax": 0.57,
+   "st": 3,
+   "rr": 14,
+   "tables": [
+    "Courses",
+    "Teams",
+    "Departments",
+    "MeetingMinutes",
+    "MeetingTasks"
+   ]
+  },
+  {
+   "m": "meetings.get",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.51,
+   "cpuMax": 0.54,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "MeetingMinutes"
+   ]
+  },
+  {
+   "m": "meetings.options",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.88,
+   "cpuMax": 0.96,
+   "st": 3,
+   "rr": 16,
+   "tables": [
+    "Courses",
+    "Teams",
+    "Departments",
+    "MeetingMinutes",
+    "MeetingTasks",
+    "CommanderAssignments"
+   ]
+  },
+  {
+   "m": "tasks.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.8,
+   "cpuMax": 0.85,
+   "st": 3,
+   "rr": 14,
+   "tables": [
+    "Courses",
+    "Teams",
+    "Departments",
+    "MeetingMinutes",
+    "MeetingTasks"
+   ]
+  },
+  {
+   "m": "tasks.get",
+   "kind": "read",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.48,
+   "cpuMax": 0.57,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "MeetingTasks"
+   ]
+  },
+  {
+   "m": "tasks.indicators",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.77,
+   "cpuMax": 0.81,
+   "st": 3,
+   "rr": 14,
+   "tables": [
+    "Courses",
+    "Teams",
+    "Departments",
+    "MeetingMinutes",
+    "MeetingTasks"
+   ]
+  },
+  {
+   "m": "meetings.integrity",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.65,
+   "cpuMax": 2.93,
+   "st": 3,
+   "rr": 294,
+   "tables": [
+    "Courses",
+    "AuditLog",
+    "MeetingMinutes"
+   ]
+  },
+  {
+   "m": "audit.list",
+   "kind": "read",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 3.89,
+   "cpuMax": 7.6,
+   "st": 3,
+   "rr": 292,
+   "tables": [
+    "AuditLog"
+   ]
+  },
+  {
+   "m": "courses.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 2.89,
+   "cpuMax": 2.89,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "courses.archive",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 3.19,
+   "cpuMax": 3.19,
+   "st": 6,
+   "rr": 7,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "courses.reopen",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 4.88,
+   "cpuMax": 4.88,
+   "st": 6,
+   "rr": 7,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "courses.rename",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 4.81,
+   "cpuMax": 4.81,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "users.add",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 3.35,
+   "cpuMax": 3.35,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "users.set",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.72,
+   "cpuMax": 0.72,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "emergency.set",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 1,
+   "cpuMax": 1,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "soldiers.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 2.06,
+   "cpuMax": 2.06,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "soldiers.update",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.62,
+   "cpuMax": 0.62,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "soldiers.reassign",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.63,
+   "cpuMax": 0.63,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "soldiers.setActive",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.56,
+   "cpuMax": 0.56,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "soldiers.cancel",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.59,
+   "cpuMax": 0.59,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "soldiers.restore",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 1.03,
+   "cpuMax": 1.03,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Soldiers",
+    "Courses"
+   ]
+  },
+  {
+   "m": "nav.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.66,
+   "cpuMax": 0.66,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "navtypes.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.62,
+   "cpuMax": 0.62,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "navtypes.rename",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.67,
+   "cpuMax": 0.67,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "NavigationTypes"
+   ]
+  },
+  {
+   "m": "navtypes.setActive",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.54,
+   "cpuMax": 0.54,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "assignments.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.65,
+   "cpuMax": 0.65,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "assignments.update",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.58,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "assignments.setActive",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.53,
+   "cpuMax": 0.53,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "record.edit",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.61,
+   "cpuMax": 0.61,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "record.cancel",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.54,
+   "cpuMax": 0.54,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "record.restore",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.59,
+   "cpuMax": 0.59,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "correction.request",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.62,
+   "cpuMax": 0.62,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "correction.review",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.63,
+   "cpuMax": 0.63,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "CorrectionRequests"
+   ]
+  },
+  {
+   "m": "settings.set",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.66,
+   "cpuMax": 0.66,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "fitness.typeCreate",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.64,
+   "cpuMax": 0.64,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "fitness.typeWeights",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.6,
+   "cpuMax": 0.6,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "fitness.typeActive",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.56,
+   "cpuMax": 0.56,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "fitness.typeVariant",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.6,
+   "cpuMax": 0.6,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "fitness.importDraft",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 7,
+   "cpuMax": 7,
+   "st": 6,
+   "rr": 7,
+   "tables": [
+    "Courses",
+    "FitnessScoringVersions",
+    "FitnessScoringRows"
+   ]
+  },
+  {
+   "m": "fitness.editRow",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.68,
+   "cpuMax": 0.68,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "FitnessScoringVersions"
+   ]
+  },
+  {
+   "m": "fitness.addTable",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.66,
+   "cpuMax": 0.66,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "FitnessScoringVersions"
+   ]
+  },
+  {
+   "m": "fitness.approve",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.7,
+   "cpuMax": 0.7,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "FitnessScoringVersions"
+   ]
+  },
+  {
+   "m": "fitness.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 1.38,
+   "cpuMax": 1.38,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "fitness.recompute",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.65,
+   "cpuMax": 0.65,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "FitnessTests"
+   ]
+  },
+  {
+   "m": "mk.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.51,
+   "cpuMax": 0.51,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "exams.defCreate",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.63,
+   "cpuMax": 0.63,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "exams.defPass",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.59,
+   "cpuMax": 0.59,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "ExamDefinitions"
+   ]
+  },
+  {
+   "m": "exams.attempt",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.61,
+   "cpuMax": 0.61,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "acttypes.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.61,
+   "cpuMax": 0.61,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "acttypes.rename",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.59,
+   "cpuMax": 0.59,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "ActivityTypes"
+   ]
+  },
+  {
+   "m": "acttypes.setActive",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.55,
+   "cpuMax": 0.55,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "attendance.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.69,
+   "cpuMax": 0.69,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "marches.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 1.1,
+   "cpuMax": 1.1,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "readiness.assess",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.64,
+   "cpuMax": 0.64,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "events.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.53,
+   "cpuMax": 0.53,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "qual.define",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.78,
+   "cpuMax": 0.78,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "qual.setActive",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.73,
+   "cpuMax": 0.73,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Qualifications"
+   ]
+  },
+  {
+   "m": "qual.postpone",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.63,
+   "cpuMax": 0.63,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Qualifications"
+   ]
+  },
+  {
+   "m": "qual.update",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.62,
+   "cpuMax": 0.62,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "qual.requestExclusion",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.57,
+   "cpuMax": 0.57,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "qual.reviewExclusion",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.69,
+   "cpuMax": 0.69,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "assess.add",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.89,
+   "cpuMax": 0.89,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "notes.save",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.57,
+   "cpuMax": 0.57,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "followups.create",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.85,
+   "cpuMax": 0.85,
+   "st": 3,
+   "rr": 67,
+   "tables": [
+    "Courses",
+    "Soldiers"
+   ]
+  },
+  {
+   "m": "followups.update",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.62,
+   "cpuMax": 0.62,
+   "st": 3,
+   "rr": 8,
+   "tables": [
+    "PersonalFollowUps"
+   ]
+  },
+  {
+   "m": "favorites.toggle",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.99,
+   "cpuMax": 0.99,
+   "st": 6,
+   "rr": 68,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Favorites"
+   ]
+  },
+  {
+   "m": "snote.add",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.69,
+   "cpuMax": 0.69,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "snote.cancel",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.74,
+   "cpuMax": 0.74,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "SharedResultNotes"
+   ]
+  },
+  {
+   "m": "alerts.refresh",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.27,
+   "cpuMax": 1.27,
+   "st": 3,
+   "rr": 71,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "ExamMeetings",
+    "Qualifications",
+    "ThresholdSettings",
+    "ReadinessRecords",
+    "PersonalFollowUps",
+    "Alerts"
+   ]
+  },
+  {
+   "m": "alerts.handle",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.66,
+   "cpuMax": 0.66,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Alerts"
+   ]
+  },
+  {
+   "m": "forms.createLink",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 1.98,
+   "cpuMax": 1.98,
+   "st": 6,
+   "rr": 68,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "FormTokens"
+   ]
+  },
+  {
+   "m": "forms.review",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.66,
+   "cpuMax": 0.66,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "SoldierUpdateRequests"
+   ]
+  },
+  {
+   "m": "reports.generate",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.58,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "reports.exportAuthorize",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.67,
+   "cpuMax": 0.67,
+   "st": 5,
+   "rr": 9,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "reports.exportComplete",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.61,
+   "cpuMax": 0.61,
+   "st": 5,
+   "rr": 9,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "reports.fullExport",
+   "kind": "write",
+   "cls": "UNSUPPORTED",
+   "code": "NOT_CONNECTED",
+   "cpu": 0.31,
+   "cpuMax": 0.31,
+   "st": 1,
+   "rr": 1,
+   "tables": [
+    "Courses",
+    "Soldiers",
+    "Departments",
+    "Teams",
+    "FitnessTests",
+    "MarksmanshipTests",
+    "NavigationTests",
+    "TheoreticalExamAttempts",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Marches",
+    "MarchAttendance",
+    "Qualifications",
+    "QualificationAssignments",
+    "ReadinessRecords",
+    "SoldierEvents",
+    "NavigationTypes",
+    "ExamDefinitions"
+   ]
+  },
+  {
+   "m": "import.start",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.61,
+   "cpuMax": 0.61,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "import.decide",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.59,
+   "cpuMax": 0.59,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "ImportJobs"
+   ]
+  },
+  {
+   "m": "import.commit",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.7,
+   "cpuMax": 0.7,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "ImportJobs"
+   ]
+  },
+  {
+   "m": "import.cancel",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 2.13,
+   "cpuMax": 2.13,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "ImportJobs"
+   ]
+  },
+  {
+   "m": "docs.upload",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.62,
+   "cpuMax": 0.62,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "docs.requestLink",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 1.2,
+   "cpuMax": 1.2,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Documents"
+   ]
+  },
+  {
+   "m": "docs.reviewLink",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 1.3,
+   "cpuMax": 1.3,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "Documents"
+   ]
+  },
+  {
+   "m": "docs.attachEvidence",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 2.77,
+   "cpuMax": 2.77,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "QualificationAssignments"
+   ]
+  },
+  {
+   "m": "ocr.start",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 1.62,
+   "cpuMax": 1.62,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "ocr.editRow",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.49,
+   "cpuMax": 0.49,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "OCRExtractedRows"
+   ]
+  },
+  {
+   "m": "ocr.approveRow",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.48,
+   "cpuMax": 0.48,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "OCRExtractedRows"
+   ]
+  },
+  {
+   "m": "ocr.rejectRow",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "NOT_FOUND",
+   "cpu": 0.36,
+   "cpuMax": 0.36,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "OCRExtractedRows"
+   ]
+  },
+  {
+   "m": "backup.create",
+   "kind": "write",
+   "cls": "UNSUPPORTED",
+   "code": "NOT_CONNECTED",
+   "cpu": 0.27,
+   "cpuMax": 0.27,
+   "st": 1,
+   "rr": 1,
+   "tables": [
+    "SchemaMeta",
+    "Courses",
+    "Departments",
+    "Teams",
+    "Soldiers",
+    "CommanderAssignments",
+    "Favorites",
+    "FitnessTestTypes",
+    "FitnessScoringVersions",
+    "FitnessScoringRows",
+    "FitnessTests",
+    "MarksmanshipTests",
+    "NavigationTypes",
+    "NavigationTests",
+    "ExamDefinitions",
+    "TheoreticalExamAttempts",
+    "ExamMeetings",
+    "ActivityTypes",
+    "AttendanceEvents",
+    "AttendanceRecords",
+    "Marches",
+    "MarchAttendance",
+    "Qualifications",
+    "QualificationAssignments",
+    "QualificationEvidence",
+    "QualificationDueDateHistory",
+    "ReadinessRecords",
+    "ReadinessReviews",
+    "Documents",
+    "SharedResultNotes",
+    "SoldierEvents",
+    "Alerts",
+    "AssistantDrafts",
+    "CorrectionRequests",
+    "AuditLog",
+    "ThresholdSettings",
+    "OCRJobs",
+    "OCRExtractedRows",
+    "ReportJobs",
+    "BackupJobs",
+    "AlertHistory",
+    "SoldierUpdateRequests",
+    "FormTokens",
+    "ImportJobs",
+    "ImportRows",
+    "SoldierPersonalDetails",
+    "CommanderAssessments",
+    "PrivateNotes",
+    "MeetingMinutes",
+    "MeetingTasks",
+    "MeetingTaskEvents",
+    "PersonalFollowUps",
+    "FollowUpHistory"
+   ]
+  },
+  {
+   "m": "backup.restore",
+   "kind": "write",
+   "cls": "UNSUPPORTED",
+   "code": "NOT_CONNECTED",
+   "note": "צריך אחסון קבצים",
+   "cpu": 0,
+   "st": 0,
+   "rr": 0
+  },
+  {
+   "m": "backup.recover",
+   "kind": "write",
+   "cls": "UNSUPPORTED",
+   "code": "NOT_CONNECTED",
+   "note": "צריך אחסון קבצים",
+   "cpu": 0,
+   "st": 0,
+   "rr": 0
+  },
+  {
+   "m": "preflight.run",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.94,
+   "cpuMax": 0.94,
+   "st": 6,
+   "rr": 5,
+   "tables": []
+  },
+  {
+   "m": "backup.prune",
+   "kind": "write",
+   "cls": "IMPLEMENTED",
+   "code": "OK",
+   "cpu": 0.58,
+   "cpuMax": 0.58,
+   "st": 3,
+   "rr": 4,
+   "tables": [
+    "BackupJobs"
+   ]
+  },
+  {
+   "m": "meetings.save",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.64,
+   "cpuMax": 0.64,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "tasks.setStatus",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.45,
+   "cpuMax": 0.45,
+   "st": 3,
+   "rr": 4,
+   "tables": []
+  },
+  {
+   "m": "meetings.auditRepair",
+   "kind": "write",
+   "cls": "IMPLEMENTED_NEEDS_INPUT",
+   "code": "VALIDATION",
+   "cpu": 0.47,
+   "cpuMax": 0.47,
+   "st": 3,
+   "rr": 6,
+   "tables": [
+    "Courses"
+   ]
+  },
+  {
+   "m": "dash.trends",
+   "kind": "blocked",
+   "cls": "BLOCKED_BY_POLICY",
+   "code": "POLICY_BLOCKED",
+   "cpu": 0.37,
+   "cpuMax": 0.37,
+   "st": 2,
+   "rr": 1,
+   "tables": []
+  },
+  {
+   "m": "reports.build",
+   "kind": "blocked",
+   "cls": "BLOCKED_BY_POLICY",
+   "code": "POLICY_BLOCKED",
+   "cpu": 0.3,
+   "cpuMax": 0.3,
+   "st": 2,
+   "rr": 1,
+   "tables": []
+  },
+  {
+   "m": "ai.draft",
+   "kind": "blocked",
+   "cls": "BLOCKED_BY_POLICY",
+   "code": "POLICY_BLOCKED",
+   "cpu": 0.27,
+   "cpuMax": 0.27,
+   "st": 2,
+   "rr": 1,
+   "tables": []
+  },
+  {
+   "m": "ai.drafts",
+   "kind": "blocked",
+   "cls": "BLOCKED_BY_POLICY",
+   "code": "POLICY_BLOCKED",
+   "cpu": 0.28,
+   "cpuMax": 0.28,
+   "st": 2,
+   "rr": 1,
+   "tables": []
+  },
+  {
+   "m": "ai.reviewDraft",
+   "kind": "blocked",
+   "cls": "BLOCKED_BY_POLICY",
+   "code": "POLICY_BLOCKED",
+   "cpu": 0.32,
+   "cpuMax": 0.32,
+   "st": 2,
+   "rr": 1,
+   "tables": []
+  },
+  {
+   "m": "migration.run",
+   "kind": "blocked",
+   "cls": "BLOCKED_BY_POLICY",
+   "code": "POLICY_BLOCKED",
+   "cpu": 0.34,
+   "cpuMax": 0.34,
+   "st": 2,
+   "rr": 1,
+   "tables": []
+  }
+ ]
+}

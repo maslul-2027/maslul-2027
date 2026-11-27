@@ -1,0 +1,26 @@
+# MASLUL shared TEST — Cloudflare Workers FREE + D1 FREE. SYNTHETIC DATA ONLY. No secrets in this file.
+# Secrets (set once in the Cloudflare dashboard, Settings -> Variables and secrets; never committed):  APP_SECRET (>= 32 random chars)  and  BOOTSTRAP_TOKEN (>= 32 random chars, used once to create the first admin).
+name = "maslul-test"
+main = "src/worker.js"
+compatibility_date = "2025-10-11"
+workers_dev = true          # free https://maslul-test.<account>.workers.dev — NO custom domain, NO paid add-on
+preview_urls = false
+
+[build]
+watch_dir = ["../../src", "../../native", "../../backend_next"]   # NOT src/*.generated.js: build output must not retrigger the build
+# compiles the real engine (src/*.gs) + synthetic seed into the bundle (no eval at run time) and builds the 4-tab RTL app into ./public
+command = "node ../../scripts/build_cf_worker.js && node ../../scripts/build_native_app.js --cf"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+# the Worker runs first for EVERY path and falls through to env.ASSETS for the static app (src/worker.js). A path-pattern list let /auth/status answer 404 from the asset layer on the first live deploy; `true` removes that failure class (cost: static hits also count toward the 100,000 requests/day Free quota — fine for a TEST)
+run_worker_first = true
+
+# D1 database: no id here on purpose — wrangler's automatic provisioning creates it on the first deploy. The Worker creates its own tables on first use.
+[[d1_databases]]
+binding = "DB"
+database_name = "maslul-test-db"
+
+[vars]
+ALLOW_LOCAL_HTTP = "0"      # "1" only in local development (.dev.vars); production is HTTPS-only

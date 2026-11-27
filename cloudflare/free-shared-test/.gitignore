@@ -1,0 +1,11 @@
+# built on every deploy/CI run (scripts/build_cf_worker.js, scripts/build_native_app.js --cf)
+src/engine.generated.js
+src/seed.generated.js
+src/route_table.generated.js
+public/
+.dev.vars
+.wrangler/
+node_modules/
+dist/
+
+wrangler.deploy.toml
