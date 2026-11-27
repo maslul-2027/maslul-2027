@@ -181,6 +181,54 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
 .in-bars{margin:6px 0 10px}.in-barrow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr) auto;gap:8px;align-items:center;min-height:30px;font-size:13px}
 .in-bl{overflow-wrap:anywhere}.in-bt{display:block;height:12px;background:#e8eef0;border-radius:6px;overflow:hidden}.in-bt i{display:block;height:100%;background:var(--teal)}
 
+/* ===== MASLUL design system v2 — ONE layer on the existing tokens (4-tab RTL shell, white / graphite / teal unchanged). Rules: body 16px, secondary ≥14px, captions ≥12.5px, targets ≥44px, AA contrast (muted #4d5b61 on white = 7.1:1), 8px spacing grid, radius 14/18, one elevation, motion 120–280ms and off for reduced-motion. ===== */
+:root{--ink:#10181d;--muted:#4d5b61;--surface:#fff;--bg:#f4f7f8;--teal-d:#005f63;--teal-l:#e5f5f4;--r1:14px;--r2:18px;--sh:0 1px 2px #10181d0f,0 4px 14px #10181d0a;--s1:8px;--s2:16px;--s3:24px}
+body{font-size:16px;line-height:1.5;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+.subtitle{color:var(--muted);font-size:13.5px;margin:2px 0 8px}
+/* header + demo notice: one quiet line instead of a 3-line block above every screen */
+.top{padding:14px 0 4px}.brand{font-size:20px}.pill{font-size:12px;padding:6px 10px}
+.notice{font-size:12.5px;line-height:1.45;padding:7px 11px;margin:6px 0 10px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.notice{min-height:44px;display:block;padding:11px 12px;line-height:22px}.notice.open{white-space:normal;line-height:1.5}
+/* hierarchy */
+.section{margin:22px 0 10px}.section h2{font-size:19px;letter-spacing:-.1px}.section .count,.section span{font-size:13px;color:var(--muted)}
+h1.page{font-size:24px;line-height:1.25;margin:6px 0 4px}
+.hero{background:linear-gradient(160deg,#16272f 0%,#0f1d23 100%);border-radius:var(--r2);padding:22px 20px;box-shadow:var(--sh)}.hero h1{font-size:24px}.hero p{font-size:15px}.hero .primary{width:100%;min-height:52px;font-size:16px;margin-top:6px}
+.primary{min-height:50px;border-radius:var(--r1);font-size:16px;box-shadow:0 2px 0 #028a88}.primary:active{transform:translateY(1px);box-shadow:none}
+.secondary{min-height:48px;border-radius:var(--r1);font-size:15px}
+.stats{gap:10px}.stat{border-radius:var(--r2);box-shadow:var(--sh);border-top:3px solid var(--teal);padding:14px 12px}.stat strong{font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums}.stat small{font-size:13.5px;color:var(--muted)}
+.card{border-radius:var(--r2);box-shadow:var(--sh);padding:16px;min-height:64px}.card h3{font-size:16.5px;margin:0 0 4px}.card p{font-size:14px;color:var(--muted);line-height:1.45}
+button.card:active{background:var(--teal-l);transform:scale(.995)}
+.muted{color:var(--muted)}
+/* bottom navigation: readable labels, clear active pill */
+.nav{box-shadow:0 -6px 22px #10181d12}.tab{font-size:12.5px;font-weight:600;min-height:58px;gap:2px;color:var(--muted)}.tab i{font-size:23px}.tab[aria-current=page]{background:var(--teal-l);color:var(--teal-d);font-weight:800}
+.chip{font-size:14px}.chip.active,.chip[aria-pressed=true]{background:var(--teal);color:#fff;border-color:var(--teal)}
+.search,input[type=search]{min-height:50px;font-size:16px;border-radius:var(--r1)}
+/* soldiers: scannable rows */
+.av{flex:none;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:hsl(var(--hue) 55% 22%);background:hsl(var(--hue) 60% 90%);letter-spacing:.5px}.av-lg{width:60px;height:60px;font-size:22px}
+.srow{gap:12px}.srow>div:nth-child(2){flex:1;min-width:0}.srow h3{margin:0 0 2px}
+/* soldier card: identity header + compact facts */
+.shero{display:flex;align-items:center;gap:14px;margin:6px 0 12px}.shero-t{flex:1;min-width:0}.shero h2{margin:0;font-size:22px;line-height:1.2}.shero p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.kvcard dl.kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 14px}.kvcard .kvi{min-width:0}.kvcard .kvi dt{font-size:12.5px;color:var(--muted);margin:0 0 2px}.kvcard .kvi dd{margin:0;font-size:16px;font-weight:700}
+/* entry tiles */
+.tile{gap:14px}.tile i{font-size:26px;width:44px}.tile h3{font-size:16.5px}
+/* insight reports: bigger chart type, readable tables, tappable bars */
+.in-t{font-size:12px}.in-kpi small{font-size:13.5px}.in-kpi b{font-size:28px;font-variant-numeric:tabular-nums}
+.in-table{font-size:14.5px}.in-table th,.in-table td{padding:11px 12px}.in-table th{font-size:13px;color:var(--muted)}
+.in-find li{font-size:16px;box-shadow:var(--sh)}
+.in-bar{cursor:pointer;transition:opacity var(--t-press) var(--ease),filter var(--t-press) var(--ease)}.in-bar:hover{filter:brightness(1.08)}.in-bar.on{filter:none;stroke:#10181d;stroke-width:2}
+.in-sheet{margin:10px 0;background:#fff;border:1px solid #cce5e4;border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh);animation:inSheet var(--t-reveal) var(--ease)}.in-sheet h3{margin:0 0 4px;font-size:16.5px}.in-sheet p{margin:2px 0;font-size:14.5px;color:var(--muted)}.in-sheet b{color:var(--ink)}
+.in-sheet .share{height:8px;border-radius:4px;background:#e3eaec;margin:8px 0;overflow:hidden}.in-sheet .share i{display:block;height:100%;background:var(--teal);width:var(--w);transition:width var(--t-reveal) var(--ease)}
+@keyframes inSheet{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.in-act{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));z-index:3;background:linear-gradient(#f4f7f800,#f4f7f8 30%);padding:10px 0 4px;margin:10px 0}
+/* focus + motion + zoom */
+:focus-visible{outline:3px solid #009fa4;outline-offset:2px;border-radius:8px}
+@media(max-width:359px){.stats{grid-template-columns:1fr 1fr}.shero h2{font-size:20px}}
+@media(prefers-reduced-motion:reduce){.in-sheet,.in-bar,.in-sheet .share i{animation:none!important;transition:none!important}}
+
+.dirhint{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+.in-table td:not(:first-child),.in-table th:not(:first-child){white-space:nowrap;font-variant-numeric:tabular-nums;unicode-bidi:plaintext}
+.in-kpis:has(>:nth-child(3):last-child){grid-template-columns:repeat(3,minmax(0,1fr))}.in-kpis:has(>:nth-child(3):last-child) .in-kpi b{font-size:22px}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="entry"><i>✎</i>הזנה</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
@@ -219,6 +267,7 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
   function go(route) { if (bulkLeave && bulkLeave.dirty()) { leaveAsk(function () { bulkLeave = null; go(route); }); return; } if (location.hash !== '#/' + route) location.hash = '#/' + route; else { forceTop = true; render(); } }
   function leaveAsk(cont) { dialog('שינויים שלא נשמרו', [h('p', { text: 'הוזנו נתונים שעדיין לא נשמרו. לעזוב את המסך בלי לשמור?' })], function () { cont(); return true; }, 'עזיבה בלי לשמור', true); }
   window.addEventListener('beforeunload', function (e) { if (bulkLeave && bulkLeave.dirty()) { e.preventDefault(); e.returnValue = ''; } });
+  (function () { var n = document.querySelector('.notice'); if (!n) return; n.setAttribute('role', 'button'); n.setAttribute('tabindex', '0'); n.setAttribute('aria-expanded', 'false'); n.setAttribute('aria-label', n.textContent.trim() + ' (הקשה להרחבה)'); var tg = function () { var o = n.classList.toggle('open'); n.setAttribute('aria-expanded', o ? 'true' : 'false'); }; n.addEventListener('click', tg); n.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tg(); } }); })();
   function setTab(name) { document.querySelectorAll('.tab').forEach(function (b) { if (b.dataset.go === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); }); }
   /* gentle scroll reveal for content BELOW the fold only (never hides what is already visible; fail-safe un-hides everything after 1.5 s; none under reduced motion) */
   var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, rvIO = null, rvT = null;
@@ -399,6 +448,8 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
 
   /* ---------- TRAINEES ---------- */
   var cache = { soldiers: null };
+  /* design system v2: initials avatar (decorative, aria-hidden) — a stable hue per soldier id so rows are scannable without reading every name */
+  function avatar(name, id, big) { var w = String(name || '?').trim().split(/\s+/), t = (w[0] || '?').charAt(0) + (w[1] ? w[1].charAt(0) : ''), hue = 0, k = String(id || name); for (var i = 0; i < k.length; i++) hue = (hue * 31 + k.charCodeAt(i)) % 360; return h('span', { class: 'av' + (big ? ' av-lg' : ''), 'aria-hidden': 'true', style: '--hue:' + hue, text: t }); }
   function Soldiers() {
     var q = h('input', { class: 'search', id: 'q', type: 'search', placeholder: 'חיפוש לפי שם, מספר אישי או מחלקה…', 'aria-label': 'חיפוש חניכים', autocomplete: 'off', value: S.q }), list = h('div', { id: 'people', 'aria-live': 'polite' }), count = h('span', { class: 'count', id: 'count', text: '' });
     var chips = h('div', { class: 'filters', role: 'group', 'aria-label': 'סינון לפי מחלקה' });
@@ -415,7 +466,7 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
       if (!rows.length) { list.append(emptyBox(all.length ? 'לא נמצאו חניכים. אפשר לנסות חיפוש אחר.' : 'עדיין אין חניכים בקורס. אפשר להוסיף את הראשון.')); return; }
       rows.slice(0, 200).forEach(function (s) {
         var cancelled = s.record_status === 'cancelled';
-        list.append(card(s.full_name, (s.department_name || '').replace(/\s*\(זמני\)/, '') + ' · ' + (s.team_name || '').replace(/\s*\(זמני\)/, ''), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active), function () { go('soldier/' + s.id); }));
+        var rc = card(s.full_name, (s.department_name || '').replace(/\s*\(זמני\)/, '') + ' · ' + (s.team_name || '').replace(/\s*\(זמני\)/, ''), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active), function () { go('soldier/' + s.id); }); rc.classList.add('srow'); rc.insertBefore(avatar(s.full_name, s.id), rc.firstChild); list.append(rc);
       });
       if (rows.length > 200) list.append(h('p', { class: 'muted', text: 'מוצגים 200 ראשונים. צמצמו עם חיפוש.' }));
     }
@@ -428,14 +479,14 @@ a.primary.em-call{display:flex;align-items:center;justify-content:center;gap:8px
     api('soldiers.card', { id: id }).then(function (r) {
       if (!r.ok) { mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), errBox(r, function () { SoldierCard(id); })], 'כרטיס חניך'); return; }
       var c = r.data, s = c.soldier, cancelled = s.record_status === 'cancelled';
-      var kv = h('dl', { class: 'kv' }); [['מספר אישי', s.personal_number], ['קורס', c.course.name], ['מחלקה', (c.department_name || '').replace(/\s*\(זמני\)/, '')], ['צוות', (c.team_name || '').replace(/\s*\(זמני\)/, '')], ['מגדר', s.gender === 'F' ? 'נקבה' : 'זכר'], ['פק״ל', s.pakal || '—'], ['תאריך גיוס', s.enlistment_date || '—']].forEach(function (p) { kv.append(h('dt', { text: p[0] }), h('dd', { text: p[1] || '—', dir: p[0] === 'מספר אישי' ? 'ltr' : null })); });
+      var kv = h('dl', { class: 'kv' }); [['מספר אישי', s.personal_number], ['קורס', c.course.name], ['מחלקה', (c.department_name || '').replace(/\s*\(זמני\)/, '')], ['צוות', (c.team_name || '').replace(/\s*\(זמני\)/, '')], ['מגדר', s.gender === 'F' ? 'נקבה' : 'זכר'], ['פק״ל', s.pakal || '—'], ['תאריך גיוס', s.enlistment_date || '—']].forEach(function (p) { kv.append(h('div', { class: 'kvi' }, [h('dt', { text: p[0] }), h('dd', { text: p[1] || '—', dir: p[0] === 'מספר אישי' ? 'ltr' : null })])); });
       var btns = h('div', { class: 'btns' });
       btns.append(h('button', { class: 'primary', type: 'button', disabled: cancelled, text: 'עריכה', onclick: function () { SoldierForm(s); } }));
       if (cancelled) btns.append(h('button', { class: 'secondary', type: 'button', text: 'שחזור', onclick: function () { reasonDialog('שחזור חניך', false, function (reason, msg) { return api('soldiers.restore', { id: s.id, reason: reason }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('החניך שוחזר'); SoldierCard(s.id); }); }); } }));
       else btns.append(h('button', { class: 'danger', type: 'button', text: 'ביטול חניך', onclick: function () { reasonDialog('ביטול חניך', true, function (reason, msg) { return api('soldiers.cancel', { id: s.id, reason: reason }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('החניך בוטל'); SoldierCard(s.id); }); }); } }));
       var nav = c.navigation, extra = [];
       if (nav && nav.count !== undefined) extra.push(h('div', { class: 'card' }, [h('div', {}, [h('h3', { text: 'ניווט' }), h('p', { text: nav.count ? ('ממוצע ' + (nav.mean_display || '—') + ' · ' + nav.count + ' מבחנים') : 'עדיין אין מבחני ניווט' })])]));
-      var priv = h('div', { id: 'priv' }, skeleton(1)), progBox = h('div', { id: 'progBox' }, skeleton(1)), emBox = h('div', { id: 'emBox' }), fuBox = (C.mode === 'server' && !isAdmin()) ? null : h('div', { id: 'fuCardBox' }, skeleton(1)); mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), h('div', { class: 'section' }, [h('h2', { text: s.full_name }), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active)]), h('div', { class: 'card', style: 'display:block' }, [kv]), isAdmin() ? emBox : null, btns, progBox].filter(Boolean).concat(extra, [fuBox, priv]).filter(Boolean), s.full_name); if (isAdmin()) emergencyBlock(s, emBox); SoldierExtras(s, priv, cancelled); soldierProgress(s, progBox); if (fuBox) soldierFollowups(s, fuBox, cancelled);
+      var priv = h('div', { id: 'priv' }, skeleton(1)), progBox = h('div', { id: 'progBox' }, skeleton(1)), emBox = h('div', { id: 'emBox' }), fuBox = (C.mode === 'server' && !isAdmin()) ? null : h('div', { id: 'fuCardBox' }, skeleton(1)); mount('soldiers', [h('button', { class: 'back', type: 'button', onclick: function () { go('soldiers'); }, text: '→ חזרה לרשימה' }), h('div', { class: 'shero', id: 'sHero' }, [avatar(s.full_name, s.id, true), h('div', { class: 'shero-t' }, [h('h2', { text: s.full_name }), h('p', { text: [(c.department_name || '').replace(/\s*\(זמני\)/, ''), (c.team_name || '').replace(/\s*\(זמני\)/, '')].filter(Boolean).join(' · ') })]), cancelled ? status('מבוטל', true) : status(s.active ? 'פעיל' : 'לא פעיל', !s.active)]), h('div', { class: 'card kvcard', style: 'display:block' }, [kv]), isAdmin() ? emBox : null, btns, progBox].filter(Boolean).concat(extra, [fuBox, priv]).filter(Boolean), s.full_name); if (isAdmin()) emergencyBlock(s, emBox); SoldierExtras(s, priv, cancelled); soldierProgress(s, progBox); if (fuBox) soldierFollowups(s, fuBox, cancelled);
     });
   }
   /* ---------- soldier card extras (batch 4): reassign / active, private notes, assessments, favourite, emergency contact ---------- */
@@ -2259,6 +2310,12 @@ var RK = (function () {
     svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', summary);
     return h('figure', { class: 'in-fig', id: id }, [h('figcaption', { text: title }), h('div', { class: 'in-svgwrap' }, [svg]), tbl, tg]);
   }
+  /* tap-to-deepen for a histogram bar: what the bar means (range, N, share of those measured) + — in the operational zone only — who is in it (exact scores, tap → soldier card). Group part uses only legal bins (≥5). */
+  function inBinSheet(P, i, rows, id) {
+    var b = P.score.bins[i], tot = P.score.n, pc = Math.round(100 * b.n / tot), box = h('section', { class: 'in-sheet', id: id || 'inSheet', role: 'region', 'aria-label': 'פירוט טווח ' + b.label, 'aria-live': 'polite' }, [h('h3', { text: 'טווח ' + b.label }), h('p', {}, [h('b', { text: b.n + ' חניכים' }), document.createTextNode(' · ' + pc + '% מתוך ' + tot + ' שנבדקו')]), h('div', { class: 'share', 'aria-hidden': 'true', style: '--w:' + pc + '%' }, [h('i')])]);
+    if (rows) { var inb = rows.filter(function (r) { return r.final_score >= b.clo && r.final_score <= b.chi; }).sort(function (x, y) { return y.final_score - x.final_score; }); box.append(h('p', { class: 'muted', text: 'תצוגה מבצעית (לא נכללת בקבצים) — ' + inb.length + ' בטווח:' })); inb.slice(0, 30).forEach(function (r) { box.append(card(r.soldier_name, 'ציון ' + inFmt(r.final_score), h('span', { class: 'arrow', text: '←' }), function () { go('soldier/' + r.soldier_id); })); }); }
+    return box;
+  }
   function histChart(p, onPick, picked) {
     var bins = p.score.bins, n = bins.length, W = 320, H = 160, gap = 10, bw = Math.min(70, (W - 40 - gap * (n - 1)) / n), x0 = (W - (n * bw + (n - 1) * gap)) / 2, max = Math.max.apply(null, bins.map(function (b) { return b.n; }).concat([1]));
     var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'in-svg' }); svg.append(sv('line', { x1: 10, x2: W - 10, y1: 126, y2: 126, class: 'in-axis' }));
@@ -2329,7 +2386,8 @@ var RK = (function () {
         body.append(sectionHead('דוחות לפי תבנית', null));
         body.append(card('תמונת מצב קורס', 'מה השתנה, מה דורש טיפול, איכות נתונים וכל התחומים · סיכומים קבוצתיים מוגנים', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course'); }));
         body.append(card('דוח ניווט', list.length ? 'ניתוח אירוע, מגמה, PDF ו-Excel · ' + list.length + ' אירועים' : 'אין עדיין אירועי ניווט', h('span', { class: 'arrow', text: '←' }), list.length ? function () { go('insight/nav/' + list[0].typeId + '/' + list[0].date); } : null));
-        [['דוח כש״ג', 'fitness'], ['נוכחות / מסעות', 'attendance']].forEach(function (t) { body.append(card(t[0], 'סיכום קבוצתי של התחום בדשבורד הקורס, כולל PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course/' + t[1]); })); });
+        [['נוכחות / מסעות', 'attendance']].forEach(function (t) { body.append(card(t[0], 'סיכום קבוצתי של התחום בדשבורד הקורס, כולל PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course/' + t[1]); })); });
+        body.append(card('דוח כושר גופני (כש״ג)', 'ערכי גלם, מגמות לפי רכיב, ציון משוקלל מאושר בלבד, יחידות · PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/fit'); }));
         body.append(card('דוח קליעה', 'קליעה רגילה ויל״מ בנפרד, התפלגות, נשק מאופס, סוגי נשק ויחידות · PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/shoot'); }));
         var exBox = h('div', { id: 'inExamCards' }); body.append(sectionHead('דוחות מבחנים', null), exBox);
         api('exams.defs', { courseId: S.course.id, opts: {} }, 'fresh').then(function (dr) { if (!dr.ok) { exBox.append(h('p', { class: 'muted', text: 'רשימת המבחנים לא נטענה.' })); return; } var defs = dr.data || []; if (!defs.length) exBox.append(emptyBox('אין מבחנים מוגדרים.')); defs.forEach(function (d) { exBox.append(card('דוח מבחן — ' + d.name, 'מסלול עמידה א׳/ב׳/ג׳, התפלגות, יחידות, PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/exam/' + d.id); })); }); });
@@ -2543,7 +2601,7 @@ function ExamInsight(examId) {
       if (P.hidden) body.append(h('div', { class: 'msg', id: 'exInsufficient', role: 'status', text: (P.score.reason || 'אין מספיק נתונים') + '. כל המדדים הקבוצתיים מוסתרים; הנתונים המבצעיים למטה מיועדים למורשים בלבד.' }));
       else {
         body.append(sectionHead('מסלול העמידה', null), h('table', { class: 'in-table', id: 'exStages' }, [h('thead', {}, [h('tr', {}, ['שלב', 'חניכים'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, P.stages.map(function (s) { return h('tr', {}, [h('td', { text: s[0] }), h('td', { text: s[1] })]); }))]));
-        body.append(sectionHead('התפלגות ציון מועד א׳', 'כל עמודה ≥ ' + IN_MIN_N), chartFigure('exHist', 'התפלגות ציון מועד א׳ · N=' + P.score.n, histChart(P, function () {}, -1), 'התפלגות ציון מועד א׳: ' + P.score.bins.map(function (b) { return b.label + ' — ' + b.n; }).join('; '), ['טווח', 'חניכים'], P.score.bins.map(function (b) { return [b.label, b.n]; })));
+        var picked = -1, hb = h('div', { id: 'exHistBox' }), sb = h('div', { id: 'exSheetBox' }); var drawH = function () { hb.replaceChildren(chartFigure('exHist', 'התפלגות ציון מועד א׳ · N=' + P.score.n + ' · הקשה על עמודה מראה פירוט', histChart(P, function (i) { picked = i; drawH(); }, picked), 'התפלגות ציון מועד א׳: ' + P.score.bins.map(function (b) { return b.label + ' — ' + b.n; }).join('; '), ['טווח', 'חניכים'], P.score.bins.map(function (b) { return [b.label, b.n]; }))); sb.replaceChildren(); if (picked >= 0) sb.append(inBinSheet(P, picked, null, 'exSheet')); }; body.append(sectionHead('התפלגות ציון מועד א׳', 'כל עמודה ≥ ' + IN_MIN_N), hb, sb); drawH();
         var us = P.departments.concat(P.teams); if (us.length) { body.append(sectionHead('יחידות', 'N≥' + IN_MIN_N)); body.append(h('table', { class: 'in-table', id: 'exUnits' }, [h('thead', {}, [h('tr', {}, ['יחידה', 'N', 'עמידה במועד א׳', 'ממוצע'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, us.map(function (u) { return h('tr', {}, [h('td', { text: u.name }), h('td', { text: u.hidden ? 'מוסתר' : String(u.n) }), h('td', { text: u.hidden ? u.reason : (u.pass1 ? u.pass1.txt : '—') }), h('td', { text: u.hidden ? 'מוסתר' : inFmt(u.mean) })]); }))])); }
       }
       var opBox = h('section', { class: 'in-op', id: 'exOps', 'aria-label': 'תצוגה מבצעית' }, [h('h3', { text: 'תצוגה מבצעית — מספרים מדויקים (לא נכללים בקבצים)' }), h('p', { class: 'muted', id: 'exOpsLine', text: O.recorded + ' עם ניסיון א׳ · ' + O.eligible + ' בהיקף · ' + O.missing + ' ללא ניסיון · עברו א׳/ב׳/ג׳: ' + O.stages.A + '/' + O.stages.B + '/' + O.stages.C + ' · לא עברו: ' + O.stages.failC + ' · ממתינים: ' + (O.stages.pendB + O.stages.pendC) })]);
@@ -2631,7 +2689,7 @@ function ShootInsight() {
       body.append(sectionHead('ממצאים', null), h('ul', { class: 'in-find', id: 'shFind' }, P.findings.map(function (t) { return h('li', { text: t }); })));
       if (P.hidden) body.append(h('div', { class: 'msg', id: 'shInsufficient', role: 'status', text: 'אין מספיק נתונים להצגה קבוצתית. הנתונים המבצעיים למטה מיועדים למורשים בלבד.' }));
       else {
-        body.append(sectionHead('התפלגות ציון קליעה רגילה', 'כל עמודה ≥ ' + IN_MIN_N), chartFigure('shHist', 'התפלגות ציון קליעה · N=' + P.score.n, histChart(P, function () {}, -1), 'התפלגות ציון קליעה: ' + P.score.bins.map(function (b) { return b.label + ' — ' + b.n; }).join('; '), ['טווח', 'חניכים'], P.score.bins.map(function (b) { return [b.label, b.n]; })));
+        var picked = -1, hb = h('div', { id: 'shHistBox' }), sb = h('div', { id: 'shSheetBox' }); var drawH = function () { hb.replaceChildren(chartFigure('shHist', 'התפלגות ציון קליעה · N=' + P.score.n + ' · הקשה על עמודה מראה פירוט', histChart(P, function (i) { picked = i; drawH(); }, picked), 'התפלגות ציון קליעה: ' + P.score.bins.map(function (b) { return b.label + ' — ' + b.n; }).join('; '), ['טווח', 'חניכים'], P.score.bins.map(function (b) { return [b.label, b.n]; }))); sb.replaceChildren(); if (picked >= 0) sb.append(inBinSheet(P, picked, m.rows, 'shSheet')); }; body.append(sectionHead('התפלגות ציון קליעה רגילה', 'כל עמודה ≥ ' + IN_MIN_N), hb, sb); drawH();
         body.append(sectionHead('לפי סוג נשק', null), h('table', { class: 'in-table', id: 'shWeapons' }, [h('thead', {}, [h('tr', {}, ['נשק', 'חניכים', 'ממוצע'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, P.weapons.map(function (w) { return h('tr', {}, [h('td', { text: w.name }), h('td', { text: w.hidden ? 'מוסתר' : String(w.n) }), h('td', { text: w.hidden ? 'מוסתר' : inFmt(w.mean) })]); }))]));
         var us = P.departments.concat(P.teams); if (us.length) { body.append(sectionHead('יחידות', 'N≥' + IN_MIN_N)); body.append(h('table', { class: 'in-table', id: 'shUnits' }, [h('thead', {}, [h('tr', {}, ['יחידה', 'N', 'ממוצע'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, us.map(function (u) { return h('tr', {}, [h('td', { text: u.name }), h('td', { text: u.hidden ? 'מוסתר' : String(u.n) }), h('td', { text: u.hidden ? u.reason : inFmt(u.mean) })]); }))])); }
       }
@@ -2644,6 +2702,107 @@ function ShootInsight() {
 }
 window.__insight.shootBuild = inShootBuild; window.__insight.shootPdf = inShootPdf; window.__insight.shootXlsx = inShootXlsx;
 
+
+/* ===== FITNESS EVENT insight ("דוח כש״ג"): built ONLY from what the engine persisted (Fitness.gs): raw component values, component scores and the approved weighted score. Nothing is guessed:
+   · weighted score / component points exist ONLY when an APPROVED scoring version produced them — otherwise the report says BLOCKED (reason counts), and shows raw-value insights only;
+   · NULL ≠ ZERO: an empty component is "לא הוזן" (excluded from every n, never averaged as 0); a typed 0 reps is a real value;
+   · direction is explicit per component (reps: more is better · times mm:ss: less is better); a trend compares the SAME soldier's first and latest result of the SAME test type, per component;
+   · no pass/fail threshold exists (U6 undecided) ⇒ no pass rate, no ranking. Small-cell policy as in the other reports: group projection `pub` (screen/PDF/XLSX) vs operational `ops` (screen only). ===== */
+var IN_FT_MD = { version: 'insight-fit-1', source: 'fitness.list · fitness.types · soldiers.list' };
+var IN_FT_COMPS = [['pullups', 'מתח', 'חזרות', 1], ['parallel_bars', 'מקבילים', 'חזרות', 1], ['trap_bar', 'Trap Bar', 'חזרות', 1], ['run150x2', 'ריצת 300 מ׳ (150×2)', 'זמן', -1], ['run3km', 'ריצת 3 ק״מ', 'זמן', -1]];
+function inFtSec(v) { var m = /^(\d{1,2}):([0-5]\d)$/.exec(String(v === null || v === undefined ? '' : v).trim()); return m ? +m[1] * 60 + +m[2] : null; }
+function inFtVal(c, v) { if (v === null || v === undefined || String(v).trim() === '') return null; if (c[2] === 'זמן') return inFtSec(v); var n = Number(v); return isFinite(n) && n >= 0 && Math.floor(n) === n ? n : null; }   /* '' → null (missing); 0 → 0 (a real value) */
+function inFtFmt(c, v) { if (v === null || v === undefined || isNaN(v)) return '—'; if (c[2] !== 'זמן') return inFmt(v); var s = Math.round(v), mm = Math.floor(s / 60), ss = s % 60; return mm + ':' + (ss < 10 ? '0' : '') + ss; }
+function inFtDelta(c, d) { if (d === 0) return 'ללא שינוי'; var better = d * c[3] > 0; return (c[2] === 'זמן' ? Math.abs(Math.round(d)) + ' שנ׳' : inFmt(Math.abs(d)) + ' חזרות') + (better ? ' שיפור' : ' החמרה'); }
+function inFitBuild(list, soldiers, types, ctx) {
+  ctx = ctx || {}; var sol = {}, active = {}; (soldiers || []).forEach(function (s) { sol[s.id] = s; if (s.active !== false && s.record_status !== 'cancelled') active[s.id] = 1; });
+  var tmap = {}; (types || []).forEach(function (t) { tmap[t.id] = t; }); var regular = (types || []).filter(function (t) { return !t.is_opening; }).map(function (t) { return t.id; });
+  var use = (list || []).filter(function (r) { return r.record_status !== 'cancelled' && !r.soldier_cancelled && (!regular.length || regular.indexOf(r.test_type_id) >= 0); });
+  var by = {}; use.forEach(function (r) { (by[r.soldier_id] = by[r.soldier_id] || []).push(r); });
+  var cmp = function (a, b) { return String(a.test_date) < String(b.test_date) ? -1 : String(a.test_date) > String(b.test_date) ? 1 : String(a.updated_at || a.id) < String(b.updated_at || b.id) ? -1 : 1; };
+  var cur = {}, prev = {}; Object.keys(by).forEach(function (id) { var a = by[id].sort(cmp), c = a[a.length - 1]; cur[id] = c; for (var i = a.length - 2; i >= 0; i--) if (a[i].test_type_id === c.test_type_id) { prev[id] = a[i]; break; } });
+  var elig = Object.assign({}, active); Object.keys(cur).forEach(function (id) { elig[id] = 1; }); var eligible = Object.keys(elig).length, recorded = Object.keys(cur).length, hidden = recorded < IN_MIN_N;
+  var reasons = { no_table: 0, out_of_range: 0, gender_missing: 0 }, scored = [], wrows = [], notEntered = {}, compVals = {}, ops = { recorded: recorded, eligible: eligible, missing: eligible - recorded, reasons: reasons, review: [], attention: [], incomplete: [] };
+  IN_FT_COMPS.forEach(function (c) { compVals[c[0]] = []; notEntered[c[0]] = 0; });
+  Object.keys(cur).forEach(function (id) { var r = cur[id], so = sol[id] || {}, inType = tmap[r.test_type_id] ? (tmap[r.test_type_id].weights || {}) : null, missingAny = false;
+    IN_FT_COMPS.forEach(function (c) { if (inType && !(c[0] in inType)) return; var raw = r.raw ? r.raw[c[0]] : undefined, v = inFtVal(c, raw); if (v === null) { notEntered[c[0]]++; missingAny = true; } else compVals[c[0]].push({ id: id, v: v }); var cs = r.components ? r.components[c[0]] : null; if (cs && cs.reason && cs.reason !== 'ok' && cs.reason !== 'not_entered') { reasons[cs.reason] = (reasons[cs.reason] || 0) + 1; if (cs.reason === 'out_of_range') ops.review.push({ soldier_id: id, soldier_name: r.soldier_name || so.full_name || id, comp: c[1] }); } });
+    if (missingAny) ops.incomplete.push({ soldier_id: id, soldier_name: r.soldier_name || so.full_name || id });
+    if (r.weighted_score !== null && r.weighted_score !== undefined && isFinite(Number(r.weighted_score))) { scored.push(Number(r.weighted_score)); wrows.push({ soldier_id: id, soldier_name: r.soldier_name || so.full_name || id, department_id: so.department_id, department_name: so.department_name, team_id: so.team_id, team_name: so.team_name, final_score: Number(r.weighted_score) }); } });
+  var blocked = recorded > 0 && scored.length === 0, blockReason = blocked ? (reasons.no_table > 0 ? 'אין טבלת ניקוד מאושרת — ציון משוקלל ונקודות לרכיבים לא מחושבים' : reasons.gender_missing > 0 ? 'מין החייל לא מוגדר — לא ניתן לנקד' : 'חסרים רכיבים — אין ציון משוקלל (חסר אינו נחשב 0)') : '';
+  var m = { v: 1, kind: 'fitness', version: IN_FT_MD.version, course: ctx.course || '', generatedAt: ctx.now || new Date().toISOString(), source: IN_FT_MD.source };
+  var weights = regular.length && tmap[regular[0]] ? tmap[regular[0]].weights : null;
+  var pub = { eligible: eligible, eligibleCell: eligible >= IN_MIN_N ? eligible : 'פחות מ-' + IN_MIN_N, recorded: hidden ? null : recorded, hidden: hidden, basis: 'חניכים פעילים כיום בהיקף ההרשאה, בתוספת חניכים שיש להם תוצאה (אין תיעוד היסטורי של הרכב הקורס)', pct: null, coverage: inRate(recorded, eligible), findings: [], attention: [], comps: [], score: null, blocked: blocked, blockReason: blockReason, departments: [], teams: [], weights: weights };
+  if (!hidden) { pub.pct = Math.round(100 * recorded / eligible);
+    IN_FT_COMPS.forEach(function (c) { var vs = compVals[c[0]], n = vs.length, vals = vs.map(function (x) { return x.v; }), row = { key: c[0], name: c[1], unit: c[2], dir: c[3] > 0 ? 'יותר טוב' : 'פחות טוב', n: n >= IN_MIN_N ? n : null, hidden: n < IN_MIN_N, reason: n < IN_MIN_N ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : '' };
+      if (n >= IN_MIN_N) { row.median = inMedian(vals); row.mean = inMean(vals); row.text = inFtFmt(c, row.median); var pr = [];   /* comparable pairs: same soldier, same test type (prev), both values entered */
+        vs.forEach(function (x) { var p = prev[x.id]; if (!p) return; var pv = inFtVal(c, p.raw ? p.raw[c[0]] : undefined); if (pv !== null) pr.push(x.v - pv); }); var up = pr.filter(function (d) { return d * c[3] > 0; }).length, dn = pr.filter(function (d) { return d * c[3] < 0; }).length, sm = pr.length - up - dn;
+        if (pr.length >= IN_MIN_N) { var parts = inPart({ better: up, worse: dn, same: sm }, pr.length); var pn = function (v) { return /^\d+$/.test(String(v)) ? +v : v; }; row.trend = { n: pr.length, median: inMedian(pr), better: pn(parts.better), worse: pn(parts.worse), same: pn(parts.same), text: inFtDelta(c, inMedian(pr)) }; } else row.trend = { hidden: true, reason: 'פחות מ-' + IN_MIN_N + ' חניכים עם שתי מדידות להשוואה' }; }
+      pub.comps.push(row); });
+    if (scored.length >= IN_MIN_N) { var cur2 = inUnitsOf(wrows, scored.length); pub.score = { n: scored.length, mean: inMean(scored), median: inMedian(scored), bins: inMergeBins(scored) }; pub.departments = cur2.departments; pub.teams = cur2.teams; }
+    var okc = pub.comps.filter(function (x) { return !x.hidden; }); pub.findings.push('כיסוי כש״ג: ' + pub.coverage.txt + ' (תוצאה אחרונה לכל חניך, מבחן רגיל).');
+    if (blocked) pub.findings.push('BLOCKED — ' + blockReason + '. מוצגים ערכי גלם בלבד.'); else if (pub.score) pub.findings.push('ציון משוקלל מאושר: ממוצע ' + inFmt(pub.score.mean) + ', חציון ' + inFmt(pub.score.median) + ' (N=' + pub.score.n + ').'); else pub.findings.push('ציון משוקלל: פחות מ-' + IN_MIN_N + ' חניכים עם ציון מלא — לא מוצג.');
+    okc.forEach(function (x) { if (x.trend && !x.trend.hidden) pub.findings.push(x.name + ': חציון ' + x.text + ' · שינוי חציוני מהמדידה הקודמת ' + x.trend.text + ' (N=' + x.trend.n + ').'); });
+    pub.findings.push('לא הוגדר סף עמידה בכש״ג, ולכן אין אחוז עובר ואין דירוג.'); var ms = eligible - recorded; if (ms > 0) pub.attention.push({ id: 'missing', text: (ms >= IN_MIN_N ? ms : 'פחות מ-' + IN_MIN_N) + ' חניכים ללא תוצאת כש״ג' });
+  } else pub.findings.push('פחות מ-' + IN_MIN_N + ' חניכים עם תוצאת כש״ג: לא מוצגים ערכים, מגמות או פילוחים. הנתונים המבצעיים זמינים למורשים בלבד.');
+  if (ops.missing > 0) ops.attention.push({ id: 'missing', text: ops.missing + ' חניכים ללא תוצאת כש״ג', go: 'd/fitness' }); if (ops.incomplete.length) ops.attention.push({ id: 'inc', text: ops.incomplete.length + ' חניכים עם רכיב חסר (אין ציון משוקלל)', go: 'd/fitness' }); if (ops.review.length) ops.attention.push({ id: 'rev', text: ops.review.length + ' ערכים מחוץ לטווח הטבלה — נדרשת בדיקה', go: 'd/fitness' });
+  ops.notEntered = notEntered; m.ops = ops; m.pub = pub; m.rows = wrows; return m;
+}
+function inFitPdf(m, logos) {
+  var p = m.pub, d = RK.Pdf({ title: 'דוח כושר גופני', stamp: inStamp(m.generatedAt), logos: logos || [] }), R = RK.colors.RED;
+  d.header('דוח כושר גופני (כש״ג) — תמונת מצב', (m.course || 'קורס'), ['נוצר: ' + String(m.generatedAt).slice(0, 16).replace('T', ' ') + ' (UTC) · גרסת שיטה ' + m.version + ' · מקור: ' + m.source, 'ספירות קטנות מ-' + IN_MIN_N + ' מוסתרות · ללא שמות, מספרים אישיים או דירוג אישי · ניקוד רק לפי טבלה מאושרת']);
+  d.kpis([{ label: 'כיסוי כש״ג', value: p.hidden ? 'אין מספיק נתונים' : p.coverage.short, note: p.hidden ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : 'N=' + p.recorded }, { label: 'ציון משוקלל (מאושר)', value: p.hidden ? '—' : p.blocked ? 'BLOCKED' : p.score ? inFmt(p.score.mean) : '—', note: p.blocked ? 'אין טבלה מאושרת' : p.score ? 'חציון ' + inFmt(p.score.median) + ' · N=' + p.score.n : '' }, { label: 'רכיבים עם נתונים', value: p.hidden ? '—' : String(p.comps.filter(function (x) { return !x.hidden; }).length) + ' מתוך 5', note: 'N≥' + IN_MIN_N + ' לכל רכיב' }]);
+  d.h2('מסקנות עיקריות'); p.findings.forEach(function (t) { d.callout(t, /^BLOCKED/.test(t) ? { accent: R } : undefined); });
+  if (!p.hidden) {
+    d.h2('רכיבי המבחן — ערכי גלם אחרונים'); d.table(['רכיב', 'כיוון', 'N', 'חציון', 'שינוי חציוני'], p.comps.map(function (x) { return [x.name, x.dir, x.hidden ? 'מוסתר' : String(x.n), x.hidden ? 'מוסתר' : x.text, x.hidden ? '—' : (x.trend && !x.trend.hidden ? x.trend.text : 'מוסתר')]; }));
+    if (p.score && p.score.bins.length >= 2) d.histogram({ title: 'התפלגות ציון משוקלל מאושר', note: 'כל עמודה ≥ ' + IN_MIN_N + ' חניכים', h: 130, bins: p.score.bins });
+    var us = p.departments.concat(p.teams); if (us.length) { d.pageBreak(); d.h2('יחידות — ציון משוקלל'); d.table(['יחידה', 'N', 'ממוצע'], us.map(function (u) { return [u.name, u.hidden ? 'מוסתר' : String(u.n), u.hidden ? 'מוסתר' : inFmt(u.mean)]; })); }
+  }
+  if (p.attention.length) { d.h2('מה דורש טיפול'); p.attention.forEach(function (a) { d.callout(a.text, { accent: R }); }); }
+  d.banner('איכות הנתונים והיקף', '', 'מה נספר, מה חסר ומה הוסתר'); d.p('בסיס הכיסוי: ' + p.basis + '.', { size: 9 });
+  d.h2('הגדרות ושיטה'); d.table(['מדד', 'הגדרה'], [['ערך לחניך', 'התוצאה האחרונה של החניך (מבחן רגיל); מגמה = החניך מול המדידה הקודמת מאותו סוג מבחן'], ['חסר מול אפס', 'רכיב ריק = לא הוזן ולא נספר; 0 חזרות הוא ערך אמיתי'], ['כיוון', 'חזרות: יותר טוב · זמן (דק׳:שנ׳): פחות טוב'], ['ציון משוקלל', 'רק לפי גרסת ניקוד מאושרת ומשקלים מאושרים (' + (p.weights ? Object.keys(p.weights).map(function (k) { return k + ' ' + p.weights[k]; }).join(', ') : 'לפי סוג המבחן') + '); חסר רכיב ⇒ אין ציון'], ['סף עמידה', 'לא הוגדר — אין אחוז עובר, אין דירוג'], ['הסתרה', 'ספירה קטנה מ-' + IN_MIN_N + ' ומשלימה לה אינן מוצגות; אין מינימום/מקסימום']]);
+  d.p('כל המספרים נגזרים מאותו מודל כמו המסך. מידע סינתטי בסביבת בדיקה בלבד.', { size: 8.5, color: RK.colors.GREY }); return d.build();
+}
+function inFitXlsx(m) {
+  var p = m.pub, sh = [];
+  sh.push({ name: 'סיכום', header: ['מדד', 'ערך', 'הערה'], rows: [['קורס', m.course, ''], ['חניכים בהיקף (מכנה)', p.eligibleCell, p.basis], ['חניכים עם תוצאה', p.hidden ? 'פחות מ-' + IN_MIN_N : p.recorded, ''], ['כיסוי', p.hidden ? '—' : p.coverage.txt, ''], ['ציון משוקלל מאושר — ממוצע', p.hidden ? '—' : p.blocked ? 'BLOCKED' : p.score ? inR1(p.score.mean) : 'פחות מ-' + IN_MIN_N, p.blocked ? p.blockReason : p.score ? 'חציון ' + inR1(p.score.median) + ' · N=' + p.score.n : ''], ['גרסת שיטה', m.version, ''], ['נוצר (UTC)', m.generatedAt, '']] });
+  sh.push({ name: 'רכיבים', header: ['רכיב', 'יחידה', 'כיוון', 'N', 'חציון', 'ממוצע (גלם)'], rows: p.hidden ? [['אין מספיק נתונים', '', '', '', '', '']] : p.comps.map(function (x) { return [x.name, x.unit === 'זמן' ? 'mm:ss' : 'חזרות', x.dir, x.hidden ? 'מוסתר' : x.n, x.hidden ? 'מוסתר' : x.text, x.hidden ? 'מוסתר' : (x.unit === 'זמן' ? inFtFmt([0, 0, 'זמן'], x.mean) : inR1(x.mean))]; }) });
+  sh.push({ name: 'מגמות', header: ['רכיב', 'N זוגות', 'שינוי חציוני', 'מיטיבים', 'ללא שינוי', 'מחמירים'], rows: p.hidden ? [['אין מספיק נתונים', '', '', '', '', '']] : p.comps.map(function (x) { var t = x.trend; return t && !t.hidden ? [x.name, t.n, t.text, t.better, t.same, t.worse] : [x.name, 'מוסתר', 'מוסתר', 'מוסתר', 'מוסתר', 'מוסתר']; }) });
+  sh.push({ name: 'התפלגות', header: ['טווח ציון משוקלל', 'חניכים'], rows: p.score ? p.score.bins.map(function (b) { return [b.label, b.n]; }) : [[p.blocked ? 'BLOCKED — אין טבלה מאושרת' : 'אין מספיק נתונים', '']] });
+  var ur = function (lvl) { return function (u) { return [lvl, u.name, u.hidden ? 'מוסתר' : u.n, u.hidden ? 'מוסתר' : inR1(u.mean), u.reason || '']; }; };
+  sh.push({ name: 'יחידות', header: ['רמה', 'יחידה', 'N', 'ממוצע', 'הערה'], rows: p.departments.map(ur('מחלקה')).concat(p.teams.map(ur('צוות'))) });
+  sh.push({ name: 'מה דורש טיפול', header: ['פריט'], rows: p.attention.length ? p.attention.map(function (a) { return [a.text]; }) : [['אין פריטים']] });
+  return RK.xlsx({ sheets: sh });
+}
+function inFitLoad() { var cid = S.course.id; return Promise.all([api('soldiers.list', { courseId: cid, opts: {} }, 'fresh'), api('fitness.list', { courseId: cid, opts: {} }, 'fresh'), api('fitness.types', { courseId: cid }, 'fresh')]).then(function (rr) { for (var i = 0; i < 3; i++) if (!rr[i].ok) return rr[i]; return { ok: true, model: inFitBuild(rr[1].data || [], rr[0].data || [], rr[2].data || [], { course: S.course && S.course.name }) }; }); }
+function inFitFile(m, kind) { var pdf = kind === 'pdf'; return inGated('fitness', pdf ? 'pdf' : 'xlsx', 'all', function () { return pdf ? inFitPdf(m) : inFitXlsx(m); }, 'maslul-fitness_' + String(m.generatedAt).slice(0, 10) + '_v1.' + (pdf ? 'pdf' : 'xlsx')); }
+function FitInsight() {
+  var body = h('div', { 'aria-live': 'polite' }, [skeleton(3)]);
+  mount('more', [h('button', { class: 'back', type: 'button', id: 'ftBack', onclick: function () { go('insight'); }, text: '→ חזרה לתובנות ודוחות' }), h('h1', { class: 'page', text: 'דוח כושר גופני' }), body], 'דוח כושר גופני');
+  function draw() {
+    body.replaceChildren(skeleton(3)); inFitLoad().then(function (r) {
+      body.replaceChildren(); if (!r.ok) { body.append(errBox(r, draw), h('p', { class: 'muted', text: 'לא מוצגים נתונים או תובנות כשהקריאה מהשרת נכשלה.' })); return; }
+      var m = r.model, P = m.pub, O = m.ops; window.__insight.fit = m;
+      body.append(h('p', { class: 'in-sub', id: 'ftSub', text: (m.course || '') + ' · רק נתונים שנשמרו ובניקוד מאושר · ללא סף עמידה' }), h('details', { class: 'in-meta', id: 'ftStamp' }, [h('summary', { text: 'נקרא מהשרת ' + new Date(m.generatedAt).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }) + ' · מקור ומכנה' }), h('p', { text: 'מקור: ' + m.source + ' · מכנה: ' + P.eligible + ' חניכים (' + P.basis + ')' })]));
+      if (!O.recorded) { body.append(emptyBox('אין עדיין תוצאות כש״ג — אין מה לנתח.')); return; }
+      if (P.blocked && !P.hidden) body.append(h('div', { class: 'msg err', id: 'ftBlocked', role: 'status', text: 'BLOCKED — ' + P.blockReason + '. מוצגים ערכי גלם בלבד; לא מוצג ציון.' }));
+      body.append(h('div', { class: 'in-kpis' }, [kpi('כיסוי כש״ג', P.hidden ? 'אין מספיק נתונים' : P.coverage.short, P.hidden ? 'פחות מ-' + IN_MIN_N + ' תוצאות' : 'N=' + P.recorded, 'ftK1', '', P.hidden ? undefined : P.pct), kpi('ציון משוקלל', P.hidden ? '—' : P.blocked ? 'BLOCKED' : P.score ? inFmt(P.score.mean) : '—', P.blocked ? 'אין טבלה מאושרת' : P.score ? 'חציון ' + inFmt(P.score.median) : '', 'ftK2'), kpi('רכיבים עם נתונים', P.hidden ? '—' : P.comps.filter(function (x) { return !x.hidden; }).length + '/5', 'N≥' + IN_MIN_N + ' לרכיב', 'ftK3')]));
+      var act = h('div', { class: 'btns in-act' }); if (isAdmin()) act.append(h('button', { class: 'primary', type: 'button', id: 'ftPdf', text: 'יצירת דוח PDF', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inFitFile(m, 'pdf').then(function () { busy(b, false); }); }, 30); } }), h('button', { class: 'secondary', type: 'button', id: 'ftXlsx', text: 'ייצוא נתונים (Excel)', onclick: function (ev) { var b = ev.currentTarget; busy(b, true); setTimeout(function () { inFitFile(m, 'xlsx').then(function () { busy(b, false); }); }, 30); } })); else act.append(h('p', { class: 'muted', id: 'ftNoExport', text: 'הפקת קבצים מותרת למנהל הקורס בלבד.' }));
+      act.append(h('button', { class: 'secondary', type: 'button', id: 'ftRefresh', text: 'רענון', onclick: draw })); body.append(act);
+      body.append(sectionHead('ממצאים', null), h('ul', { class: 'in-find', id: 'ftFind' }, P.findings.map(function (t) { return h('li', { text: t }); })));
+      if (P.hidden) body.append(h('div', { class: 'msg', id: 'ftInsufficient', role: 'status', text: 'אין מספיק נתונים להצגה קבוצתית. הנתונים המבצעיים למטה מיועדים למורשים בלבד.' }));
+      else {
+        body.append(sectionHead('רכיבי המבחן', 'ערכי גלם · כיוון מצוין'), h('table', { class: 'in-table', id: 'ftComps' }, [h('thead', {}, [h('tr', {}, ['רכיב', 'N', 'חציון', 'שינוי חציוני'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, P.comps.map(function (x) { return h('tr', {}, [h('td', {}, [document.createTextNode(x.name), h('small', { class: 'dirhint', text: x.dir })]), h('td', { text: x.hidden ? 'מוסתר' : String(x.n) }), h('td', { text: x.hidden ? 'מוסתר' : x.text }), h('td', { text: x.hidden ? '—' : x.trend && !x.trend.hidden ? x.trend.text : 'מוסתר' })]); }))]));
+        if (P.score && P.score.bins.length >= 2) { var picked = -1, hb = h('div', { id: 'ftHistBox' }), sb = h('div', { id: 'ftSheetBox' }); var drawH = function () { hb.replaceChildren(chartFigure('ftHist', 'התפלגות ציון משוקלל · N=' + P.score.n + ' · הקשה על עמודה מראה פירוט', histChart(P, function (i) { picked = i; drawH(); }, picked), 'התפלגות ציון משוקלל: ' + P.score.bins.map(function (b) { return b.label + ' — ' + b.n; }).join('; '), ['טווח', 'חניכים'], P.score.bins.map(function (b) { return [b.label, b.n]; }))); sb.replaceChildren(); if (picked >= 0) sb.append(inBinSheet(P, picked, m.rows, 'ftSheet')); }; body.append(sectionHead('התפלגות ציון משוקלל מאושר', 'כל עמודה ≥ ' + IN_MIN_N), hb, sb); drawH(); }
+        var us = P.departments.concat(P.teams); if (us.length) { body.append(sectionHead('יחידות', 'N≥' + IN_MIN_N), h('table', { class: 'in-table', id: 'ftUnits' }, [h('thead', {}, [h('tr', {}, ['יחידה', 'N', 'ממוצע'].map(function (x) { return h('th', { scope: 'col', text: x }); }))]), h('tbody', {}, us.map(function (u) { return h('tr', {}, [h('td', { text: u.name }), h('td', { text: u.hidden ? 'מוסתר' : String(u.n) }), h('td', { text: u.hidden ? u.reason : inFmt(u.mean) })]); }))])); }
+      }
+      var opBox = h('section', { class: 'in-op', id: 'ftOps', 'aria-label': 'תצוגה מבצעית' }, [h('h3', { text: 'תצוגה מבצעית — מספרים מדויקים (לא נכללים בקבצים)' }), h('p', { class: 'muted', id: 'ftOpsLine', text: O.recorded + ' עם תוצאה · ' + O.eligible + ' בהיקף · ' + O.missing + ' ללא תוצאה · רכיב חסר: ' + O.incomplete.length + ' · מחוץ לטווח: ' + O.review.length })]);
+      O.attention.forEach(function (a) { opBox.append(card(a.text, 'פתיחת המסך הרלוונטי', null, function () { go(a.go); })); }); O.review.slice(0, 40).forEach(function (x) { opBox.append(card(x.soldier_name, 'ערך מחוץ לטווח הטבלה: ' + x.comp, null, function () { go('soldier/' + x.soldier_id); })); }); body.append(opBox);
+    });
+  }
+  draw();
+}
+window.__insight.fitBuild = inFitBuild; window.__insight.fitPdf = inFitPdf; window.__insight.fitXlsx = inFitXlsx;
+
   /* ---------- router ---------- */
   var ROUTES = { home: Home, soldiers: Soldiers, tasks: Tasks, more: More, attendance: Attendance, alerts: Alerts, 'soldier-new': function () { SoldierForm(null); } };
   function render() {
@@ -2655,7 +2814,7 @@ window.__insight.shootBuild = inShootBuild; window.__insight.shootPdf = inShootP
       if (adm) { emp[0].append(h('button', { class: 'primary', id: 'seedBtn', type: 'button', text: 'טעינת קורס סינתטי (נתונים מומצאים בלבד)', onclick: function () { this.disabled = true; this.setAttribute('aria-busy', 'true'); var b = this; api('gw:seed', {}).then(function (x) { if (!x.ok) { b.disabled = false; b.removeAttribute('aria-busy'); toast(msgOf(x), 'err'); return; } toast('הקורס הסינתטי נטען'); location.reload(); }); } }));
         emp.push(sectionHead('מה יקרה אחרי הטעינה', null), card('חניכים וצוותים', 'רשימה, חיפוש וסינון לפי מחלקה', null), card('מעקבים ומסעות', 'משימות, מסע עם חסרים ועריכת משתתפים אחרי שמירה', null), card('הזמנת מפקדים', 'בלשונית "עוד" → אישור בקשות; כל מפקד רואה רק את הצוות שלו', null)); }
       mount('home', emp); return; }
-    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); if (r === 'entry') return EntryHub(); if (r === 'insight') return InsightHub(); if (r === 'insight/shoot') return ShootInsight(); var ie = /^insight\/exam\/([A-Za-z0-9-]+)$/.exec(r); if (ie) return ExamInsight(ie[1]); var ci = /^insight\/course(?:\/([a-z]+))?$/.exec(r); if (ci) return CourseInsight(ci[1] || 'all'); var ni = /^insight\/nav\/([^\/]+)\/(\d{4}-\d{2}-\d{2})(?:\/([^\/]+))?$/.exec(r); if (ni) return NavInsight(ni[1], ni[2], ni[3]); if (r === 'followups' || r === 'tasks') return Tasks(); var fn = /^followup-new\/(.+)$/.exec(r); if (fn) return FollowForm(fn[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
+    var m = /^soldier\/(.+)$/.exec(r); if (m) return SoldierCard(m[1]); var mt = /^meeting\/(.+)$/.exec(r); if (mt) return MeetingView(mt[1]); if (r === 'mgmt') return Mgmt(); if (r === 'entry') return EntryHub(); if (r === 'insight') return InsightHub(); if (r === 'insight/shoot') return ShootInsight(); if (r === 'insight/fit') return FitInsight(); var ie = /^insight\/exam\/([A-Za-z0-9-]+)$/.exec(r); if (ie) return ExamInsight(ie[1]); var ci = /^insight\/course(?:\/([a-z]+))?$/.exec(r); if (ci) return CourseInsight(ci[1] || 'all'); var ni = /^insight\/nav\/([^\/]+)\/(\d{4}-\d{2}-\d{2})(?:\/([^\/]+))?$/.exec(r); if (ni) return NavInsight(ni[1], ni[2], ni[3]); if (r === 'followups' || r === 'tasks') return Tasks(); var fn = /^followup-new\/(.+)$/.exec(r); if (fn) return FollowForm(fn[1]); var dm = /^d\/([a-z]+)(?:\/(\d+))?$/.exec(r); if (dm) return dm[2] === undefined ? Domain(dm[1]) : DomainForm(dm[1], +dm[2]); (ROUTES[r] || Home)();
   }
   /* Read warm-up (server mode only): the data a tab needs is requested on touch-down (before the click completes) and once when the app is ready; the client's short read memo hands it over, so the screen paints real content instead of a skeleton. Reads only, same arguments as the screens use. */
   var WARM = { soldiers: [['soldiers.list', { opts: {} }]], tasks: [['followups.list', { opts: {} }], ['tasks.list', { opts: {} }], ['soldiers.list', { opts: {} }]] };

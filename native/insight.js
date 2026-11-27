@@ -198,6 +198,12 @@
     svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', summary);
     return h('figure', { class: 'in-fig', id: id }, [h('figcaption', { text: title }), h('div', { class: 'in-svgwrap' }, [svg]), tbl, tg]);
   }
+  /* tap-to-deepen for a histogram bar: what the bar means (range, N, share of those measured) + — in the operational zone only — who is in it (exact scores, tap → soldier card). Group part uses only legal bins (≥5). */
+  function inBinSheet(P, i, rows, id) {
+    var b = P.score.bins[i], tot = P.score.n, pc = Math.round(100 * b.n / tot), box = h('section', { class: 'in-sheet', id: id || 'inSheet', role: 'region', 'aria-label': 'פירוט טווח ' + b.label, 'aria-live': 'polite' }, [h('h3', { text: 'טווח ' + b.label }), h('p', {}, [h('b', { text: b.n + ' חניכים' }), document.createTextNode(' · ' + pc + '% מתוך ' + tot + ' שנבדקו')]), h('div', { class: 'share', 'aria-hidden': 'true', style: '--w:' + pc + '%' }, [h('i')])]);
+    if (rows) { var inb = rows.filter(function (r) { return r.final_score >= b.clo && r.final_score <= b.chi; }).sort(function (x, y) { return y.final_score - x.final_score; }); box.append(h('p', { class: 'muted', text: 'תצוגה מבצעית (לא נכללת בקבצים) — ' + inb.length + ' בטווח:' })); inb.slice(0, 30).forEach(function (r) { box.append(card(r.soldier_name, 'ציון ' + inFmt(r.final_score), h('span', { class: 'arrow', text: '←' }), function () { go('soldier/' + r.soldier_id); })); }); }
+    return box;
+  }
   function histChart(p, onPick, picked) {
     var bins = p.score.bins, n = bins.length, W = 320, H = 160, gap = 10, bw = Math.min(70, (W - 40 - gap * (n - 1)) / n), x0 = (W - (n * bw + (n - 1) * gap)) / 2, max = Math.max.apply(null, bins.map(function (b) { return b.n; }).concat([1]));
     var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'in-svg' }); svg.append(sv('line', { x1: 10, x2: W - 10, y1: 126, y2: 126, class: 'in-axis' }));
@@ -268,7 +274,8 @@
         body.append(sectionHead('דוחות לפי תבנית', null));
         body.append(card('תמונת מצב קורס', 'מה השתנה, מה דורש טיפול, איכות נתונים וכל התחומים · סיכומים קבוצתיים מוגנים', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course'); }));
         body.append(card('דוח ניווט', list.length ? 'ניתוח אירוע, מגמה, PDF ו-Excel · ' + list.length + ' אירועים' : 'אין עדיין אירועי ניווט', h('span', { class: 'arrow', text: '←' }), list.length ? function () { go('insight/nav/' + list[0].typeId + '/' + list[0].date); } : null));
-        [['דוח כש״ג', 'fitness'], ['נוכחות / מסעות', 'attendance']].forEach(function (t) { body.append(card(t[0], 'סיכום קבוצתי של התחום בדשבורד הקורס, כולל PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course/' + t[1]); })); });
+        [['נוכחות / מסעות', 'attendance']].forEach(function (t) { body.append(card(t[0], 'סיכום קבוצתי של התחום בדשבורד הקורס, כולל PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/course/' + t[1]); })); });
+        body.append(card('דוח כושר גופני (כש״ג)', 'ערכי גלם, מגמות לפי רכיב, ציון משוקלל מאושר בלבד, יחידות · PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/fit'); }));
         body.append(card('דוח קליעה', 'קליעה רגילה ויל״מ בנפרד, התפלגות, נשק מאופס, סוגי נשק ויחידות · PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/shoot'); }));
         var exBox = h('div', { id: 'inExamCards' }); body.append(sectionHead('דוחות מבחנים', null), exBox);
         api('exams.defs', { courseId: S.course.id, opts: {} }, 'fresh').then(function (dr) { if (!dr.ok) { exBox.append(h('p', { class: 'muted', text: 'רשימת המבחנים לא נטענה.' })); return; } var defs = dr.data || []; if (!defs.length) exBox.append(emptyBox('אין מבחנים מוגדרים.')); defs.forEach(function (d) { exBox.append(card('דוח מבחן — ' + d.name, 'מסלול עמידה א׳/ב׳/ג׳, התפלגות, יחידות, PDF ו-Excel', h('span', { class: 'arrow', text: '←' }), function () { go('insight/exam/' + d.id); })); }); });

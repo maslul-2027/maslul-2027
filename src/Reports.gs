@@ -143,7 +143,7 @@ const Reports = {
    * Step 2 exportComplete: the browser reports the byte size + SHA-256 of the file it produced; the server binds it to the ticket exactly once (REPORT_EXPORT_COMPLETED).
    * Honest limit: the server cannot see the bytes the browser builds, so this gates + records the sanctioned path; it is not DRM. The DATA the file is built from is only what the actor's own scoped reads already return.
    */
-  EXPORT_KINDS: ['navigation', 'course', 'exams', 'shooting'],
+  EXPORT_KINDS: ['navigation', 'course', 'exams', 'shooting', 'fitness'],
   exportAuthorize(ctx, courseId, req) {
     req = req || {}; const kind = Util.str(req.kind), format = Util.str(req.format), scope = Util.str(req.scope);
     try { Records.guardCourse_(ctx, 'report.generate', courseId); }
