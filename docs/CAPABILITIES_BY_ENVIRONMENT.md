@@ -8,7 +8,7 @@
 | 1. דמו ציבורי בדפדפן | מנוע מקומי ב-localStorage, נתונים סינתטיים, ללא שרת | 160 מתוך 178 נתיבים מסומנים PASS_SYNTH_E2E: בדפדפן, בקריאות שמקורן בממשק ומתואמות לקלט/תנועת משתמש (`interaction_verified` בלדג׳ר). זו הוכחה שהמסך קורא לנתיב אחרי תנועה, **לא** אימות סמנטי מלא של 158 התהליכים | לא מוכיח הרשאות שרת, התמדה בין מכשירים, קבצים או גיבוי |
 | 2. שרת TEST מקומי מאומת (HTTPS, loopback / חבילת Windows) | אותו UI מול שרת אמיתי: כניסה, סשנים, הרשאות, קבצים מוצפנים | **הוכחות הרצה ב-HTTPS (דחיות הרשאה והמסלול המלא):** `tests/secure_test_server.js`, `tests/marches_server.js`, `tests/documents_server.js`, `tests/report_export.js`, `tests/backup_restore.js`, `tests/full_backup.js`, `scripts/e2e_secure_browser.js`, `scripts/e2e_report_export_browser.js`, `scripts/e2e_backup_restore_browser.js`, `scripts/e2e_documents_browser.js`, `scripts/e2e_release_package.js` (Windows ב-CI). אין כאן טענה שכל 176 הנתיבים הורצו ב-HTTPS | מחשב אחד בלבד; לא נגיש ממכשיר אחר |
 | 2א. שומרי סיווג והרשאה בלי הרצת HTTPS (לא נחשבים הוכחת שרת) | בדיקות Node על המנוע בזיכרון עם זהות מדומה | `tests/route_table.js` הוא שומר **מלאי וסיווג** (כל נתיב מסווג ידנית, רשימת חסומים) ואינו בודק הרשאה בזמן ריצה; `tests/d7_authz.js`, `tests/v1_pentest.js`, `tests/uxqa_server.js` הן סריקות הרשאה על המנוע, לא על שרת HTTPS | לא להציג כ"בדיקת שרת מאובטח" |
-| 3. שרת TEST פרטי משותף מתארח | אותו קוד על מארח מאושר, שני מכשירים | **NOT_DEPLOYED. אין הוכחה.** תנאי הקבלה בשני טלפונים מתוארים ב-`docs/PRIVATE_TEST_SERVER.md` (סעיף "שני טלפונים פיזיים"); תסריט מפורט מוצע ב-PR #85 שטרם מוזג. הכול NOT_RUN | לא ניתן לטעון שהוא קיים |
+| 3. שרת TEST פרטי משותף מתארח | אותו קוד על מארח מאושר, שני מכשירים | **DEPLOYED (Cloudflare Workers Free + D1, TEST סינתטי בלבד):** SHA `fe0a22fefd486e8f9c7e3d3e9966019471977dbd`, הרצת Actions 45992678902 (verify + deploy) הסתיימה בהצלחה וה-smoke מ-GitHub החזיר READY (`/auth/status` מוגדר, `/api` ללא כניסה נסגר). **Hosted signed-in E2E: NOT_RUN** — אין הוכחה ממארח לתהליכים מאומתים, לתפקידים חיים או ל-D1 מרוחק תחת השהיה אמיתית; הוכחת התהליכים היא בסנדבוקס מבודד (`scripts/qa_zero_touch.js`: Worker אמיתי + D1 מקומי). טלפונים פיזיים: NOT_RUN | ירוק ב-CI אינו הוכחה שהאתר המתארח נבדק מאומת |
 | 4. נתונים אמיתיים | | **אסור כרגע.** דורש אישורי בעלים, ארגון ואבטחה (go/no-go), ו-pen-test | אישור הדמו אינו אישור לכך |
 
 ## הסבר המספרים (176 / 158 / 5 / 13)
@@ -21,19 +21,19 @@
 ## הנתיבים הלא-מחוברים (13), ומה מצבם בכל סביבה
 | נתיב | דמו ציבורי | שרת TEST מקומי | פרטי משותף |
 |---|---|---|---|
-| `reports.generate` | NOT_CONNECTED | עובד (HTTPS; `docs/REPORT_EXPORT_TEST.md`) | NOT_DEPLOYED |
-| `reports.fullExport` | NOT_CONNECTED | עובד (HTTPS; `docs/REPORT_EXPORT_TEST.md`) | NOT_DEPLOYED |
-| `reports.download` | NOT_CONNECTED | עובד (HTTPS; `docs/REPORT_EXPORT_TEST.md`) | NOT_DEPLOYED |
-| `docs.upload` | NOT_CONNECTED | עובד (HTTPS; `docs/DOCUMENTS_TEST.md`) | NOT_DEPLOYED |
-| `docs.download` | NOT_CONNECTED | עובד (HTTPS; `docs/DOCUMENTS_TEST.md`) | NOT_DEPLOYED |
-| `ocr.start` | NOT_CONNECTED | חסום: אין מנוע OCR | NOT_DEPLOYED |
-| `backup.create` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | NOT_DEPLOYED |
-| `backup.verify` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | NOT_DEPLOYED |
-| `backup.plan` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | NOT_DEPLOYED |
-| `backup.restore` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | NOT_DEPLOYED |
-| `backup.recover` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | NOT_DEPLOYED |
-| `backup.prune` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | NOT_DEPLOYED |
-| `migration.run` | NOT_CONNECTED | חסום: מושבת בכוונה | NOT_DEPLOYED |
+| `reports.generate` | NOT_CONNECTED | עובד (HTTPS; `docs/REPORT_EXPORT_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `reports.fullExport` | NOT_CONNECTED | עובד (HTTPS; `docs/REPORT_EXPORT_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `reports.download` | NOT_CONNECTED | עובד (HTTPS; `docs/REPORT_EXPORT_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `docs.upload` | NOT_CONNECTED | עובד (HTTPS; `docs/DOCUMENTS_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `docs.download` | NOT_CONNECTED | עובד (HTTPS; `docs/DOCUMENTS_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `ocr.start` | NOT_CONNECTED | חסום: אין מנוע OCR | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `backup.create` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `backup.verify` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `backup.plan` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `backup.restore` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `backup.recover` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `backup.prune` | NOT_CONNECTED | עובד (HTTPS; `docs/BACKUP_RESTORE_TEST.md`) | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
+| `migration.run` | NOT_CONNECTED | חסום: מושבת בכוונה | מתארח: NOT_CONNECTED (ללא אחסון קבצים ב-Cloudflare Free; אין גיבוי D1 נתמך — `docs/TEST_BACKUP_STRATEGY.md`) |
 
 ## כיסוי לפי קבוצה
 | קבוצה | נתיבים | דמו PASS | נקראים בשם בקוד סוויטות שרת (רמז כיסוי בלבד, לא הוכחה) |

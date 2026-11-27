@@ -1,6 +1,6 @@
 # MASLUL — סביבת בדיקה משותפת על Cloudflare Workers Free + D1 Free
 
-**סטטוס:** קוד + בדיקות בלבד. **לא נפרס, אין חשבון, לא נמזג, `main`/Pages ללא שינוי.** נתונים סינתטיים בלבד.
+**סטטוס (עודכן 27.11.2026):** נפרס ל-Cloudflare Workers Free + D1 (TEST סינתטי בלבד) מהענף `cloudflare/free-shared-test`, SHA `fe0a22fefd486e8f9c7e3d3e9966019471977dbd`; Actions 45992678902 (verify+deploy) הצליחה וה-smoke מ-GitHub החזיר READY. **אין הוכחת E2E מאומת ממארח (NOT_RUN)** — ראו `docs/CAPABILITIES_BY_ENVIRONMENT.md` ו-`docs/TODAY_READINESS_GO_NO_GO.md`. אין גיבוי D1 נתמך (`docs/TEST_BACKUP_STRATEGY.md`). `main`/Pages ללא שינוי. נתונים סינתטיים בלבד.
 **עלות חוזרת:** 0 ₪ — אין כרטיס אשראי, אין SMS, אין שרת בתשלום, אין Google Apps Script.
 **הקוד:** `cloudflare/free-shared-test/` (+ `scripts/build_cf_worker.js`, `native/cf_client.js`). **CI:** `.github/workflows/cloudflare-free-test.yml`.
 

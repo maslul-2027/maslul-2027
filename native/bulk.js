@@ -11,7 +11,7 @@
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function BulkEntry(cfg) {
     if (C.mode === 'server' && C.role === 'viewer') return Domain(cfg.domain);
-    var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, loaded = false, loadSeq = 0, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
+    var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, loaded = false, loadSeq = 0, autoFill = {}, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
     var progress = h('div', { class: 'be-progress', id: 'beProgress', role: 'status', 'aria-live': 'polite' }), list = h('div', { class: 'be-list', id: 'beList' }), summary = h('div', { id: 'beSummary', 'aria-live': 'polite' });
     var shHost = h('div', { class: 'be-shared', id: 'beShared' }), holder = h('div', {}, skeleton(3));
     mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go(cfg.back); }, text: '→ חזרה' }), h('h1', { class: 'page', text: cfg.title }), holder], cfg.title);
@@ -80,8 +80,18 @@
       return Promise.resolve().then(function () { return cfg.existing(o); }).then(function (r) {
         if (seq !== loadSeq) return;
         if (!r || !r.ok) { loadFailed(r); return; }
-        existing = r.data || []; (cfg.sharedEdit || []).forEach(function (n) { var el = $('#be_' + n), ex = existing.filter(function (x) { return x.record_status !== 'cancelled'; })[0]; if (el && String(el.value).trim() === '' && ex && ex[n] !== undefined && ex[n] !== null) el.value = String(ex[n]); });
-        loaded = true; summary.replaceChildren(); overlay(); refreshAll(); applyFilter();
+        existing = r.data || []; var evNote = [];
+        (cfg.sharedEdit || []).forEach(function (n) { var el = $('#be_' + n); if (!el) return;
+          var vals = []; existing.forEach(function (x) { if (x.record_status === 'cancelled') return; var v = x[n]; if (v === undefined || v === null || v === '') return; v = String(v); if (vals.indexOf(v) < 0) vals.push(v); });
+          /* a value that was auto-filled from ANOTHER event (other type/date) must never leak into this one */
+          if (autoFill[n] && autoFill[n].key !== key && el.value === autoFill[n].val) el.value = '';
+          if (vals.length > 1) { if (autoFill[n] && el.value === autoFill[n].val) el.value = ''; evNote.push({ t: 'err', n: n, m: 'באירוע זה שמורות הגדרות שונות זו מזו בשדה "' + ((cfg.shared.filter(function (f) { return f.n === n; })[0] || {}).l || n) + '" (' + vals.join(' / ') + '). לא נבחר ערך אוטומטית — הזינו ערך מפורש ובדקו את הרשומות הקיימות.' }); }
+          else if (vals.length === 1 && String(el.value).trim() === '') { el.value = vals[0]; autoFill[n] = { key: key, val: vals[0] }; evNote.push({ t: 'ok', n: n }); }
+          else if (vals.length === 1 && Number(el.value) !== Number(vals[0])) evNote.push({ t: 'warn', n: n, m: 'הערך שהוזן (' + el.value + ') שונה מהמוגדר באירוע הקיים (' + vals[0] + ').' }); });
+        loaded = true; summary.replaceChildren();
+        var nAct = existing.filter(function (x) { return x.record_status !== 'cancelled'; }).length; if (nAct && evNote.some(function (x) { return x.t === 'ok'; })) summary.append(h('p', { class: 'muted', id: 'beRestored', role: 'status', text: 'הגדרות האירוע שוחזרו מהתוצאות השמורות (' + nAct + ' חניכים עם תוצאה).' }));
+        evNote.filter(function (x) { return x.t !== 'ok'; }).forEach(function (x) { summary.append(h('div', { class: x.t === 'err' ? 'msg err' : 'msg', id: 'beEvent_' + x.n, role: x.t === 'err' ? 'alert' : 'status', text: x.m })); });
+        overlay(); refreshAll(); applyFilter();
       }, function () { if (seq === loadSeq) loadFailed(null); });
     }
     function build() {
@@ -89,7 +99,13 @@
       if (!sols().length) { holder.append(emptyBox('אין חניכים פעילים בהרשאה שלכם.')); return; }
       var cfgShared = cfg.shared.map(function (f) { var inp; if (f.t === 'select') inp = h('select', { id: 'be_' + f.n }, [h('option', { value: '', text: 'בחרו…' })].concat(f.o(P).map(function (x) { return h('option', { value: x[0], text: x[1] }); }))); else { inp = h('input', { id: 'be_' + f.n, type: f.t === 'date' ? 'date' : 'text', maxlength: f.max_len || null, inputmode: f.t === 'number' ? (f.int ? 'numeric' : 'decimal') : null, autocomplete: 'off', value: f.def === 'today' ? today() : (f.def || '') }); }
         if (f.t === 'select' && P[cfg.pre && cfg.pre[0]] && f.first) { var opts = f.o(P); if (opts.length === 1) inp.value = opts[0][0]; }
-        inp.addEventListener('change', function () { loadExisting().then(function () { refreshAll(); }); }); inp.addEventListener('input', function () { refreshAll(); }); return field(f.l + (f.req ? ' *' : ''), inp, f.hint); });
+        inp.addEventListener('change', function () { loadExisting().then(function () { refreshAll(); }); }); inp.addEventListener('input', function () { refreshAll(); });
+        if (f.t === 'select' && f.single) {   /* exactly ONE valid choice: no redundant dropdown — the id is kept (still sent to the server), shown as a compact read-only label; 0 choices: explained, 2+: the selector */
+          var oo = f.o(P);
+          if (oo.length === 1) { inp.value = oo[0][0]; inp.hidden = true; return h('div', { class: 'fixed-choice', id: 'be_fixed_' + f.n }, [h('small', { text: f.l }), h('b', { text: oo[0][1] }), inp]); }
+          if (!oo.length) return h('div', { class: 'notice', role: 'status', id: 'be_none_' + f.n, text: f.l + ': אין אפשרות זמינה כרגע — יש לפנות למנהל להגדרת הסוג.' });
+        }
+        return field(f.l + (f.req ? ' *' : ''), inp, f.hint); });
       shHost.replaceChildren.apply(shHost, cfgShared);
       var org = S.org || { departments: [], teams: [] };
       var q = h('input', { class: 'search', id: 'beQ', type: 'search', placeholder: 'חיפוש שם / מספר אישי', 'aria-label': 'חיפוש חניך' }), dep = h('select', { id: 'beDep', 'aria-label': 'סינון לפי מחלקה' }, [h('option', { value: '', text: 'כל המחלקות' })].concat(org.departments.map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); }))), team = h('select', { id: 'beTeam', 'aria-label': 'סינון לפי צוות' }, [h('option', { value: '', text: 'כל הצוותים' })].concat(org.teams.map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, ''), 'data-dep': t.department_id }); })));
@@ -194,7 +210,7 @@
   var FIT_COLS = [{ n: 'pullups', l: 'מתח (חזרות)', int: 1, min: 0, max: 200 }, { n: 'parallel_bars', l: 'מקבילים (חזרות)', int: 1, min: 0, max: 200 }, { n: 'trap_bar', l: 'Trap Bar (חזרות)', int: 1, min: 0, max: 200 }, { n: 'run150x2', l: 'ריצת 300 מ׳ (ד:שש)', t: 'time' }, { n: 'run3km', l: 'ריצת 3 ק״מ (ד:שש)', t: 'time' }];
   BULK.fitness = {
     domain: 'fitness', back: 'd/fitness', title: 'הזנה קבוצתית — כש״ג רגיל', table: 'FitnessTests', createM: 'fitness.create', pre: ['fitness.types'], minFilled: 1,
-    shared: [{ n: 'test_type_id', l: 'סוג מבחן כש״ג', t: 'select', req: 1, o: function (P) { return (P['fitness.types'] || []).filter(function (t) { return t.active !== false && t.selectable !== false && !t.is_opening; }).map(function (t) { return [t.id, t.name]; }); } }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1, def: 'today' }],
+    shared: [{ n: 'test_type_id', l: 'סוג מבחן כש״ג', t: 'select', req: 1, single: 1, o: function (P) { return (P['fitness.types'] || []).filter(function (t) { return t.active !== false && t.selectable !== false && !t.is_opening; }).map(function (t) { return [t.id, t.name]; }); } }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1, def: 'today' }],
     cols: FIT_COLS, sharedEdit: [],
     colApplies: function (c, o, P) { var t = (P['fitness.types'] || []).filter(function (x) { return x.id === o.test_type_id; })[0]; return !t || !t.weights || t.weights[c.n] !== undefined; },
     existingKey: function (o) { return o.test_type_id && /^\d{4}-\d{2}-\d{2}$/.test(o.test_date) ? o.test_type_id + '|' + o.test_date : ''; },

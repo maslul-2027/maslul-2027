@@ -242,6 +242,15 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
 .rtile,button.stat{min-width:0;overflow-wrap:anywhere}.rtile b,.rtile small{max-width:100%}
 @media(max-width:359px){.rtiles{grid-template-columns:1fr}.hero{padding:16px 14px}}
 
+/* QA audit fixes */
+.in-bar{fill:transparent;stroke:none!important;filter:none!important}.in-bv{fill:var(--teal);pointer-events:none}.in-bv.on{fill:#0b5c5f;stroke:#10181d;stroke-width:2}
+.in-svg:has(.in-bar:hover) .in-bv{opacity:1}.in-bar:focus-visible{outline:3px solid #161b20;outline-offset:-3px}
+@media(max-width:279px){.in-table td:not(:first-child),.in-table th:not(:first-child){white-space:normal}.in-table th,.in-table td{padding:8px 4px}}
+#view .card a[href]{display:inline-block;padding-block:12px;min-height:44px}
+#view .card>div,#view .card h3,#view .card p{min-width:0;overflow-wrap:anywhere}
+#view button,#view .chip,#view select,#view input{max-width:100%;overflow-wrap:anywhere}#view button{white-space:normal}
+.fixed-choice{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:10px 12px;margin:6px 0;border:1px solid var(--line);border-radius:var(--r);background-color:#f1f8f8}.fixed-choice small{color:var(--muted);font-size:14px}.fixed-choice b{font-size:16px}
+
 </style></head><body><div class="app"><header class="top"><div class="brand">MASLUL <b>2027</b></div><span class="pill">DEMO · נתונים לדוגמה</span></header><p class="subtitle" id="ctx">פיילוט מסלול 2027 · סביבת תצוגה בלבד</p><div class="notice">זוהי הדגמה עצמאית ללא חיבור לנתוני הקורס. אין להזין מידע אישי או מבצעי.</div>
 <main id="view" class="screen"></main></div>
 <nav class="nav" aria-label="ניווט ראשי"><div class="nav-inner"><button class="tab" data-go="home" aria-current="page"><i>⌂</i>בית</button><button class="tab" data-go="soldiers"><i>♙</i>חניכים</button><button class="tab" data-go="entry"><i>✎</i>הזנה</button><button class="tab" data-go="more"><i>☷</i>עוד</button></div></nav>
@@ -643,7 +652,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
         h('div', { class: 'btns' }, [h('button', { class: 'secondary', id: 'logout', type: 'button', text: 'התנתקות', onclick: function () { C.logout(); } })])])]), 'עוד'); return; }
     var foot = h('div', {}, [sectionHead('מידע', null), card('התקנה במסך הבית', 'Safari ← שיתוף ← הוסף למסך הבית', h('span', { text: '📱' })), card('סביבת הדגמה', 'ללא התחברות, ללא שרת, ללא נתוני אמת — הנתונים נשמרים במכשיר הזה בלבד', h('span', { text: '🛡️' })),
       h('div', { class: 'btns' }, [h('button', { class: 'secondary', type: 'button', text: 'איפוס הדגמה', onclick: function () { dialog('איפוס נתוני הדגמה', [h('p', { text: 'כל הנתונים שהוזנו בדפדפן הזה יוחלפו בנתוני הדגמה מקוריים. לפני כן נשמר עותק אחד של המצב הנוכחי באותו דפדפן בלבד (לא בשרת ולא במכשיר אחר), וניתן לשחזר אותו מהמסך הזה. הגיבוי הוא תא יחיד: איפוס נוסף ידרוס אותו.' }), (C.hasPrev && C.hasPrev()) ? h('p', { class: 'msg err', role: 'alert', text: 'שימו לב: כבר קיים עותק קודם מהאיפוס האחרון, והאיפוס הזה יחליף אותו. כדי לשמור אותו, שחזרו אותו קודם או ייצאו לקובץ ממסך זה.' }) : null, h('p', { class: 'muted', text: 'לשמירה לטווח ארוך השתמשו ב"ייצוא נתוני הדגמה לקובץ" לפני האיפוס.' })], function () { C.reset(); }, 'איפוס (עם גיבוי)', true); } }), (C.hasPrev && C.hasPrev()) ? h('button', { class: 'secondary', type: 'button', id: 'demoRestore', text: 'שחזור לפני האיפוס האחרון', onclick: function () { C.restorePrev(); } }) : null, (C.exportData && C.mode !== 'server') ? h('button', { class: 'secondary', type: 'button', id: 'demoExport', text: 'ייצוא נתוני הדגמה לקובץ', onclick: function () { var d = C.exportData(); if (!d) { toast('אין נתונים לייצוא', 'err'); return; } var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([d], { type: 'application/json' })); a.download = 'maslul-demo-state.json'; a.rel = 'noopener'; document.body.append(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500); toast('הקובץ יורד'); } }) : null, h('button', { class: 'secondary', id: 'role-switch', type: 'button', text: 'תפקיד הדגמה: ' + (C.role === 'commander' ? 'מפקד' : 'מנהל') + ' — החלפה', onclick: function () { C.as(C.role === 'commander' ? 'admin' : 'commander'); } }), h('button', { class: 'secondary', id: 'refresh-app', type: 'button', text: 'בדיקת עדכון', onclick: function () { if (navigator.serviceWorker) navigator.serviceWorker.getRegistration().then(function (registration) { return registration?.update(); }).finally(function () { var url = new URL(location.href); url.searchParams.set('v', String(Date.now())); location.replace(url); }); else location.reload(); } })]),
-      h('p', { class: 'muted', text: 'הגרסה המחוברת תדרוש הרשמה ואישור מנהל, הרשאות צד שרת ואבטחת PIN. אלה אינם חלק מהדגמה זו.' })]);
+      h('p', { class: 'muted', text: 'הגרסה המחוברת תדרוש הרשמה ואישור מנהל, הרשאות צד שרת ואבטחת PIN. אלה אינם חלק מהדגמה זו.' }), (function () { var m = document.querySelector('meta[name="maslul-build"]'); return m && m.content ? h('p', { class: 'muted', id: 'buildId', text: 'גרסת קוד: ' + m.content.slice(0, 12) }) : null; })()].filter(Boolean));
     mount('more', nodes.concat([foot]), 'עוד');
   }
 
@@ -751,7 +760,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
       click: function (a, reload) { if (!isAdmin()) { toast('טיפול בהתראה — למנהל בלבד', 'err'); return; } var sel = h('select', { id: 'alTo' }, ['handled', 'archived', 'open'].map(function (v) { return h('option', { value: v, text: ALERT_ST[v] }); })), note = h('textarea', { id: 'alNote' }); dialog((ALERT_TOPIC[a.topic] || 'התראה') + (a.soldier_name ? ' · ' + a.soldier_name : ''), [h('p', { text: a.reason || '' }), field('סטטוס חדש', sel), field('הערה (חובה לטיפול)', note)], function (msg) { return api('alerts.handle', { id: a.id, to: sel.value, note: note.value }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('ההתראה עודכנה'); reload(); }); }, 'עדכון'); } }] };
   D.meetings = { title: 'ישיבות ומשימות', lists: [{ h: 'סיכומי ישיבות', m: 'meetings.list', a: CID, row: function (m) { return [m.subject, fmtD(m.meeting_at) + (m.tasks_open !== undefined ? ' · משימות פתוחות ' + m.tasks_open : '')]; } }],
     forms: [{ t: 'סיכום ישיבה חדש', m: 'meetings.save', screen: function () { MeetingEditor(); } }] };
-  D.settings = { title: 'הגדרות מקצועיות', forms: [], lists: [{ h: 'פרמטרים (שינוי נרשם עם נימוק ותאריך תחילה)', m: 'settings.list', a: CID, row: function (st) { return [st.label, 'ערך נוכחי: ' + st.value + (st.history && st.history.length ? ' · ' + st.history.length + ' שינויים' : ''), null]; },
+  D.settings = { title: 'הגדרות מקצועיות', forms: [], lists: [{ h: 'פרמטרים (שינוי נרשם עם נימוק ותאריך תחילה)', m: 'settings.list', a: CID, row: function (st) { return [st.label, 'ערך נוכחי: ' + (st.value == null || st.value === '' ? 'לא הוגדר (ממתין לאישור מקצועי)' : st.value) + (st.history && st.history.length ? ' · ' + st.history.length + ' שינויים' : ''), null]; },
     click: function (st, reload) { if (!isAdmin()) { toast('שינוי הגדרות — למנהל בלבד', 'err'); return; } var v = h('input', { id: 'sv', value: st.value }), ef = h('input', { id: 'se', type: 'date' }), rs = h('input', { id: 'sr' }); dialog(st.label, [field('ערך חדש', v), field('בתוקף מתאריך', ef), field('נימוק (חובה)', rs)], function (msg) { if (!rs.value.trim()) { msg.textContent = 'יש לציין נימוק.'; msg.className = 'msg err'; return false; } return api('settings.set', { courseId: S.course.id, key: st.key, value: st.type === 'number' || st.type === 'int' ? Number(v.value) : v.value, effective_from: ef.value || undefined, reason: rs.value.trim() }).then(function (x) { if (!x.ok) { msg.textContent = msgOf(x); msg.className = 'msg err'; return false; } toast('ההגדרה נשמרה'); reload(); }); }, 'שמירה'); } }] };
   /* Reports: real files. Generate on the server, then download the real PDF/XLSX (server mode). In the public demo nothing is connected, so the server says so and no fake file is produced. */
   function dlReport(id) { return C.download ? C.download(id) : Promise.resolve({ ok: false, code: 'NOT_CONNECTED', message: 'הורדת קבצים זמינה רק בסביבת הבדיקה המאובטחת.' }); }
@@ -907,7 +916,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
   }
   function fitLive(c) {
     var box = h('div', { class: 'card', id: 'fitLive', style: 'display:block', 'aria-live': 'polite' }), types = c.P['fitness.types'] || [], seq = 0, timer = null, ins = c.ins;
-    var tf = ins.test_type_id; if (tf) { var sel = types.filter(function (t) { return t.selectable !== false && t.active !== false && !t.is_opening; }); if (sel.length === 1 && !tf.value) { tf.value = sel[0].id; tf.dispatchEvent(new Event('change')); } }
+    var tf = ins.test_type_id; if (tf) { var sel = types.filter(function (t) { return t.selectable !== false && t.active !== false && !t.is_opening; }); if (sel.length === 1) { if (!tf.value) { tf.value = sel[0].id; tf.dispatchEvent(new Event('change')); } var tw = c.wraps && c.wraps.test_type_id; if (tw && !tw.dataset.fixed) { tw.dataset.fixed = '1'; tw.style.display = 'none'; tw.after(h('div', { class: 'fixed-choice', id: 'fit_fixed_type' }, [h('small', { text: 'סוג מבחן כש״ג' }), h('b', { text: sel[0].name })])); } } else if (!sel.length) { c.f.append(h('div', { class: 'notice', role: 'status', id: 'fit_no_type', text: 'סוג מבחן כש״ג: אין אפשרות זמינה כרגע — יש לפנות למנהל.' })); } }
     c.f.append(box);
     function comps() { var raw = {}; ['pullups', 'parallel_bars', 'trap_bar', 'run150x2', 'run3km'].forEach(function (k) { var i = ins[k]; if (i && i.value !== '' && !c.wraps[k].hidden) raw[k] = (k === 'run150x2' || k === 'run3km') ? i.value.trim() : Number(i.value); }); return raw; }
     function line(label, val) { return h('div', { style: 'display:flex;justify-content:space-between;gap:10px;min-height:28px;align-items:center' }, [h('span', { text: label }), h('b', { text: val })]); }
@@ -1074,7 +1083,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
     if (!isAdmin()) { toast('שינוי ציון עובר — למנהל בלבד', 'err'); return; } var ps = h('input', { id: 'dpS', type: 'number', min: '0', max: '100', step: '1', value: d.own_pass_score === null || d.own_pass_score === undefined ? '' : d.own_pass_score, placeholder: 'ריק = ברירת מחדל' }), rs = h('input', { id: 'dpR' });
     dialog('ציון עובר — ' + d.name, [field('ציון עובר (0–100)', ps), field('סיבה (חובה)', rs)], function (msg) { if (!rs.value.trim()) { msg.textContent = 'יש לציין סיבה.'; msg.className = 'msg err'; return false; } return api('exams.defPass', { id: d.id, pass: ps.value === '' ? '' : Number(ps.value), reason: rs.value.trim() }).then(function (x) { if (!x.ok) return errAt(msg, x); toast('נשמר'); reload(); }); }, 'שמירה'); } });
   /* --- navigation group summary (N>=5 suppression comes from the server) / readiness action queue --- */
-  function navRow(box, g) { if (g.suppressed) { box.append(card(g.name || 'קבוצה', 'מדוכא — קבוצה קטנה מ-5 חיילים', null)); return; } box.append(card(g.name || 'קורס', 'חיילים ' + g.soldiers + ' · עם תוצאות ' + g.soldiers_with_results + ' · תוצאות ' + g.count + ' · ממוצע ' + (g.mean_display || '—'), null)); }
+  function navRow(box, g) { if (g.suppressed) { box.append(card(g.name || 'קבוצה', 'מדוכא — קבוצה קטנה מ-5 חיילים', null)); return; } box.append(card(g.name || 'קורס', 'חיילים ' + g.soldiers + ' · עם תוצאות ' + (g.soldiers_with_results == null ? 'פחות מ-5' : g.soldiers_with_results) + ' · תוצאות ' + (g.count == null ? 'פחות מ-5' : g.count) + ' · ממוצע ' + (g.mean_display || '—'), null)); }
   D.nav.lists.push({ h: 'סיכום קבוצתי', m: 'nav.groups', a: CID, view: function (d, box) { navRow(box, d.course || {}); (d.departments || []).forEach(function (x) { navRow(box, x); }); (d.teams || []).forEach(function (x) { navRow(box, x); }); } });
   D.readiness.lists.push({ h: 'תור פעולה — חניכים ללא סטטוס כשירות', m: 'readiness.notEntered', a: CID, empty: 'לכל החניכים הוזן סטטוס.', row: function (r) { return [sname(r.soldier_id) || r.soldier_id, 'לא הוזן סטטוס כשירות — לחיצה להזנה', null]; }, click: function (r) { location.hash = '#/d/readiness/0'; toast('בחרו את החניך בטופס "עדכון כשירות"'); } });
   /* --- course dashboard: overview, groups, compare courses, per-soldier trends --- */
@@ -1442,7 +1451,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
   function today() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function BulkEntry(cfg) {
     if (C.mode === 'server' && C.role === 'viewer') return Domain(cfg.domain);
-    var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, loaded = false, loadSeq = 0, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
+    var cid = S.course.id, sh = {}, rows = [], P = {}, existing = null, saving = false, loaded = false, loadSeq = 0, autoFill = {}, filt = { q: '', dep: '', team: '', st: 'all' }, reason = '';
     var progress = h('div', { class: 'be-progress', id: 'beProgress', role: 'status', 'aria-live': 'polite' }), list = h('div', { class: 'be-list', id: 'beList' }), summary = h('div', { id: 'beSummary', 'aria-live': 'polite' });
     var shHost = h('div', { class: 'be-shared', id: 'beShared' }), holder = h('div', {}, skeleton(3));
     mount('more', [h('button', { class: 'back', type: 'button', onclick: function () { go(cfg.back); }, text: '→ חזרה' }), h('h1', { class: 'page', text: cfg.title }), holder], cfg.title);
@@ -1511,8 +1520,18 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
       return Promise.resolve().then(function () { return cfg.existing(o); }).then(function (r) {
         if (seq !== loadSeq) return;
         if (!r || !r.ok) { loadFailed(r); return; }
-        existing = r.data || []; (cfg.sharedEdit || []).forEach(function (n) { var el = $('#be_' + n), ex = existing.filter(function (x) { return x.record_status !== 'cancelled'; })[0]; if (el && String(el.value).trim() === '' && ex && ex[n] !== undefined && ex[n] !== null) el.value = String(ex[n]); });
-        loaded = true; summary.replaceChildren(); overlay(); refreshAll(); applyFilter();
+        existing = r.data || []; var evNote = [];
+        (cfg.sharedEdit || []).forEach(function (n) { var el = $('#be_' + n); if (!el) return;
+          var vals = []; existing.forEach(function (x) { if (x.record_status === 'cancelled') return; var v = x[n]; if (v === undefined || v === null || v === '') return; v = String(v); if (vals.indexOf(v) < 0) vals.push(v); });
+          /* a value that was auto-filled from ANOTHER event (other type/date) must never leak into this one */
+          if (autoFill[n] && autoFill[n].key !== key && el.value === autoFill[n].val) el.value = '';
+          if (vals.length > 1) { if (autoFill[n] && el.value === autoFill[n].val) el.value = ''; evNote.push({ t: 'err', n: n, m: 'באירוע זה שמורות הגדרות שונות זו מזו בשדה "' + ((cfg.shared.filter(function (f) { return f.n === n; })[0] || {}).l || n) + '" (' + vals.join(' / ') + '). לא נבחר ערך אוטומטית — הזינו ערך מפורש ובדקו את הרשומות הקיימות.' }); }
+          else if (vals.length === 1 && String(el.value).trim() === '') { el.value = vals[0]; autoFill[n] = { key: key, val: vals[0] }; evNote.push({ t: 'ok', n: n }); }
+          else if (vals.length === 1 && Number(el.value) !== Number(vals[0])) evNote.push({ t: 'warn', n: n, m: 'הערך שהוזן (' + el.value + ') שונה מהמוגדר באירוע הקיים (' + vals[0] + ').' }); });
+        loaded = true; summary.replaceChildren();
+        var nAct = existing.filter(function (x) { return x.record_status !== 'cancelled'; }).length; if (nAct && evNote.some(function (x) { return x.t === 'ok'; })) summary.append(h('p', { class: 'muted', id: 'beRestored', role: 'status', text: 'הגדרות האירוע שוחזרו מהתוצאות השמורות (' + nAct + ' חניכים עם תוצאה).' }));
+        evNote.filter(function (x) { return x.t !== 'ok'; }).forEach(function (x) { summary.append(h('div', { class: x.t === 'err' ? 'msg err' : 'msg', id: 'beEvent_' + x.n, role: x.t === 'err' ? 'alert' : 'status', text: x.m })); });
+        overlay(); refreshAll(); applyFilter();
       }, function () { if (seq === loadSeq) loadFailed(null); });
     }
     function build() {
@@ -1520,7 +1539,13 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
       if (!sols().length) { holder.append(emptyBox('אין חניכים פעילים בהרשאה שלכם.')); return; }
       var cfgShared = cfg.shared.map(function (f) { var inp; if (f.t === 'select') inp = h('select', { id: 'be_' + f.n }, [h('option', { value: '', text: 'בחרו…' })].concat(f.o(P).map(function (x) { return h('option', { value: x[0], text: x[1] }); }))); else { inp = h('input', { id: 'be_' + f.n, type: f.t === 'date' ? 'date' : 'text', maxlength: f.max_len || null, inputmode: f.t === 'number' ? (f.int ? 'numeric' : 'decimal') : null, autocomplete: 'off', value: f.def === 'today' ? today() : (f.def || '') }); }
         if (f.t === 'select' && P[cfg.pre && cfg.pre[0]] && f.first) { var opts = f.o(P); if (opts.length === 1) inp.value = opts[0][0]; }
-        inp.addEventListener('change', function () { loadExisting().then(function () { refreshAll(); }); }); inp.addEventListener('input', function () { refreshAll(); }); return field(f.l + (f.req ? ' *' : ''), inp, f.hint); });
+        inp.addEventListener('change', function () { loadExisting().then(function () { refreshAll(); }); }); inp.addEventListener('input', function () { refreshAll(); });
+        if (f.t === 'select' && f.single) {   /* exactly ONE valid choice: no redundant dropdown — the id is kept (still sent to the server), shown as a compact read-only label; 0 choices: explained, 2+: the selector */
+          var oo = f.o(P);
+          if (oo.length === 1) { inp.value = oo[0][0]; inp.hidden = true; return h('div', { class: 'fixed-choice', id: 'be_fixed_' + f.n }, [h('small', { text: f.l }), h('b', { text: oo[0][1] }), inp]); }
+          if (!oo.length) return h('div', { class: 'notice', role: 'status', id: 'be_none_' + f.n, text: f.l + ': אין אפשרות זמינה כרגע — יש לפנות למנהל להגדרת הסוג.' });
+        }
+        return field(f.l + (f.req ? ' *' : ''), inp, f.hint); });
       shHost.replaceChildren.apply(shHost, cfgShared);
       var org = S.org || { departments: [], teams: [] };
       var q = h('input', { class: 'search', id: 'beQ', type: 'search', placeholder: 'חיפוש שם / מספר אישי', 'aria-label': 'חיפוש חניך' }), dep = h('select', { id: 'beDep', 'aria-label': 'סינון לפי מחלקה' }, [h('option', { value: '', text: 'כל המחלקות' })].concat(org.departments.map(function (d) { return h('option', { value: d.id, text: d.name.replace(/\s*\(זמני\)/, '') }); }))), team = h('select', { id: 'beTeam', 'aria-label': 'סינון לפי צוות' }, [h('option', { value: '', text: 'כל הצוותים' })].concat(org.teams.map(function (t) { return h('option', { value: t.id, text: t.name.replace(/\s*\(זמני\)/, ''), 'data-dep': t.department_id }); })));
@@ -1625,7 +1650,7 @@ button.stat:active{transform:scale(.97)}button.stat .go{position:absolute;inset-
   var FIT_COLS = [{ n: 'pullups', l: 'מתח (חזרות)', int: 1, min: 0, max: 200 }, { n: 'parallel_bars', l: 'מקבילים (חזרות)', int: 1, min: 0, max: 200 }, { n: 'trap_bar', l: 'Trap Bar (חזרות)', int: 1, min: 0, max: 200 }, { n: 'run150x2', l: 'ריצת 300 מ׳ (ד:שש)', t: 'time' }, { n: 'run3km', l: 'ריצת 3 ק״מ (ד:שש)', t: 'time' }];
   BULK.fitness = {
     domain: 'fitness', back: 'd/fitness', title: 'הזנה קבוצתית — כש״ג רגיל', table: 'FitnessTests', createM: 'fitness.create', pre: ['fitness.types'], minFilled: 1,
-    shared: [{ n: 'test_type_id', l: 'סוג מבחן כש״ג', t: 'select', req: 1, o: function (P) { return (P['fitness.types'] || []).filter(function (t) { return t.active !== false && t.selectable !== false && !t.is_opening; }).map(function (t) { return [t.id, t.name]; }); } }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1, def: 'today' }],
+    shared: [{ n: 'test_type_id', l: 'סוג מבחן כש״ג', t: 'select', req: 1, single: 1, o: function (P) { return (P['fitness.types'] || []).filter(function (t) { return t.active !== false && t.selectable !== false && !t.is_opening; }).map(function (t) { return [t.id, t.name]; }); } }, { n: 'test_date', l: 'תאריך', t: 'date', req: 1, def: 'today' }],
     cols: FIT_COLS, sharedEdit: [],
     colApplies: function (c, o, P) { var t = (P['fitness.types'] || []).filter(function (x) { return x.id === o.test_type_id; })[0]; return !t || !t.weights || t.weights[c.n] !== undefined; },
     existingKey: function (o) { return o.test_type_id && /^\d{4}-\d{2}-\d{2}$/.test(o.test_date) ? o.test_type_id + '|' + o.test_date : ''; },
@@ -2337,9 +2362,11 @@ var RK = (function () {
     var bins = p.score.bins, n = bins.length, W = 320, H = 160, gap = 10, bw = Math.min(70, (W - 40 - gap * (n - 1)) / n), x0 = (W - (n * bw + (n - 1) * gap)) / 2, max = Math.max.apply(null, bins.map(function (b) { return b.n; }).concat([1]));
     var svg = sv('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'in-svg' }); svg.append(sv('line', { x1: 10, x2: W - 10, y1: 126, y2: 126, class: 'in-axis' }));
     bins.forEach(function (b, i) { var x = x0 + i * (bw + gap), hh = Math.max(3, 96 * b.n / max), on = picked === i;
-      var bar = sv('rect', { x: x, y: 126 - hh, width: bw, height: hh, rx: 4, class: 'in-bar' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': 'טווח ' + b.label + ': ' + b.n + ' חניכים. הקשה מסננת את הרשימה המבצעית', 'data-bin': i });
+      var vis = sv('rect', { x: x, y: 126 - hh, width: bw, height: hh, rx: 4, class: 'in-bv' + (on ? ' on' : ''), 'aria-hidden': 'true' });
+      /* the interactive target is the WHOLE column (≥44 CSS px tall even for a 1-soldier bar); the painted bar keeps the true proportional height */
+      var bar = sv('rect', { x: x - gap / 2, y: 28, width: bw + gap, height: 116, class: 'in-bar' + (on ? ' on' : ''), tabindex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': 'טווח ' + b.label + ': ' + b.n + ' חניכים. הקשה מסננת את הרשימה המבצעית', 'data-bin': i });
       bar.addEventListener('click', function () { onPick(on ? -1 : i); }); bar.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onPick(on ? -1 : i); } });
-      svg.append(bar, stext(x + bw / 2, 126 - hh - 5, String(b.n), { class: 'in-t in-tv' }), stext(x + bw / 2, 143, b.label)); });
+      svg.append(vis, stext(x + bw / 2, 126 - hh - 5, String(b.n), { class: 'in-t in-tv' }), stext(x + bw / 2, 143, b.label), bar); });
     return svg;
   }
   function lineChart(m) {
